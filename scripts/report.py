@@ -47,10 +47,13 @@ def accuracy(dirs):
 
 
 def kernels(paths):
-    import matplotlib
+    try:
+        import matplotlib
 
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except ImportError:  # tables only (plots are made in the container)
+        plt = None
 
     for path in paths:
         res = _load(path)
@@ -58,23 +61,28 @@ def kernels(paths):
         names = [k for k in rows[0] if k not in ("batch", "ctx") and not k.startswith("kv_bytes")
                  and not k.endswith("_error")]
         print(f"\n### {res['gpu']}: decode attention, us (lower is better)\n")
-        print("| batch | ctx | " + " | ".join(names) + " | ours_int8 vs ours_bf16 | ours_int8 vs fa2 |")
-        print("|---|---|" + "---|" * (len(names) + 2))
+        ref8 = "fa3_fp8" if "fa3_fp8" in names else None
+        extra = ["triton int8 / triton bf16", "cuda int8 vs fa2"] + (["cuda int8 vs fa3 fp8"] if ref8 else [])
+        print("| batch | ctx | " + " | ".join(names) + " | " + " | ".join(extra) + " |")
+        print("|---|---|" + "---|" * (len(names) + len(extra)))
         for r in rows:
             cells = [f"{r[n]:.1f}" if r.get(n) else "err" for n in names]
-            sp1 = r["ours_bf16"] / r["ours_int8"] if r.get("ours_int8") else math.nan
-            sp2 = r["fa2_bf16"] / r["ours_int8"] if r.get("ours_int8") else math.nan
-            print(f"| {r['batch']} | {r['ctx']} | " + " | ".join(cells) + f" | {sp1:.2f}x | {sp2:.2f}x |")
+            sp = [r["ours_bf16"] / r["ours_int8"], r["fa2_bf16"] / r["cuda_int8"]]
+            if ref8:
+                sp.append(r["fa3_fp8"] / r["cuda_int8"] if r.get("fa3_fp8") else math.nan)
+            print(f"| {r['batch']} | {r['ctx']} | " + " | ".join(cells) + " | "
+                  + " | ".join(f"{x:.2f}x" for x in sp) + " |")
         print("\nachieved KV bandwidth, GB/s (bytes the kernel must read / time)\n")
-        print("| batch | ctx | fa2_bf16 | ours_bf16 | ours_int8 | vllm_int8_pth |")
-        print("|---|---|---|---|---|---|")
+        print("| batch | ctx | fa2_bf16 | ours_bf16 | ours_int8 | cuda_int8 | vllm_int8_pth |")
+        print("|---|---|---|---|---|---|---|")
         for r in rows:
             def bw(name, nbytes):
                 return f"{nbytes / (r[name] * 1e-6) / 1e9:.0f}" if r.get(name) else "-"
             print(f"| {r['batch']} | {r['ctx']} | {bw('fa2_bf16', r['kv_bytes_bf16'])} | "
                   f"{bw('ours_bf16', r['kv_bytes_bf16'])} | {bw('ours_int8', r['kv_bytes_int8'])} | "
+                  f"{bw('cuda_int8', r['kv_bytes_int8'])} | "
                   f"{bw('vllm_int8_pth', r['kv_bytes_int8'] * 1.03)} |")
-        fig, axes = plt.subplots(1, 3, figsize=(16, 4.2))
+        fig, axes = plt.subplots(1, 3, figsize=(16, 4.2)) if plt else (None, [])
         for ax, b in zip(axes, (1, 32, 128)):
             sub = [r for r in rows if r["batch"] == b]
             for n in names:
@@ -86,9 +94,10 @@ def kernels(paths):
             ax.set_xlabel("context tokens")
             ax.set_ylabel("us")
             ax.grid(alpha=0.3)
-        axes[0].legend(fontsize=7)
-        fig.tight_layout()
-        fig.savefig(path.replace(".json", ".png"), dpi=120)
+        if plt:
+            axes[0].legend(fontsize=7)
+            fig.tight_layout()
+            fig.savefig(path.replace(".json", ".png"), dpi=120)
         if res.get("write"):
             print("\n### KV write path, us\n")
             keys = [k for k in res["write"][0] if k != "tokens"]

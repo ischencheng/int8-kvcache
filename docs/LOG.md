@@ -343,3 +343,29 @@ v3 在 A100 上的有效带宽 1.45 TB/s（峰值约 2.0 TB/s），比 FA2 bf16 
    得让所有行都走 MODE 2（`KVQ_INT8_MAX_Q` 设大），见下一步的补测。
 2. 个别配置 ΔNLL 略小于 0（−0.0003 / −0.0006）：bf16 自己的 greedy 输出不一定是任意扰动模型下概率最大的序列，
    量化噪声让某些 token 的分布变尖时 NLL 会小幅下降；这个量级应视为"没有退化"，不解读成"变好"。
+
+## Step 8a kernel 基准（阶段七/八，A100）
+
+`scripts/bench_kernels.py`，Qwen2.5-7B 形状（28 q head / 4 kv head / D 128 / block 16），decode（每请求 1 个 query），
+`triton.testing.do_bench`（L2 冲刷、CUDA event 计时），所有 Triton kernel 用同一套 split-KV 策略。完整表在
+`docs/tables/kernels_a100.md`，摘录（µs）：
+
+| batch × ctx | FA2 bf16 | vLLM Triton bf16 | vLLM int8_per_token_head | 我们 Triton bf16 | 我们 Triton int8 | **我们 CUDA int8** | CUDA / FA2 |
+|---|---|---|---|---|---|---|---|
+| 1 × 4k | 38.2 | 40.4 | 41.8 | 24.7 | 25.3 | 25.2 | 1.52× |
+| 1 × 32k | 89.6 | 213.2 | 235.4 | 99.6 | 107.3 | 66.6 | 1.35× |
+| 8 × 32k | 368.9 | 360.1 | 528.0 | 351.0 | 260.9 | 216.8 | 1.70× |
+| 32 × 32k | 1322 | 1356 | 1551 | 1302 | 855 | **703** | **1.88×** |
+| 64 × 16k | 1757 | 1374 | 1312 | 1288 | 943 | **853** | **2.06×** |
+| 128 × 32k | 5584 | 5822 | 4697 | 5035 | 3696 | **2709** | **2.06×** |
+| 256 × 16k | 5034 | 5152 | 4644 | 5240 | 3528 | **2545** | **1.98×** |
+
+- 有效 KV 带宽（必须读的字节数 / 时间）：CUDA int8 1.36–1.45 TB/s，Triton int8 1.15–1.26 TB/s，我们的 bf16 kernel 1.6–1.7 TB/s，
+  FA2 1.2–1.7 TB/s（A100 峰值约 2.0 TB/s）。int8 kernel 每字节要做的指令更多（反量化、P 量化），带宽利用率比 bf16 低，
+  但读的字节减半，所以净收益 1.4–2.1 倍；**上下文越长、batch 越大收益越大**（课程的判断成立）。
+- 小 batch 短上下文（1 × 1k）是延迟瓶颈，int8 没有收益，CUDA 版还略慢（固定开销：q 量化序言 + 合并）。
+- **vLLM 原生 int8_per_token_head 在多数点比 bf16 还慢**（32 × 32k：1551 vs FA2 1322）：它读出 int8 后转成 bf16 再用 bf16
+  Tensor Core，还要额外读每个 (token, head) 的 fp32 scale 并在 S/P 上逐列乘，访存省下的被这些开销吃掉了。
+- 写 cache：融合的量化+写入 8192 token 28 µs（Triton）/ 33 µs（CUDA），**比 vLLM 原生 bf16 写入（42 µs）还快**（只写一半字节）；
+  不融合的两遍 PyTorch 实现 310 µs；vLLM 的 per_token_head 写入 70 µs（要现算每个 token 的 scale）。
+- q 量化：单独 kernel 8–13 µs；融合进 attention 序言后 attention 耗时不变（159 vs 159 µs），所以融合版是对的选择。
