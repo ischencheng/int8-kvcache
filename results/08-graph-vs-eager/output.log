@@ -1,0 +1,5 @@
+{"batch": 1, "ctx": 4096, "triton_int8_eager": 63.1, "triton_int8_graph": 20.1, "cuda_int8_eager": 72.2, "cuda_int8_graph": 70.2, "cuda_int8_nosplit_eager": 180.8, "cuda_int8_nosplit_graph": 179.9}
+{"batch": 32, "ctx": 4096, "triton_int8_eager": 175.4, "triton_int8_graph": 173.7, "cuda_int8_eager": 668.3, "cuda_int8_graph": 666.9, "cuda_int8_nosplit_eager": 217.8, "cuda_int8_nosplit_graph": 216.8}
+{"batch": 64, "ctx": 4096, "triton_int8_eager": 245.4, "triton_int8_graph": 250.3, "cuda_int8_eager": 366.2, "cuda_int8_graph": 356.6, "cuda_int8_nosplit_eager": 357.9, "cuda_int8_nosplit_graph": 356.8}
+
+[modal_app] exit=0 wall=73s

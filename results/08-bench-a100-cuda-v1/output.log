@@ -1,0 +1,51 @@
+{"batch": 1, "ctx": 1024, "fa2_bf16": 29.9, "vllm_triton_bf16": 23.7, "vllm_int8_pth": 25.5, "ours_bf16": 19.0, "ours_int8_deq": 19.6, "ours_int8": 18.8, "ours_int8_g32": 18.0, "cuda_int8": 80.0, "kv_bytes_bf16": 2097152, "kv_bytes_int8": 1048576}
+{"batch": 1, "ctx": 4096, "fa2_bf16": 43.6, "vllm_triton_bf16": 41.9, "vllm_int8_pth": 42.1, "ours_bf16": 25.8, "ours_int8_deq": 28.0, "ours_int8": 26.6, "ours_int8_g32": 27.1, "cuda_int8": 76.6, "kv_bytes_bf16": 8388608, "kv_bytes_int8": 4194304}
+{"batch": 1, "ctx": 16384, "fa2_bf16": 64.6, "vllm_triton_bf16": 118.2, "vllm_int8_pth": 125.2, "ours_bf16": 60.7, "ours_int8_deq": 65.9, "ours_int8": 60.9, "ours_int8_g32": 62.9, "cuda_int8": 131.3, "kv_bytes_bf16": 33554432, "kv_bytes_int8": 16777216}
+{"batch": 1, "ctx": 32768, "fa2_bf16": 90.0, "vllm_triton_bf16": 214.7, "vllm_int8_pth": 236.6, "ours_bf16": 99.9, "ours_int8_deq": 117.6, "ours_int8": 108.1, "ours_int8_g32": 112.1, "cuda_int8": 204.8, "kv_bytes_bf16": 67108864, "kv_bytes_int8": 33554432}
+{"batch": 8, "ctx": 1024, "fa2_bf16": 48.3, "vllm_triton_bf16": 34.3, "vllm_int8_pth": 37.4, "ours_bf16": 39.1, "ours_int8_deq": 38.6, "ours_int8": 35.6, "ours_int8_g32": 34.4, "cuda_int8": 136.1, "kv_bytes_bf16": 16777216, "kv_bytes_int8": 8388608}
+{"batch": 8, "ctx": 4096, "fa2_bf16": 89.8, "vllm_triton_bf16": 76.7, "vllm_int8_pth": 91.4, "ours_bf16": 73.8, "ours_int8_deq": 68.5, "ours_int8": 58.4, "ours_int8_g32": 61.5, "cuda_int8": 160.9, "kv_bytes_bf16": 67108864, "kv_bytes_int8": 33554432}
+{"batch": 8, "ctx": 16384, "fa2_bf16": 212.9, "vllm_triton_bf16": 201.0, "vllm_int8_pth": 288.6, "ours_bf16": 194.7, "ours_int8_deq": 193.2, "ours_int8": 150.1, "ours_int8_g32": 159.4, "cuda_int8": 290.1, "kv_bytes_bf16": 268435456, "kv_bytes_int8": 134217728}
+{"batch": 8, "ctx": 32768, "fa2_bf16": 372.8, "vllm_triton_bf16": 363.4, "vllm_int8_pth": 529.5, "ours_bf16": 352.5, "ours_int8_deq": 356.3, "ours_int8": 262.7, "ours_int8_g32": 284.3, "cuda_int8": 448.0, "kv_bytes_bf16": 536870912, "kv_bytes_int8": 268435456}
+{"batch": 32, "ctx": 1024, "fa2_bf16": 92.4, "vllm_triton_bf16": 88.5, "vllm_int8_pth": 90.9, "ours_bf16": 82.5, "ours_int8_deq": 90.1, "ours_int8": 78.1, "ours_int8_g32": 79.8, "cuda_int8": 417.3, "kv_bytes_bf16": 67108864, "kv_bytes_int8": 33554432}
+{"batch": 32, "ctx": 4096, "fa2_bf16": 216.2, "vllm_triton_bf16": 222.9, "vllm_int8_pth": 238.4, "ours_bf16": 210.5, "ours_int8_deq": 200.8, "ours_int8": 160.3, "ours_int8_g32": 168.3, "cuda_int8": 508.7, "kv_bytes_bf16": 268435456, "kv_bytes_int8": 134217728}
+{"batch": 32, "ctx": 16384, "fa2_bf16": 693.7, "vllm_triton_bf16": 714.6, "vllm_int8_pth": 809.9, "ours_bf16": 681.7, "ours_int8_deq": 630.0, "ours_int8": 464.0, "ours_int8_g32": 499.3, "cuda_int8": 941.6, "kv_bytes_bf16": 1073741824, "kv_bytes_int8": 536870912}
+{"batch": 32, "ctx": 32768, "fa2_bf16": 1325.2, "vllm_triton_bf16": 1366.4, "vllm_int8_pth": 1551.3, "ours_bf16": 1306.3, "ours_int8_deq": 1192.8, "ours_int8": 859.1, "ours_int8_g32": 929.6, "cuda_int8": 1514.2, "kv_bytes_bf16": 2147483648, "kv_bytes_int8": 1073741824}
+{"batch": 64, "ctx": 1024, "fa2_bf16": 151.3, "vllm_triton_bf16": 115.8, "vllm_int8_pth": 98.4, "ours_bf16": 112.0, "ours_int8_deq": 135.1, "ours_int8": 86.0, "ours_int8_g32": 94.0, "cuda_int8": 160.6, "kv_bytes_bf16": 134217728, "kv_bytes_int8": 67108864}
+{"batch": 64, "ctx": 4096, "fa2_bf16": 464.2, "vllm_triton_bf16": 371.6, "vllm_int8_pth": 341.8, "ours_bf16": 345.5, "ours_int8_deq": 444.1, "ours_int8": 255.2, "ours_int8_g32": 257.7, "cuda_int8": 405.3, "kv_bytes_bf16": 536870912, "kv_bytes_int8": 268435456}
+{"batch": 64, "ctx": 16384, "fa2_bf16": 1764.3, "vllm_triton_bf16": 1381.7, "vllm_int8_pth": 1315.5, "ours_bf16": 1288.2, "ours_int8_deq": 1821.0, "ours_int8": 948.0, "ours_int8_g32": 952.9, "cuda_int8": 1427.7, "kv_bytes_bf16": 2147483648, "kv_bytes_int8": 1073741824}
+{"batch": 64, "ctx": 32768, "fa2_bf16": 3480.7, "vllm_triton_bf16": 2727.2, "vllm_int8_pth": 2611.0, "ours_bf16": 2542.6, "ours_int8_deq": 3584.7, "ours_int8": 1875.8, "ours_int8_g32": 1880.8, "cuda_int8": 2782.9, "kv_bytes_bf16": 4294967296, "kv_bytes_int8": 2147483648}
+{"batch": 128, "ctx": 1024, "fa2_bf16": 220.7, "vllm_triton_bf16": 220.2, "vllm_int8_pth": 178.2, "ours_bf16": 187.6, "ours_int8_deq": 188.2, "ours_int8": 144.9, "ours_int8_g32": 146.8, "cuda_int8": 280.5, "kv_bytes_bf16": 268435456, "kv_bytes_int8": 134217728}
+{"batch": 128, "ctx": 4096, "fa2_bf16": 738.2, "vllm_triton_bf16": 779.3, "vllm_int8_pth": 607.1, "ours_bf16": 660.9, "ours_int8_deq": 678.0, "ours_int8": 488.6, "ours_int8_g32": 492.0, "cuda_int8": 768.5, "kv_bytes_bf16": 1073741824, "kv_bytes_int8": 536870912}
+{"batch": 128, "ctx": 16384, "fa2_bf16": 2808.1, "vllm_triton_bf16": 2930.2, "vllm_int8_pth": 2371.9, "ours_bf16": 2550.7, "ours_int8_deq": 2624.0, "ours_int8": 1859.2, "ours_int8_g32": 1854.3, "cuda_int8": 2660.9, "kv_bytes_bf16": 4294967296, "kv_bytes_int8": 2147483648}
+{"batch": 128, "ctx": 32768, "fa2_bf16": 5579.3, "vllm_triton_bf16": 5822.5, "vllm_int8_pth": 4713.0, "ours_bf16": 5039.2, "ours_int8_deq": 5226.3, "ours_int8": 3701.1, "ours_int8_g32": 3623.4, "cuda_int8": 5213.3, "kv_bytes_bf16": 8589934592, "kv_bytes_int8": 4294967296}
+{"batch": 256, "ctx": 1024, "fa2_bf16": 372.7, "vllm_triton_bf16": 358.2, "vllm_int8_pth": 323.6, "ours_bf16": 359.0, "ours_int8_deq": 324.6, "ours_int8": 258.7, "ours_int8_g32": 262.0, "cuda_int8": 524.6, "kv_bytes_bf16": 536870912, "kv_bytes_int8": 268435456}
+{"batch": 256, "ctx": 4096, "fa2_bf16": 1308.8, "vllm_triton_bf16": 1326.6, "vllm_int8_pth": 1193.0, "ours_bf16": 1342.7, "ours_int8_deq": 1193.6, "ours_int8": 913.8, "ours_int8_g32": 922.2, "cuda_int8": 1473.9, "kv_bytes_bf16": 2147483648, "kv_bytes_int8": 1073741824}
+{"batch": 256, "ctx": 16384, "fa2_bf16": 5053.7, "vllm_triton_bf16": 5165.7, "vllm_int8_pth": 4661.1, "ours_bf16": 5256.3, "ours_int8_deq": 4664.6, "ours_int8": 3534.5, "ours_int8_g32": 3484.3, "cuda_int8": 5247.9, "kv_bytes_bf16": 8589934592, "kv_bytes_int8": 4294967296}
+{"tokens": 64, "vllm_bf16_write": 8.264861660651288, "vllm_int8_pth_write": 8.806400187313557, "ours_bf16_write": 8.351815168194918, "ours_int8_fused": 8.625532693133271, "torch_int8_two_pass": 123.64403841203949, "cuda_int8_fused": 8.772887445308946}
+{"tokens": 256, "vllm_bf16_write": 8.953483704138886, "vllm_int8_pth_write": 9.648355634676085, "ours_bf16_write": 7.91053889760542, "ours_int8_fused": 9.485963655805046, "torch_int8_two_pass": 132.54079974722117, "cuda_int8_fused": 10.189269758214099}
+{"tokens": 2048, "vllm_bf16_write": 16.106140282026278, "vllm_int8_pth_write": 24.300865083932877, "ours_bf16_write": 12.785427160985217, "ours_int8_fused": 14.070375906513599, "torch_int8_two_pass": 136.8847081279443, "cuda_int8_fused": 16.306716913603385}
+{"tokens": 8192, "vllm_bf16_write": 42.44287805446726, "vllm_int8_pth_write": 70.16489934176207, "ours_bf16_write": 31.01687377882229, "ours_int8_fused": 29.180819932255687, "torch_int8_two_pass": 313.68724027825465, "cuda_int8_fused": 33.27357331018069}
+{"batch": 32, "ctx": 4096, "quant_q_kernel": 8.164483707955897, "cuda_quant_q": 9.04999639438584, "attn_fused_q": 160.33448001546583, "attn_prequant_q": 160.7718625158634}
+{"batch": 128, "ctx": 4096, "quant_q_kernel": 10.490352767245733, "cuda_quant_q": 10.817882289890857, "attn_fused_q": 488.0239968188107, "attn_prequant_q": 488.24642211433473}
+{"batch": 256, "ctx": 1024, "quant_q_kernel": 13.17868674138807, "cuda_quant_q": 14.10440366506298, "attn_fused_q": 257.9476104355326, "attn_prequant_q": 262.9359596468545}
+++ head -1
+++ ls /opt/nvidia/nsight-compute/2025.3.1/ncu /usr/local/cuda/bin/ncu
++ NCU=/opt/nvidia/nsight-compute/2025.3.1/ncu
++ cd scripts
++ /opt/nvidia/nsight-compute/2025.3.1/ncu --clock-control none --profile-from-start off --target-processes all --section SpeedOfLight --section MemoryWorkloadAnalysis --section ComputeWorkloadAnalysis --section Occupancy --section LaunchStats --section WarpStateStats --metrics dram__bytes_read.sum,dram__bytes_read.sum.per_second,sm__pipe_tensor_op_hmma_cycles_active.avg.pct_of_peak_sustained_active,sm__inst_executed_pipe_tensor_op_imma.sum,sm__inst_executed_pipe_tensor_op_hmma.sum -o /tmp/out/decode -f python3 ncu_decode.py
+==WARNING== Note: Running with unmodified GPU clocks. If not controlled otherwise, profiling results may be inconsistent.
+==PROF== Connected to process 108 (/usr/bin/python3.12)
+==PROF== Profiling "elementwise_kernel" - 0: 0%....50%....100% - 15 passes
+==PROF== Profiling "flash_fwd_splitkv_kernel" - 1: 0%....50%....100% - 15 passes
+==PROF== Profiling "elementwise_kernel" - 2: 0%....50%....100% - 15 passes
+==PROF== Profiling "elementwise_kernel" - 3: 0%....50%....100% - 15 passes
+==PROF== Profiling "_attn_kernel" - 4: 0%....50%....100% - 15 passes
+==PROF== Profiling "_attn_kernel" - 5: 0%....50%....100% - 15 passes
+==PROF== Profiling "int8_decode_attn_kernel" - 6: 0%....50%....100% - 15 passes
+kv bytes bf16 536870912 int8 268435456
+==PROF== Disconnected from process 108
+==PROF== Report: /tmp/out/decode.ncu-rep
++ /opt/nvidia/nsight-compute/2025.3.1/ncu --import /tmp/out/decode.ncu-rep --csv --page raw
++ /opt/nvidia/nsight-compute/2025.3.1/ncu --import /tmp/out/decode.ncu-rep --page details
+
+[modal_app] exit=0 wall=161s

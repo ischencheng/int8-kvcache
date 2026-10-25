@@ -1,0 +1,12 @@
+.......................                                                  [100%]
+23 passed in 55.01s
+{"batch": 1, "ctx": 4096, "fa2_bf16": 36.8, "triton_bf16": 24.0, "triton_int8": 24.5, "cuda_int8": 24.7, "GBps_cuda": 169.9, "GBps_triton_int8": 171.3}
+{"batch": 8, "ctx": 16384, "fa2_bf16": 220.3, "triton_bf16": 202.2, "triton_int8": 152.2, "cuda_int8": 136.1, "GBps_cuda": 986.5, "GBps_triton_int8": 881.9}
+{"batch": 32, "ctx": 4096, "fa2_bf16": 223.5, "triton_bf16": 217.8, "triton_int8": 162.1, "cuda_int8": 153.9, "GBps_cuda": 872.0, "GBps_triton_int8": 828.1}
+{"batch": 32, "ctx": 32768, "fa2_bf16": 1402.1, "triton_bf16": 1369.8, "triton_int8": 892.3, "cuda_int8": 742.7, "GBps_cuda": 1445.8, "GBps_triton_int8": 1203.3}
+{"batch": 64, "ctx": 4096, "fa2_bf16": 485.3, "triton_bf16": 362.3, "triton_int8": 256.4, "cuda_int8": 245.5, "GBps_cuda": 1093.3, "GBps_triton_int8": 1046.8}
+{"batch": 64, "ctx": 16384, "fa2_bf16": 1837.1, "triton_bf16": 1355.7, "triton_int8": 958.7, "cuda_int8": 887.2, "GBps_cuda": 1210.3, "GBps_triton_int8": 1120.0}
+{"batch": 128, "ctx": 4096, "fa2_bf16": 777.9, "triton_bf16": 689.9, "triton_int8": 492.8, "cuda_int8": 386.0, "GBps_cuda": 1390.7, "GBps_triton_int8": 1089.4}
+{"batch": 256, "ctx": 1024, "fa2_bf16": 389.1, "triton_bf16": 373.6, "triton_int8": 262.0, "cuda_int8": 208.4, "GBps_cuda": 1288.3, "GBps_triton_int8": 1024.7}
+
+[modal_app] exit=0 wall=76s

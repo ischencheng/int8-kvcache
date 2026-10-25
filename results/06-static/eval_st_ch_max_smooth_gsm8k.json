@@ -1,0 +1,28 @@
+{
+ "label": "st_ch_max_smooth",
+ "task": "gsm8k",
+ "model": "Qwen/Qwen2.5-7B-Instruct",
+ "n_prompts": 1319,
+ "n_samples": 1319,
+ "accuracy": 0.9188779378316907,
+ "wall_s": 50.750924587249756,
+ "gen_tokens": 385046,
+ "env": [
+  "KVQ_SCALES=/cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors",
+  "KVQ_CFG=B_channel_smooth",
+  "KVQ_KERNEL=triton"
+ ],
+ "llm": {
+  "max_model_len": 4096,
+  "gpu_memory_utilization": 0.85,
+  "seed": 0,
+  "enforce_eager": true,
+  "kv_cache_dtype": "int8_static",
+  "attention_config": {
+   "backend": "CUSTOM"
+  }
+ },
+ "spec_decode": {
+  "error": "AssertionError('Stat logging disabled')"
+ }
+}

@@ -1,0 +1,20 @@
+{
+ "label": "st_ch_smooth_A",
+ "env": [
+  "KVQ_SCALES=/cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors",
+  "KVQ_CFG=A_channel_smooth",
+  "KVQ_KERNEL=triton"
+ ],
+ "nll": {
+  "gsm8k": 0.07094497879853379,
+  "aime24": 0.06367217265757191
+ },
+ "tokens": {
+  "gsm8k": 57864,
+  "aime24": 31140
+ },
+ "ppl": {
+  "gsm8k": 1.0735221577644525,
+  "aime24": 1.0657429618042604
+ }
+}

@@ -280,3 +280,32 @@ Triton 版之外，三个 kernel 都用 CUDA 重写了一遍（`kvq/cuda/int8_kv
    只是在 1319 题上恰好翻对的比翻错的多。同一个配置的翻转有 30–60 题，±1 个点基本是噪声；排序以 ΔNLL 为准。
 2. PyTorch 版动态量化很慢（每步对整段上下文 gather + 量化，一个配置 GSM8K 要 12 分钟），8 个配置串行会超过 3 小时的
    函数时限。改成先单独生成 bf16 参考答案存进 Volume，再 3 台 A100 并行。第一次串行跑了 50 分钟才发现，停掉重来浪费了约 $2。
+
+## Step 7c 用 ncu 把 CUDA kernel 调到超过 Triton（阶段七性能）
+
+第一版 CUDA kernel 正确但慢：A100 上 batch 32 × ctx 32k 要 1514 µs（Triton int8 892，FA2 1402），
+小 batch 还有约 60 µs 的固定开销。按"先保精度再做性能"的顺序，用 ncu 一轮一轮定位：
+
+| 版本 | 改了什么 | b32×32k | b64×4k | b32×4k（16 段切分） | b1×4k |
+|---|---|---|---|---|---|
+| v1 | 逐字节写 V^T 到 smem，读完再算，smem 原子加合并 | 1514 | 405 | 417 | 80 |
+| v2 | cp.async 两级流水；K 行置换 + 寄存器内 4×4 字节转置，去掉 V^T 缓冲 | 1173 | 372 | 560 | 64 |
+| v3 | 合并去掉 smem 原子加；block_size 用移位，每个 chunk 只查 2 次页表并提前一轮取 | **743** | **246** | **154** | **24.7** |
+| Triton int8 | （对照） | 892 | 256 | 162 | 24.5 |
+| FA2 bf16 | （对照） | 1402 | 485 | 224 | 37 |
+
+每一步的依据（`results/08-ncu-cuda-hot/`、`results/08-graph-vs-eager/`）：
+1. v1 的 ncu：每个 scheduler 只有 3 个 warp，每发射一条指令平均等 9.4 周期，43% 在等 L1TEX（全局读 + local memory），
+   DRAM 只有 34%。原因：每个 chunk 读完才开始算（访存延迟完全暴露）；V 转置是每 lane 每 chunk 128 次逐字节 smem 写；
+   局部数组做 `reinterpret_cast` 被放进 local memory。→ v2：cp.async 预取下一个 chunk；
+   把置换挪到 K 的读取行号上（不花指令），V 保持原顺序，每个线程用 4 条 32 位 LDS + 8 条 `__byte_perm` 拿到 4 个 n-tile 的 B fragment，
+   输出通道随之置换（`chan_of`），合并时放回原位。
+2. v2 大 batch 变快了，但切分模式反而更慢。先用 CUDA graph 回放排除 host 开销（graph 和 eager 一样慢），
+   再用 ncu 源码级采样：**75% 的 stall 在合并阶段的 smem `atomicAdd(float)`**。sm_80 上 shared memory 的 float 原子加
+   编译成 `ATOMS.CAS` 循环（FADD + CAS + ISETP + BRA），4 个 warp 抢同一批地址；切分模式每个 block 的主循环很短，合并就成了大头。
+   不切分时 stall 则主要是整数指令（SHF/IMAD/IADD3）：每个 token 都在用运行时 block_size 做除法取模和 64 位乘法。
+   → v3：每个 warp 把自己的部分和写进独立的 smem 区（行距 129 个 float，32 个 lane 落在不同 bank），收尾时 4 份相加；
+   block_size 只支持 2 的幂、用移位，一个 32-token chunk 最多跨 2 页，只查 2 次 block_table，并且提前一轮把下一批页号读进寄存器。
+
+v3 在 A100 上的有效带宽 1.45 TB/s（峰值约 2.0 TB/s），比 FA2 bf16 快 1.9–2.0 倍，比 Triton int8 快 0–24%。
+23 个 CUDA 测试在每一版都重新跑过。

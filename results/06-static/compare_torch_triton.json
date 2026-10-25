@@ -1,0 +1,9 @@
+{
+ "n": 250,
+ "acc_a": 0.932,
+ "acc_b": 0.928,
+ "identical_outputs": 0.372,
+ "gained": 2,
+ "lost": 3,
+ "mean_common_prefix_frac": 0.582137982672096
+}

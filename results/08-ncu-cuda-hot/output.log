@@ -1,0 +1,17 @@
+++ ls /opt/nvidia/nsight-compute/2025.3.1/ncu
+++ head -1
++ NCU=/opt/nvidia/nsight-compute/2025.3.1/ncu
++ cd scripts
++ cat
++ /opt/nvidia/nsight-compute/2025.3.1/ncu --clock-control none --profile-from-start off --set full --import-source yes -o /tmp/out/cuda_hot -f python3 /tmp/ncu_case.py
+==WARNING== Note: Running with unmodified GPU clocks. If not controlled otherwise, profiling results may be inconsistent.
+==PROF== Connected to process 23 (/usr/bin/python3.12)
+==PROF== Profiling "int8_decode_attn_kernel" - 0: 0%....50%....100% - 51 passes
+==PROF== Profiling "split_reduce_kernel" - 1: 0%....50%....100% - 51 passes
+==PROF== Profiling "int8_decode_attn_kernel" - 2: 0%....50%....100% - 51 passes
+==PROF== Disconnected from process 23
+==PROF== Report: /tmp/out/cuda_hot.ncu-rep
++ /opt/nvidia/nsight-compute/2025.3.1/ncu --import /tmp/out/cuda_hot.ncu-rep --page details
++ /opt/nvidia/nsight-compute/2025.3.1/ncu --import /tmp/out/cuda_hot.ncu-rep --page source --csv --print-source sass
+
+[modal_app] exit=0 wall=121s

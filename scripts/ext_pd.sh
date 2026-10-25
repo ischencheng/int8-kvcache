@@ -7,7 +7,7 @@ S=/cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors
 export KVQ_CFG=B_channel_smooth KVQ_KERNEL=triton KVQ_SCALES=$S
 KVT='{"kv_connector":"NixlConnector","kv_role":"kv_both"}'
 INT8_ARGS='--kv-cache-dtype int8_static --attention-backend CUSTOM'
-COMMON="--max-model-len 8192 --gpu-memory-utilization 0.85 --disable-log-requests"
+COMMON="--max-model-len 8192 --gpu-memory-utilization 0.85"
 
 wait_up() { for i in $(seq 1 180); do curl -sf localhost:$1/v1/models >/dev/null && return 0; sleep 2; done; return 1; }
 bench() {  # label url concurrency

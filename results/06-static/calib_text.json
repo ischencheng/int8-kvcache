@@ -1,0 +1,11 @@
+{
+ "tokens": 359820,
+ "variants": [
+  "text_per_channel_max.safetensors",
+  "text_per_channel_max_smooth.safetensors",
+  "text_per_channel_q0.999_smooth.safetensors",
+  "text_per_channel_q0.9999_smooth.safetensors",
+  "text_per_head_max.safetensors",
+  "text_per_head_max_smooth.safetensors"
+ ]
+}

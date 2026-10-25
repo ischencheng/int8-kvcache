@@ -22,7 +22,6 @@ constexpr int D = 128;        // head_dim this kernel is written for
 constexpr int CHUNK = 32;     // tokens a warp processes per iteration (= k of the PV mma)
 constexpr int NWARPS = 4;
 constexpr int KROW = D + 16;  // smem K row stride in bytes: 144 -> the B-fragment loads are conflict free
-constexpr int VROW = CHUNK + 4;  // smem V^T row stride in bytes (36)
 constexpr int QROW = D + 16;
 
 __device__ __forceinline__ void mma_s8(int (&c)[4], const uint32_t (&a)[4], uint32_t b0, uint32_t b1) {
@@ -110,20 +109,42 @@ __global__ void quant_q_kernel(const __nv_bfloat16* __restrict__ q, int8_t* __re
 // ------------------------------------------------------------------------------------------
 // INT8 decode attention. Grid (num_seqs, num_kv_heads, num_splits), 4 warps.
 // Rows of the m16 tile = the G q heads of this kv head (G <= 16; rows >= G are zero and unused).
+//
+// Data movement (v2, after ncu showed exposed load latency and an instruction-heavy V transpose):
+//  * each warp streams its own 32-token chunks with cp.async into a 2-stage smem ring, so the next
+//    chunk's K/V are in flight while the current one is computed;
+//  * no V^T buffer: the token permutation that lets P feed the PV A fragment straight from the QK
+//    accumulator is applied when reading K rows (free), V keeps natural token order, and each thread
+//    builds its PV B fragments with 4 x LDS.32 + a 4x4 byte transpose (__byte_perm). The PV output
+//    columns come out channel-permuted (chan_of) and are put back in place in the combine step.
 // ------------------------------------------------------------------------------------------
-struct SmemLayout {
-  int8_t q[16 * QROW];
-  float q_scale[16];
-  float m[NWARPS][16];
-  float l[NWARPS][16];
-  union {
-    struct {
-      int8_t k[CHUNK * KROW];
-      int8_t vt[D * VROW];
-    } w[NWARPS];
-    float acc[16][D];  // reused for the cross-warp combine after the main loop
-  } u;
-};
+constexpr int STAGE_BYTES = CHUNK * KROW;  // one K or V chunk in smem (rows padded to 144 B)
+constexpr int ACC_ROW = D + 1;             // combine buffer row stride in floats
+
+__device__ __forceinline__ float row_sum(const float* s_acc, int row, int d) {
+  float x = 0.f;
+#pragma unroll
+  for (int w = 0; w < NWARPS; ++w) x += s_acc[(w * 16 + row) * ACC_ROW + d];
+  return x;
+}
+
+__device__ __forceinline__ void cp_async16(void* smem, const void* gmem, bool valid) {
+  const unsigned s = static_cast<unsigned>(__cvta_generic_to_shared(smem));
+  const int n = valid ? 16 : 0;  // src-size 0 -> zero fill
+  asm volatile("cp.async.cg.shared.global [%0], [%1], 16, %2;\n" ::"r"(s), "l"(gmem), "r"(n));
+}
+__device__ __forceinline__ void cp_async_commit() { asm volatile("cp.async.commit_group;\n" ::); }
+template <int N>
+__device__ __forceinline__ void cp_async_wait() {
+  asm volatile("cp.async.wait_group %0;\n" ::"n"(N));
+}
+
+// PV n-tile j, column n -> V channel: thread column n reads 4 consecutive channels for tiles 4q..4q+3.
+__device__ __forceinline__ int chan_of(int j, int n) { return 32 * (j >> 2) + 4 * n + (j & 3); }
+
+__device__ __forceinline__ uint32_t pack4(int a, int b, int c, int d) {
+  return (a & 0xff) | ((b & 0xff) << 8) | ((c & 0xff) << 16) | (static_cast<uint32_t>(d & 0xff) << 24);
+}
 
 template <bool PC_K, bool PC_V>
 __global__ void __launch_bounds__(NWARPS * 32)
@@ -135,13 +156,60 @@ __global__ void __launch_bounds__(NWARPS * 32)
                             const float* __restrict__ ks, const float* __restrict__ vs, float sm_scale_log2,
                             int64_t q_st, int64_t q_sh, int64_t o_st, int64_t o_sh, int64_t k_sb, int64_t k_sn,
                             int64_t k_sh, int64_t v_sb, int64_t v_sn, int64_t v_sh, int bt_stride, int block_size,
-                            int G, int64_t seg_st, int64_t seg_sh) {
-  __shared__ SmemLayout sm;
+                            int lbs, int G, int64_t seg_st, int64_t seg_sh) {
+  extern __shared__ __align__(16) char smem_raw[];
+  int8_t* s_q = reinterpret_cast<int8_t*>(smem_raw);                 // 16 x QROW
+  float* s_qscale = reinterpret_cast<float*>(smem_raw + 16 * QROW);  // 16
+  float* s_m = s_qscale + 16;                                        // NWARPS x 16
+  float* s_l = s_m + NWARPS * 16;                                    // NWARPS x 16
+  char* ring = smem_raw + 16 * QROW + (16 + 2 * NWARPS * 16) * 4;    // per warp: 2 stages x (K, V)
+  float* s_acc = reinterpret_cast<float*>(ring);                     // NWARPS x 16 x ACC_ROW, after the loop
+
   const int seq = blockIdx.x, kvh = blockIdx.y, split = blockIdx.z, num_splits = gridDim.z;
   const int warp = threadIdx.x >> 5, lane = threadIdx.x & 31, g = lane >> 2, t = lane & 3;
   const int tok = cu_q[seq];
   if (cu_q[seq + 1] - tok != 1) return;  // decode rows only (padding requests have 0 tokens)
   const int L = seq_lens[seq];
+  const int nchunks = (L + CHUNK - 1) / CHUNK;
+  const int per_split = (nchunks + num_splits - 1) / num_splits;
+  const int c_begin = split * per_split, c_end = min(nchunks, c_begin + per_split);
+  const int* bt = block_table + static_cast<int64_t>(seq) * bt_stride;
+  int8_t* wring = reinterpret_cast<int8_t*>(ring) + warp * 4 * STAGE_BYTES;
+
+  // A 32-token chunk spans at most two pages (block_size is a power of two >= 16): look the page ids
+  // up once per chunk, one round ahead, instead of a divide/modulo per token.
+  auto load_pages = [&](int cc, int& pa0, int& pa1) {
+    if (cc < c_end) {
+      const int n0 = cc * CHUNK;
+      pa0 = bt[n0 >> lbs];
+      pa1 = (n0 + 16 < L) ? bt[(n0 + 16) >> lbs] : pa0;
+    }
+  };
+  // cp.async copies of chunk c into stage st (8 lanes per token row, 4 rows per step, coalesced).
+  auto issue = [&](int c, int st, int pa0, int pa1) {
+    int8_t* sk = wring + (2 * st) * STAGE_BYTES;
+    int8_t* sv = sk + STAGE_BYTES;
+    const int8_t* kb0 = kc + static_cast<int64_t>(pa0) * k_sb + kvh * k_sh + (lane & 7) * 16;
+    const int8_t* kb1 = kc + static_cast<int64_t>(pa1) * k_sb + kvh * k_sh + (lane & 7) * 16;
+    const int8_t* vb0 = vc + static_cast<int64_t>(pa0) * v_sb + kvh * v_sh + (lane & 7) * 16;
+    const int8_t* vb1 = vc + static_cast<int64_t>(pa1) * v_sb + kvh * v_sh + (lane & 7) * 16;
+#pragma unroll
+    for (int i = 0; i < 8; ++i) {
+      const int tau = (lane >> 3) + 4 * i;
+      const int n = c * CHUNK + tau;
+      const int off = n & (block_size - 1);
+      const bool ok = n < L;
+      const bool second = tau >= 16;
+      cp_async16(sk + tau * KROW + (lane & 7) * 16, (second ? kb1 : kb0) + off * k_sn, ok);
+      cp_async16(sv + tau * KROW + (lane & 7) * 16, (second ? vb1 : vb0) + off * v_sn, ok);
+    }
+    cp_async_commit();
+  };
+  int c = c_begin + warp;
+  int pc0 = 0, pc1 = 0, pn0 = 0, pn1 = 0;
+  load_pages(c, pc0, pc1);
+  if (c < c_end) issue(c, 0, pc0, pc1);  // the first chunk is already in flight during the q prologue
+  load_pages(c + NWARPS, pn0, pn1);
 
   // ---- prologue: fold s_k into q, quantize per row (8 threads per row, 16 channels each) ----
   {
@@ -159,74 +227,64 @@ __global__ void __launch_bounds__(NWARPS * 32)
 #pragma unroll
     for (int o = 1; o < 8; o <<= 1) amax = fmaxf(amax, __shfl_xor_sync(0xffffffff, amax, o));
     const float s = fmaxf(amax / 127.f, 1e-8f);
-    alignas(16) int8_t qq[16];
+    uint32_t w[4];
 #pragma unroll
-    for (int e = 0; e < 16; ++e) qq[e] = sat_i8(__fdiv_rn(x[e], s));
-    *reinterpret_cast<uint4*>(&sm.q[row * QROW + d0]) = *reinterpret_cast<uint4*>(qq);
-    if (part == 0) sm.q_scale[row] = s * (PC_K ? 1.f : ks[kvh]) * sm_scale_log2;
+    for (int k = 0; k < 4; ++k)
+      w[k] = pack4(sat_i8(__fdiv_rn(x[4 * k], s)), sat_i8(__fdiv_rn(x[4 * k + 1], s)),
+                   sat_i8(__fdiv_rn(x[4 * k + 2], s)), sat_i8(__fdiv_rn(x[4 * k + 3], s)));
+    *reinterpret_cast<uint4*>(&s_q[row * QROW + d0]) = make_uint4(w[0], w[1], w[2], w[3]);
+    if (part == 0) s_qscale[row] = s * (PC_K ? 1.f : ks[kvh]) * sm_scale_log2;
   }
   __syncthreads();
   uint32_t a[4][4];  // q A fragments for the 4 k-steps (32 channels each)
 #pragma unroll
   for (int s = 0; s < 4; ++s) {
-    a[s][0] = *reinterpret_cast<const uint32_t*>(&sm.q[g * QROW + 32 * s + 4 * t]);
-    a[s][1] = *reinterpret_cast<const uint32_t*>(&sm.q[(g + 8) * QROW + 32 * s + 4 * t]);
-    a[s][2] = *reinterpret_cast<const uint32_t*>(&sm.q[g * QROW + 32 * s + 16 + 4 * t]);
-    a[s][3] = *reinterpret_cast<const uint32_t*>(&sm.q[(g + 8) * QROW + 32 * s + 16 + 4 * t]);
+    a[s][0] = *reinterpret_cast<const uint32_t*>(&s_q[g * QROW + 32 * s + 4 * t]);
+    a[s][1] = *reinterpret_cast<const uint32_t*>(&s_q[(g + 8) * QROW + 32 * s + 4 * t]);
+    a[s][2] = *reinterpret_cast<const uint32_t*>(&s_q[g * QROW + 32 * s + 16 + 4 * t]);
+    a[s][3] = *reinterpret_cast<const uint32_t*>(&s_q[(g + 8) * QROW + 32 * s + 16 + 4 * t]);
   }
-  const float rs0 = sm.q_scale[g], rs1 = sm.q_scale[g + 8];
+  const float rs0 = s_qscale[g], rs1 = s_qscale[g + 8];
+  int krow[4];  // K row read for QK n-tile j: the P-friendly token permutation
+#pragma unroll
+  for (int j = 0; j < 4; ++j) krow[j] = slot_of_token(8 * j + g);
 
-  // ---- this split's chunks; warp w takes chunks w, w + 4, ... ----
-  const int nchunks = (L + CHUNK - 1) / CHUNK;
-  const int per_split = (nchunks + num_splits - 1) / num_splits;
-  const int c_begin = split * per_split, c_end = min(nchunks, c_begin + per_split);
   float m0 = -1e30f, m1 = -1e30f, l0 = 0.f, l1 = 0.f;
   float acc[16][4];
 #pragma unroll
   for (int j = 0; j < 16; ++j) acc[j][0] = acc[j][1] = acc[j][2] = acc[j][3] = 0.f;
-  int8_t* sk = sm.u.w[warp].k;
-  int8_t* svt = sm.u.w[warp].vt;
-  const int* bt = block_table + static_cast<int64_t>(seq) * bt_stride;
 
-  for (int c = c_begin + warp; c < c_end; c += NWARPS) {
-    // Load the chunk: 8 lanes per token row (16 B each), 4 tokens per instruction -> coalesced.
-#pragma unroll
-    for (int i = 0; i < 8; ++i) {
-      const int tau = (lane >> 3) + 4 * i, part = lane & 7;
-      const int n = c * CHUNK + tau;
-      uint4 kr = make_uint4(0, 0, 0, 0), vr = make_uint4(0, 0, 0, 0);
-      if (n < L) {
-        const int64_t blk = bt[n / block_size];
-        const int off = n % block_size;
-        kr = *reinterpret_cast<const uint4*>(kc + blk * k_sb + off * k_sn + kvh * k_sh + part * 16);
-        vr = *reinterpret_cast<const uint4*>(vc + blk * v_sb + off * v_sn + kvh * v_sh + part * 16);
-      }
-      *reinterpret_cast<uint4*>(&sk[tau * KROW + part * 16]) = kr;
-      const int8_t* vb = reinterpret_cast<const int8_t*>(&vr);
-      const int col = slot_of_token(tau);
-#pragma unroll
-      for (int e = 0; e < 16; ++e) svt[(part * 16 + e) * VROW + col] = vb[e];
+  for (int st = 0; c < c_end; c += NWARPS, st ^= 1) {
+    if (c + NWARPS < c_end) {
+      issue(c + NWARPS, st ^ 1, pn0, pn1);
+      load_pages(c + 2 * NWARPS, pn0, pn1);
+      cp_async_wait<1>();
+    } else {
+      cp_async_wait<0>();
     }
     __syncwarp();
+    const int8_t* sk = wring + (2 * st) * STAGE_BYTES;
+    const int8_t* sv = sk + STAGE_BYTES;
 
-    // QK: 4 n-tiles of 8 tokens x 4 k-steps of 32 channels.
+    // QK: 4 n-tiles of 8 (permuted) tokens x 4 k-steps of 32 channels.
     int sacc[4][4];
 #pragma unroll
     for (int j = 0; j < 4; ++j) {
       sacc[j][0] = sacc[j][1] = sacc[j][2] = sacc[j][3] = 0;
-      const int8_t* krow = &sk[(8 * j + g) * KROW + 4 * t];
+      const int8_t* kr = &sk[krow[j] * KROW + 4 * t];
 #pragma unroll
       for (int s = 0; s < 4; ++s)
-        mma_s8(sacc[j], a[s], *reinterpret_cast<const uint32_t*>(krow + 32 * s),
-               *reinterpret_cast<const uint32_t*>(krow + 32 * s + 16));
+        mma_s8(sacc[j], a[s], *reinterpret_cast<const uint32_t*>(kr + 32 * s),
+               *reinterpret_cast<const uint32_t*>(kr + 32 * s + 16));
     }
-    // Scores of the 8 tokens this thread holds, rows g and g + 8 (log2 domain).
+    // Accumulator (j, e) is the score of token (j >= 2 ? 16 : 0) + 4t + 2(j & 1) + e.
     float s0[8], s1[8], mx0 = -INFINITY, mx1 = -INFINITY;
 #pragma unroll
     for (int j = 0; j < 4; ++j)
 #pragma unroll
       for (int e = 0; e < 2; ++e) {
-        const bool ok = c * CHUNK + 8 * j + 2 * t + e < L;
+        const int tau = (j >= 2 ? 16 : 0) + 4 * t + 2 * (j & 1) + e;
+        const bool ok = c * CHUNK + tau < L;
         s0[2 * j + e] = ok ? sacc[j][e] * rs0 : -INFINITY;
         s1[2 * j + e] = ok ? sacc[j][2 + e] * rs1 : -INFINITY;
         mx0 = fmaxf(mx0, s0[2 * j + e]);
@@ -238,27 +296,25 @@ __global__ void __launch_bounds__(NWARPS * 32)
     mx1 = fmaxf(mx1, __shfl_xor_sync(0xffffffff, mx1, 2));
     const float mn0 = fmaxf(m0, mx0), mn1 = fmaxf(m1, mx1);
     const float al0 = exp2f(m0 - mn0), al1 = exp2f(m1 - mn1);
-    float p0[8], p1[8], pm0 = 0.f, pm1 = 0.f;
+    float pm0 = 0.f, pm1 = 0.f;
 #pragma unroll
     for (int i = 0; i < 8; ++i) {
-      p0[i] = exp2f(s0[i] - mn0);
-      p1[i] = exp2f(s1[i] - mn1);
-      pm0 = fmaxf(pm0, p0[i]);
-      pm1 = fmaxf(pm1, p1[i]);
+      s0[i] = exp2f(s0[i] - mn0);  // now P
+      s1[i] = exp2f(s1[i] - mn1);
+      pm0 = fmaxf(pm0, s0[i]);
+      pm1 = fmaxf(pm1, s1[i]);
     }
     pm0 = fmaxf(pm0, __shfl_xor_sync(0xffffffff, pm0, 1));
     pm0 = fmaxf(pm0, __shfl_xor_sync(0xffffffff, pm0, 2));
     pm1 = fmaxf(pm1, __shfl_xor_sync(0xffffffff, pm1, 1));
     pm1 = fmaxf(pm1, __shfl_xor_sync(0xffffffff, pm1, 2));
     const float ps0 = fmaxf(pm0 / 127.f, 1e-30f), ps1 = fmaxf(pm1 / 127.f, 1e-30f);
-    // P -> int8 straight into the PV A fragment (slot order = token order of the QK accumulator).
-    alignas(16) int8_t q0[8], q1[8];
-    float qs0 = 0.f, qs1 = 0.f;
+    const float ri0 = 1.f / ps0, ri1 = 1.f / ps1;
+    int q0[8], q1[8], qs0 = 0, qs1 = 0;
 #pragma unroll
     for (int i = 0; i < 8; ++i) {
-      const int v0 = __float2int_rn(p0[i] / ps0), v1 = __float2int_rn(p1[i] / ps1);
-      q0[i] = static_cast<int8_t>(min(v0, 127));
-      q1[i] = static_cast<int8_t>(min(v1, 127));
+      q0[i] = min(__float2int_rn(s0[i] * ri0), 127);
+      q1[i] = min(__float2int_rn(s1[i] * ri1), 127);
       qs0 += q0[i];
       qs1 += q1[i];
     }
@@ -268,51 +324,71 @@ __global__ void __launch_bounds__(NWARPS * 32)
     qs1 += __shfl_xor_sync(0xffffffff, qs1, 2);
     l0 = l0 * al0 + qs0 * ps0;
     l1 = l1 * al1 + qs1 * ps1;
-    uint32_t pa[4];
-    pa[0] = *reinterpret_cast<const uint32_t*>(&q0[0]);  // row g,     slots 4t..4t+3   (tiles 0, 1)
-    pa[1] = *reinterpret_cast<const uint32_t*>(&q1[0]);  // row g + 8, slots 4t..4t+3
-    pa[2] = *reinterpret_cast<const uint32_t*>(&q0[4]);  // row g,     slots 16+4t..    (tiles 2, 3)
-    pa[3] = *reinterpret_cast<const uint32_t*>(&q1[4]);  // row g + 8, slots 16+4t..
-    // PV: 16 n-tiles of 8 channels, one k-step of 32 (permuted) tokens.
+    // A fragment slots 4t..4t+3 / 16+4t..16+4t+3 hold tokens 4t.. / 16+4t.. (natural order).
+    const uint32_t pa[4] = {pack4(q0[0], q0[1], q0[2], q0[3]), pack4(q1[0], q1[1], q1[2], q1[3]),
+                            pack4(q0[4], q0[5], q0[6], q0[7]), pack4(q1[4], q1[5], q1[6], q1[7])};
+    // PV: for each group of 4 n-tiles, read V[4 tokens][4 channels] twice (tokens 4t.. and 16+4t..)
+    // as 32-bit words and transpose the 4x4 bytes into the B fragments of those 4 tiles.
 #pragma unroll
-    for (int j = 0; j < 16; ++j) {
-      int pacc[4] = {0, 0, 0, 0};
-      const int8_t* vrow = &svt[(8 * j + g) * VROW + 4 * t];
-      mma_s8(pacc, pa, *reinterpret_cast<const uint32_t*>(vrow), *reinterpret_cast<const uint32_t*>(vrow + 16));
-      acc[j][0] = acc[j][0] * al0 + pacc[0] * ps0;
-      acc[j][1] = acc[j][1] * al0 + pacc[1] * ps0;
-      acc[j][2] = acc[j][2] * al1 + pacc[2] * ps1;
-      acc[j][3] = acc[j][3] * al1 + pacc[3] * ps1;
+    for (int qg = 0; qg < 4; ++qg) {
+      uint32_t b0[4], b1[4];
+#pragma unroll
+      for (int half = 0; half < 2; ++half) {
+        const int8_t* vp = &sv[(16 * half + 4 * t) * KROW + 32 * qg + 4 * g];
+        const uint32_t w0 = *reinterpret_cast<const uint32_t*>(vp);
+        const uint32_t w1 = *reinterpret_cast<const uint32_t*>(vp + KROW);
+        const uint32_t w2 = *reinterpret_cast<const uint32_t*>(vp + 2 * KROW);
+        const uint32_t w3 = *reinterpret_cast<const uint32_t*>(vp + 3 * KROW);
+        const uint32_t lo01 = __byte_perm(w0, w1, 0x5140), hi01 = __byte_perm(w0, w1, 0x7362);
+        const uint32_t lo23 = __byte_perm(w2, w3, 0x5140), hi23 = __byte_perm(w2, w3, 0x7362);
+        uint32_t* b = half ? b1 : b0;
+        b[0] = __byte_perm(lo01, lo23, 0x5410);
+        b[1] = __byte_perm(lo01, lo23, 0x7632);
+        b[2] = __byte_perm(hi01, hi23, 0x5410);
+        b[3] = __byte_perm(hi01, hi23, 0x7632);
+      }
+#pragma unroll
+      for (int cc = 0; cc < 4; ++cc) {
+        const int j = 4 * qg + cc;
+        int pacc[4] = {0, 0, 0, 0};
+        mma_s8(pacc, pa, b0[cc], b1[cc]);
+        acc[j][0] = acc[j][0] * al0 + pacc[0] * ps0;
+        acc[j][1] = acc[j][1] * al0 + pacc[1] * ps0;
+        acc[j][2] = acc[j][2] * al1 + pacc[2] * ps1;
+        acc[j][3] = acc[j][3] * al1 + pacc[3] * ps1;
+      }
     }
     m0 = mn0;
     m1 = mn1;
-    __syncwarp();
+    __syncwarp();  // this stage is refilled by the next iteration's issue
   }
 
   // ---- combine the 4 warps: weights exp2(m_w - M) ----
   if (t == 0) {
-    sm.m[warp][g] = m0;
-    sm.m[warp][g + 8] = m1;
-    sm.l[warp][g] = l0;
-    sm.l[warp][g + 8] = l1;
+    s_m[warp * 16 + g] = m0;
+    s_m[warp * 16 + g + 8] = m1;
+    s_l[warp * 16 + g] = l0;
+    s_l[warp * 16 + g + 8] = l1;
   }
-  __syncthreads();  // also ends every use of the per-warp K/V buffers
+  __syncthreads();  // also ends every use of the K/V ring, which s_acc reuses
   float M0 = -1e30f, M1 = -1e30f;
 #pragma unroll
   for (int w = 0; w < NWARPS; ++w) {
-    M0 = fmaxf(M0, sm.m[w][g]);
-    M1 = fmaxf(M1, sm.m[w][g + 8]);
+    M0 = fmaxf(M0, s_m[w * 16 + g]);
+    M1 = fmaxf(M1, s_m[w * 16 + g + 8]);
   }
   const float w0 = exp2f(m0 - M0), w1 = exp2f(m1 - M1);
-  for (int i = threadIdx.x; i < 16 * D; i += blockDim.x) (&sm.u.acc[0][0])[i] = 0.f;
-  __syncthreads();
+  // Each warp writes its rescaled rows to its own slice (row stride ACC_ROW = 129 floats keeps the
+  // 32 lanes on distinct banks); the epilogue sums the 4 slices. No shared-memory atomics: on sm_80
+  // a float atomicAdd to smem is a CAS loop, which ncu showed dominating the split-KV launches.
 #pragma unroll
-  for (int j = 0; j < 16; ++j) {
-    atomicAdd(&sm.u.acc[g][8 * j + 2 * t], acc[j][0] * w0);
-    atomicAdd(&sm.u.acc[g][8 * j + 2 * t + 1], acc[j][1] * w0);
-    atomicAdd(&sm.u.acc[g + 8][8 * j + 2 * t], acc[j][2] * w1);
-    atomicAdd(&sm.u.acc[g + 8][8 * j + 2 * t + 1], acc[j][3] * w1);
-  }
+  for (int j = 0; j < 16; ++j)
+#pragma unroll
+    for (int e = 0; e < 2; ++e) {
+      const int ch = chan_of(j, 2 * t + e);
+      s_acc[(warp * 16 + g) * ACC_ROW + ch] = acc[j][e] * w0;
+      s_acc[(warp * 16 + g + 8) * ACC_ROW + ch] = acc[j][2 + e] * w1;
+    }
   __syncthreads();
 
   // ---- epilogue: 8 threads per row, 16 channels each; s_v applied here ----
@@ -320,18 +396,23 @@ __global__ void __launch_bounds__(NWARPS * 32)
   if (row >= G) return;
   float Mr = -1e30f, Lr = 0.f;
 #pragma unroll
-  for (int w = 0; w < NWARPS; ++w) Mr = fmaxf(Mr, sm.m[w][row]);
+  for (int w = 0; w < NWARPS; ++w) Mr = fmaxf(Mr, s_m[w * 16 + row]);
 #pragma unroll
-  for (int w = 0; w < NWARPS; ++w) Lr += sm.l[w][row] * exp2f(sm.m[w][row] - Mr);
+  for (int w = 0; w < NWARPS; ++w) Lr += s_l[w * 16 + row] * exp2f(s_m[w * 16 + row] - Mr);
   const int head = kvh * G + row;
   if (num_splits == 1) {
     const float inv = 1.f / fmaxf(Lr, 1e-30f);
-    alignas(16) __nv_bfloat16 o[16];
+    uint32_t o[8];
 #pragma unroll
-    for (int e = 0; e < 16; ++e)
-      o[e] = __float2bfloat16(sm.u.acc[row][d0 + e] * inv * (PC_V ? vs[kvh * D + d0 + e] : vs[kvh]));
-    *reinterpret_cast<uint4*>(out + tok * o_st + head * o_sh + d0) = *reinterpret_cast<uint4*>(&o[0]);
-    *reinterpret_cast<uint4*>(out + tok * o_st + head * o_sh + d0 + 8) = *reinterpret_cast<uint4*>(&o[8]);
+    for (int e = 0; e < 8; ++e) {
+      const int d = d0 + 2 * e;
+      const float v0 = row_sum(s_acc, row, d) * inv * (PC_V ? vs[kvh * D + d] : vs[kvh]);
+      const float v1 = row_sum(s_acc, row, d + 1) * inv * (PC_V ? vs[kvh * D + d + 1] : vs[kvh]);
+      const __nv_bfloat162 h = __floats2bfloat162_rn(v0, v1);
+      o[e] = *reinterpret_cast<const uint32_t*>(&h);
+    }
+    *reinterpret_cast<uint4*>(out + tok * o_st + head * o_sh + d0) = make_uint4(o[0], o[1], o[2], o[3]);
+    *reinterpret_cast<uint4*>(out + tok * o_st + head * o_sh + d0 + 8) = make_uint4(o[4], o[5], o[6], o[7]);
   } else {
     const int64_t sidx = tok * seg_st + head * seg_sh + split;
     if ((threadIdx.x & 7) == 0) {
@@ -340,9 +421,12 @@ __global__ void __launch_bounds__(NWARPS * 32)
     }
 #pragma unroll
     for (int e = 0; e < 16; ++e)
-      segm_out[sidx * D + d0 + e] = sm.u.acc[row][d0 + e] * (PC_V ? vs[kvh * D + d0 + e] : vs[kvh]);
+      segm_out[sidx * D + d0 + e] = row_sum(s_acc, row, d0 + e) * (PC_V ? vs[kvh * D + d0 + e] : vs[kvh]);
   }
 }
+
+constexpr size_t DECODE_SMEM = 16 * QROW + (16 + 2 * NWARPS * 16) * 4 + NWARPS * 4 * STAGE_BYTES;
+static_assert(NWARPS * 4 * STAGE_BYTES >= NWARPS * 16 * ACC_ROW * 4, "s_acc must fit in the K/V ring");
 
 // Merge split-KV partials: o = sum_s 2^(m_s - M) acc_s / sum_s 2^(m_s - M) l_s.
 __global__ void split_reduce_kernel(__nv_bfloat16* __restrict__ out, const float* __restrict__ segm_out,
@@ -415,7 +499,10 @@ void int8_decode_attention(torch::Tensor q, torch::Tensor kc, torch::Tensor vc, 
                            c10::optional<torch::Tensor> segm_max, c10::optional<torch::Tensor> segm_sum) {
   const int num_seqs = cu_q.size(0) - 1, Hq = q.size(1), Hkv = kc.size(2), G = Hq / Hkv;
   TORCH_CHECK(q.size(2) == D && G <= 16 && kc.stride(3) == 1 && q.stride(2) == 1, "unsupported shape/layout");
-  TORCH_CHECK(kc.size(1) % 16 == 0, "block_size must be a multiple of 16");
+  const int bs = kc.size(1);
+  TORCH_CHECK(bs >= 16 && (bs & (bs - 1)) == 0, "block_size must be a power of two >= 16");
+  int lbs = 0;
+  while ((1 << lbs) < bs) ++lbs;
   if (num_seqs == 0) return;
   const bool split = segm_max.has_value();
   const int S = split ? segm_max->size(2) : 1;
@@ -428,12 +515,14 @@ void int8_decode_attention(torch::Tensor q, torch::Tensor kc, torch::Tensor vc, 
   float* ss = split ? segm_sum->data_ptr<float>() : nullptr;
   const bool pk = ks.size(-1) > 1, pv = vs.size(-1) > 1;
   auto launch = [&](auto kernel) {
-    kernel<<<grid, NWARPS * 32, 0, stream>>>(
+    // ~76 KB of dynamic smem (2-stage K/V ring per warp): above the 48 KB default, so opt in.
+    cudaFuncSetAttribute(kernel, cudaFuncAttributeMaxDynamicSharedMemorySize, static_cast<int>(DECODE_SMEM));
+    kernel<<<grid, NWARPS * 32, DECODE_SMEM, stream>>>(
         reinterpret_cast<const __nv_bfloat16*>(q.data_ptr()), kc.data_ptr<int8_t>(), vc.data_ptr<int8_t>(),
         reinterpret_cast<__nv_bfloat16*>(out.data_ptr()), so, sx, ss, cu_q.data_ptr<int>(), seq_lens.data_ptr<int>(),
         block_table.data_ptr<int>(), ks.data_ptr<float>(), vs.data_ptr<float>(), sm_log2, q.stride(0), q.stride(1),
         out.stride(0), out.stride(1), kc.stride(0), kc.stride(1), kc.stride(2), vc.stride(0), vc.stride(1),
-        vc.stride(2), block_table.stride(0), kc.size(1), G, seg_st, seg_sh);
+        vc.stride(2), block_table.stride(0), bs, lbs, G, seg_st, seg_sh);
   };
   if (pk && pv) launch(int8_decode_attn_kernel<true, true>);
   else if (pk) launch(int8_decode_attn_kernel<true, false>);

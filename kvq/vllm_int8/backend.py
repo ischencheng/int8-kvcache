@@ -95,6 +95,10 @@ class Int8StaticImpl(TritonAttentionImpl):
         self.cfg = CONFIGS[os.environ.get("KVQ_CFG", "B_channel_smooth")]
         self.kernel = os.environ.get("KVQ_KERNEL", "torch")
         self.static = None
+        if self.kernel == "cuda" and self.int8:
+            from kvq import cuda_kernels
+
+            cuda_kernels.ext()  # JIT-compile at model build time, long before any CUDA graph capture
 
     def fused_output_quant_supported(self, quant_key):
         return False  # our kernels write bf16 output only

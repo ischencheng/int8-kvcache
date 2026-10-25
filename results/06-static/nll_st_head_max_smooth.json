@@ -1,0 +1,20 @@
+{
+ "label": "st_head_max_smooth",
+ "env": [
+  "KVQ_SCALES=/cache/scales/qwen2.5-7b/math_per_head_max_smooth.safetensors",
+  "KVQ_CFG=B_head_smooth",
+  "KVQ_KERNEL=triton"
+ ],
+ "nll": {
+  "gsm8k": 0.07052459738885382,
+  "aime24": 0.06239900172596759
+ },
+ "tokens": {
+  "gsm8k": 57864,
+  "aime24": 31140
+ },
+ "ppl": {
+  "gsm8k": 1.0730709638498603,
+  "aime24": 1.0643869522438774
+ }
+}
