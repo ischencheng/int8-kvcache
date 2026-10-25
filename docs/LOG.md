@@ -369,3 +369,23 @@ v3 在 A100 上的有效带宽 1.45 TB/s（峰值约 2.0 TB/s），比 FA2 bf16 
 - 写 cache：融合的量化+写入 8192 token 28 µs（Triton）/ 33 µs（CUDA），**比 vLLM 原生 bf16 写入（42 µs）还快**（只写一半字节）；
   不融合的两遍 PyTorch 实现 310 µs；vLLM 的 per_token_head 写入 70 µs（要现算每个 token 的 scale）。
 - q 量化：单独 kernel 8–13 µs；融合进 attention 序言后 attention 耗时不变（159 vs 159 µs），所以融合版是对的选择。
+
+## Step 8b H100 上和 FP8（FA3）对比
+
+同一个基准在 H100 上跑（`docs/tables/kernels_h100.md`），加上 vLLM 自带的 FA3 FP8 KV（每 kv head 一个 descale）作为
+"有 FP8 的卡上的标准做法"：
+
+| batch × ctx | FA2 bf16 | **FA3 FP8** | 我们 Triton int8 | **我们 CUDA int8** | CUDA / FA3-FP8 | CUDA / FA2 |
+|---|---|---|---|---|---|---|
+| 1 × 32k | 59.5 | 39.2 | 94.1 | 45.4 | 0.86× | 1.31× |
+| 8 × 32k | 216.7 | 130.5 | 128.8 | 140.5 | 0.93× | 1.54× |
+| 32 × 32k | 747.9 | 432.2 | 462.6 | 425.5 | 1.02× | 1.76× |
+| 64 × 16k | 790.3 | 436.2 | 656.7 | 417.3 | 1.05× | 1.89× |
+| 128 × 32k | 3081 | 1643 | 2447 | 1761 | 0.93× | 1.75× |
+| 256 × 16k | 3099 | 1660 | 1977 | 1601 | 1.04× | 1.94× |
+
+- 课程说"int8 kernel 和 FP8 实现理论上应接近"：**成立**，我们的 CUDA int8 和 FA3 FP8 在 ±15% 以内。
+  两者读的字节数一样（1 字节/元素），差别在实现：FA3 用 Hopper 的 wgmma + TMA 异步拷贝，我们的 kernel 是为 A100 写的
+  `mma.sync` + cp.async，在 H100 上没用到这些新硬件，长上下文小 batch（1 × 32k）落后 14%。
+- 在 H100 上 Triton int8 明显落后于 CUDA（128 × 32k：2447 vs 1761 µs），Triton 版的 int8 dot 布局和流水在 Hopper 上效率不高。
+- vLLM 原生 int8_per_token_head 在 H100 上同样比 bf16 慢。
