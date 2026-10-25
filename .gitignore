@@ -4,3 +4,5 @@ results/*/output.log.full
 results/**/*.pt
 results/**/*.safetensors
 results/**/*.pkl
+results/**/*.jsonl
+!results/**/test_metrics.jsonl

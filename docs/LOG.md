@@ -246,3 +246,37 @@ Triton 版之外，三个 kernel 都用 CUDA 重写了一遍（`kvq/cuda/int8_kv
 2. vLLM 镜像预设了 `TORCH_CUDA_ARCH_LIST`（7 个架构），JIT 编译会全编一遍；改成只编当前 GPU 的架构。
 3. 这个 CUDA kernel 只做 decode：prefill / chunked prefill 是计算密集，int8 访存优势不明显，课程方案里也是反量化后走 bf16，
    所以多 token 批次仍走 Triton 的反量化 kernel。group32 的 q scale 只在 Triton 版里实现了。
+
+## Step 5 动态量化端到端验精度（阶段五）
+
+做法：插件把 FA2 的 attention 换成阶段四的 PyTorch 实现（`KVQ_ATTN=<配置名>`），KV cache 仍是 bf16，每步读出来按
+请求现场求 scale 量化（动态）。Qwen2.5-7B-Instruct，enforce_eager，greedy：
+- GSM8K test 全量 1319 题（`\boxed{}` 抽答案），逐题和 bf16 对比翻转数；
+- ΔNLL：用 bf16 自己的 greedy 回答（GSM8K 前 200 条 + AIME24 30 条，后者是 2k 级长回答）做固定文本，
+  teacher-forcing 算回答部分的平均 NLL 与 bf16 的差。连续量，噪声远小于准确率。
+
+结果（`results/05-dynamic/`，`docs/tables/stage5_dynamic.md`）：
+
+| 配置 | GSM8K | 翻转（对/错） | ΔNLL gsm8k | ΔNLL aime24 |
+|---|---|---|---|---|
+| bf16 FA2 | 92.19% | – | 0 | 0 |
+| A per_head | 89.16% | +17 / −57 | +0.0016 | +0.0035 |
+| A per_token_head（vLLM 原生做法） | 92.72% | +21 / −14 | +0.0016 | +0.0022 |
+| A per_channel | 91.89% | +10 / −14 | +0.0002 | +0.0006 |
+| A per_channel + smooth-K | 91.58% | +6 / −14 | **+0.0001** | **+0.0003** |
+| B per_head | 91.36% | +25 / −36 | +0.0004 | +0.0038 |
+| **B per_channel（不加 smooth-K）** | **63.08%** | +13 / **−397** | +0.0221 | +0.0161 |
+| B per_channel + smooth-K | 91.43% | +13 / −23 | +0.0005 | +0.0006 |
+| B per_channel + smooth-K + group32 q | **92.04%** | +11 / −13 | +0.0002 | +0.0003 |
+
+结论：
+- 技术路线可行：per_channel + smooth-K 在 KV 量化（A）和真 int8 计算（B + group32）两种实现下都和 bf16 打平
+  （±1 个点内，ΔNLL ≤ 0.0003）。
+- 阶段四的算子级误差排序在端到端完全对得上：B per_channel 不加 smooth-K 的 8.3% 算子误差变成 **GSM8K 掉 29 个点**。
+- per_head 掉 3 个点，长文本（AIME 回答）上 ΔNLL 更大（+0.0035/+0.0038）：误差随上下文累积。
+
+遇到的问题：
+1. **准确率会骗人**：per_token_head 的 92.72% 比 bf16 还高，但它的 ΔNLL（+0.0016）和掉了 3 个点的 per_head 一样差，
+   只是在 1319 题上恰好翻对的比翻错的多。同一个配置的翻转有 30–60 题，±1 个点基本是噪声；排序以 ΔNLL 为准。
+2. PyTorch 版动态量化很慢（每步对整段上下文 gather + 量化，一个配置 GSM8K 要 12 分钟），8 个配置串行会超过 3 小时的
+   函数时限。改成先单独生成 bf16 参考答案存进 Volume，再 3 台 A100 并行。第一次串行跑了 50 分钟才发现，停掉重来浪费了约 $2。
