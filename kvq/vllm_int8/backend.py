@@ -75,7 +75,11 @@ class Int8StaticBuilder(TritonAttentionMetadataBuilder):
         ctx = vllm_config.compilation_config.static_forward_context
         rank, size = get_tensor_model_parallel_rank(), get_tensor_model_parallel_world_size()
         for name in layer_names:
-            ctx[name].impl.set_static(scales.for_layer(all_scales, name, rank, size, device))
+            src, key = all_scales, name
+            if name not in all_scales and os.environ.get("KVQ_DRAFT_SCALES"):
+                # Spec-decode draft model (prefix "draft_model."): its own calibration file.
+                src, key = _load_scales(os.environ["KVQ_DRAFT_SCALES"]), name[name.index("model.layers"):]
+            ctx[name].impl.set_static(scales.for_layer(src, key, rank, size, device))
         logger.info("kvq: static INT8 scales for %d layers from %s (tp %d/%d, cfg %s, kernel %s)",
                     len(layer_names), os.environ["KVQ_SCALES"], rank, size,
                     os.environ.get("KVQ_CFG", "B_channel_smooth"), os.environ.get("KVQ_KERNEL", "torch"))

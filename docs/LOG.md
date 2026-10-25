@@ -173,3 +173,39 @@ per_channel/per_head × max/99.9%/99.99% × 是否 smooth 共 6 种 scale 文件
 1. 我们模块的 logger 用 `init_logger(__name__)` 时 INFO 不打印：vLLM 只给 `vllm.*` 命名空间配了 handler，改名 `vllm.kvq`。
 2. `AttentionBackendEnum[backend.get_name()]` 会在 Attention 构造时被调用，自定义 backend 的 `get_name()` 必须返回
    注册时用的枚举名 `"CUSTOM"`，不能沿用父类的 `"TRITON_ATTN"`。
+
+## Step 7a 三个 Triton kernel（阶段七）
+
+`kvq/triton_kernels/`：
+1. **`quant_cache.py` 量化 + reshape_and_cache 融合**：每个 program 处理一个 token 的所有 kv head，
+   读一次 bf16 K/V → 减 μ → `div_rn` 除 scale → `rint`（四舍六入五成双，和 torch.round 一致）→ clamp → 按
+   slot_mapping 写进分页 cache；slot < 0（padding）直接返回。`static=None` 时就是普通的 bf16 写 cache。
+2. **`quant_q.py` q 量化**：q × s_k[h // G, :]（折叠 per-channel K scale）后按行或按 32 通道一组求 scale 量化。
+3. **`int8_attention.py` 统一的分页 attention**（prefill / chunked prefill / decode / 投机验证一个 kernel）：
+   - 一个 program 负责 BLOCK_M = BLOCK_Q 个 token × G 个 q head（同一个 kv head，GQA 下 K/V tile 只读一次给 G 个 head 用），
+     按 block_table 以 64 token 为一个 tile 走页，online softmax；
+   - 小批量纯 decode 时把 KV 范围切 16 段（flash-decoding），第二个 kernel 合并；直接复用 vLLM Triton backend
+     metadata builder 里已经分配好的 segment 缓冲区（CUDA graph 下地址不变）；
+   - MODE 0 = bf16 cache（同一份代码的 bf16 基线，用来公平对比）；MODE 1 = int8 cache 逐 tile 反量化成 bf16 再算
+     （实现 A，prefill 用）；MODE 2 = int8 Tensor Core（实现 B，decode 用）：序言里折叠 s_k 并量化 q，
+     `tl.dot(int8, int8) → int32`，P 按（行, tile）量化成 int8 再和 int8 V 做 `tl.dot`，最后乘 s_v；
+   - `q_groups=4` 时 QK 拆成 4 个 k=32 的 int8 点积，每段乘自己的 q scale（对应阶段四的 group32）；
+   - smooth-K 在 kernel 里什么都不用做（cache 里存的就是 k-μ）。
+
+测试（`tests/test_triton_kernels.py`, `tests/test_cudagraph.py`，A100 和 L4 上 57 个全过，`results/07-kernels-test-l4/`）：
+- 融合写 cache 与 PyTorch "量化 + scatter" **逐位相等**（per_channel / per_head，含 padding slot）；q 量化逐位相等；
+- MODE 0 对 fp32 金标准 rel 1–2e-3（decode / 混合 / 纯 prefill，GQA 28/4 和 12/2）；MODE 1 对实现 A 8e-4；
+- MODE 2 对 PyTorch 实现 B ≈ 1e-5（融合 q、预量化 q、group32、16 段切分、per_head 都测了）；投机验证批（每请求 5 个 query）也一致；
+- 真实 dump 上 int8 kernel 对 FA2 输出 1.5%–3.3%（token-head q），group32 1.1%–2.7%，和阶段四的数一致；
+- CUDA graph：capture 后换输入 replay 与 eager 逐位相等。
+
+遇到的问题：
+1. **用 dump 算"静态 scale"时第 27 层误差 14.5%**，查下来是我把压缩后 cache 的整页都算进了统计：
+   每个请求最后一页没写满的 slot 里是别的请求留下的旧数据，把 μ 和 max 都带偏了。改成只用 block_table/seq_lens
+   覆盖到的有效 token 后降到 3.3%。vLLM 里的采集是在写 cache 时对新 token 统计的，天然没有这个问题；但凡是"直接读 cache 做统计"
+   的工具都要注意。
+2. **CUDA graph 里 scale 必须原地更新**：graph 记录的是张量地址。`static["v_scale"] = new` 换对象之后 replay 仍读旧值
+   （测试里输出完全不变），只有 `copy_/mul_` 原地修改才生效。所以静态 scale 要在 capture 前分配好，之后只原地改。
+3. Triton 的 `/` 是近似除法，量化写 cache 用 `tl.div_rn` 才能和 PyTorch 逐位对上；取整用 `libdevice.rint`（不是 `.to(int)` 的截断）。
+4. int8 的 `tl.dot` 要求 K 维 ≥ 32：QK 的 K 维是 head_dim（128 没问题），PV 的 K 维是 tile 长度（取 64）；
+   group32 只能用在 head_dim 128（每组 32），head_dim 64 的模型（Qwen2.5-0.5B）只能用整行 q scale。

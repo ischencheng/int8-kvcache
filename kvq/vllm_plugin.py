@@ -19,3 +19,7 @@ def register():
         from kvq import override
 
         override.install()
+    if os.environ.get("KVQ_MLA"):
+        from kvq import mla
+
+        mla.install()

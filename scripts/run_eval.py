@@ -48,9 +48,18 @@ def main():
             items.append({"id": r["id"], "answer": r["answer"], "correct": evaluate.math_correct(c.text, r["answer"]),
                           "tokens": len(c.token_ids), "text": c.text})
     acc = sum(i["correct"] for i in items) / len(items)
+    spec = {}
+    try:
+        for m in llm.get_metrics():
+            if "spec_decode" in m.name:
+                spec[m.name] = getattr(m, "value", None) if not hasattr(m, "values") else m.values
+    except Exception as e:  # noqa: BLE001 - metrics are optional
+        spec["error"] = repr(e)
     res = {"label": args.label, "task": args.task, "model": args.model, "n_prompts": len(rows),
            "n_samples": len(items), "accuracy": acc, "wall_s": wall,
            "gen_tokens": sum(i["tokens"] for i in items), "env": args.env, "llm": kwargs}
+    if spec:
+        res["spec_decode"] = spec
     print(json.dumps(res, indent=1))
     out = os.environ["OUT"]
     with open(f"{out}/eval_{args.label}_{args.task}.json", "w") as f:
