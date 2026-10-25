@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+results/*/output.log.full
+results/**/*.pt
+results/**/*.safetensors
+results/**/*.pkl
