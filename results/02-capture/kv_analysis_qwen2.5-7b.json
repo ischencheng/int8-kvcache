@@ -1,0 +1,1031 @@
+{
+ "layers": {
+  "0": {
+   "k": {
+    "absmax": 173.0,
+    "channel_ratio": 40.115943908691406,
+    "head_ratio": 1.932960867881775,
+    "token_absmax_p50": 171.0,
+    "token_absmax_max": 173.0,
+    "err": {
+     "per_tensor": 0.014559832401573658,
+     "per_head": 0.010972057469189167,
+     "per_channel": 0.0024790221359580755,
+     "per_token": 0.014362800866365433,
+     "per_token_head": 0.010704207234084606
+    },
+    "err_per_channel_q999": 0.0022860653698444366,
+    "err_visible_per_channel": 0.06635205447673798,
+    "err_visible_per_channel_smooth": 0.008804206736385822,
+    "err_visible_per_token_head": 0.28650256991386414
+   },
+   "v": {
+    "absmax": 3.25,
+    "channel_ratio": 3.5105485916137695,
+    "head_ratio": 1.7702127695083618,
+    "token_absmax_p50": 1.6796875,
+    "token_absmax_max": 2.921875,
+    "err": {
+     "per_tensor": 0.027603723108768463,
+     "per_head": 0.02435467764735222,
+     "per_channel": 0.010340679436922073,
+     "per_token": 0.01630544289946556,
+     "per_token_head": 0.01147476490586996
+    },
+    "err_per_channel_q999": 0.016628500074148178
+   },
+   "k_rope_pair_corr": 0.8132408857345581
+  },
+  "1": {
+   "k": {
+    "absmax": 67.0,
+    "channel_ratio": 24.363636016845703,
+    "head_ratio": 4.722466945648193,
+    "token_absmax_p50": 62.75,
+    "token_absmax_max": 63.5,
+    "err": {
+     "per_tensor": 0.020522095263004303,
+     "per_head": 0.011377392336726189,
+     "per_channel": 0.0027731817681342363,
+     "per_token": 0.020131446421146393,
+     "per_token_head": 0.010825048200786114
+    },
+    "err_per_channel_q999": 0.0028911340050399303,
+    "err_visible_per_channel": 0.014115680009126663,
+    "err_visible_per_channel_smooth": 0.006302494090050459,
+    "err_visible_per_token_head": 0.05510018765926361
+   },
+   "v": {
+    "absmax": 2.546875,
+    "channel_ratio": 4.465753555297852,
+    "head_ratio": 1.928994059562683,
+    "token_absmax_p50": 0.8125,
+    "token_absmax_max": 2.53125,
+    "err": {
+     "per_tensor": 0.035176344215869904,
+     "per_head": 0.024658214300870895,
+     "per_channel": 0.01045503281056881,
+     "per_token": 0.012120178900659084,
+     "per_token_head": 0.008893336169421673
+    },
+    "err_per_channel_q999": 0.016640963032841682
+   },
+   "k_rope_pair_corr": 0.8738830089569092
+  },
+  "2": {
+   "k": {
+    "absmax": 33.75,
+    "channel_ratio": 5.744680881500244,
+    "head_ratio": 3.5761590003967285,
+    "token_absmax_p50": 28.5,
+    "token_absmax_max": 33.5,
+    "err": {
+     "per_tensor": 0.02534770593047142,
+     "per_head": 0.016464419662952423,
+     "per_channel": 0.004425523802638054,
+     "per_token": 0.021610772237181664,
+     "per_token_head": 0.013256583362817764
+    },
+    "err_per_channel_q999": 0.00548594631254673,
+    "err_visible_per_channel": 0.012467559427022934,
+    "err_visible_per_channel_smooth": 0.009263700805604458,
+    "err_visible_per_token_head": 0.037346333265304565
+   },
+   "v": {
+    "absmax": 4.3125,
+    "channel_ratio": 3.0335569381713867,
+    "head_ratio": 1.5164835453033447,
+    "token_absmax_p50": 1.6875,
+    "token_absmax_max": 4.3125,
+    "err": {
+     "per_tensor": 0.0346660315990448,
+     "per_head": 0.026428841054439545,
+     "per_channel": 0.010922709479928017,
+     "per_token": 0.01403975673019886,
+     "per_token_head": 0.009750613942742348
+    },
+    "err_per_channel_q999": 0.017191985622048378
+   },
+   "k_rope_pair_corr": 0.7697440981864929
+  },
+  "3": {
+   "k": {
+    "absmax": 75.0,
+    "channel_ratio": 15.686274528503418,
+    "head_ratio": 4.31654691696167,
+    "token_absmax_p50": 70.5,
+    "token_absmax_max": 74.5,
+    "err": {
+     "per_tensor": 0.03131740540266037,
+     "per_head": 0.018736479803919792,
+     "per_channel": 0.0031183536630123854,
+     "per_token": 0.029606595635414124,
+     "per_token_head": 0.01731281168758869
+    },
+    "err_per_channel_q999": 0.003476714715361595,
+    "err_visible_per_channel": 0.014520978555083275,
+    "err_visible_per_channel_smooth": 0.008460203185677528,
+    "err_visible_per_token_head": 0.08061908930540085
+   },
+   "v": {
+    "absmax": 3.484375,
+    "channel_ratio": 2.896103858947754,
+    "head_ratio": 1.4866666793823242,
+    "token_absmax_p50": 1.3671875,
+    "token_absmax_max": 3.234375,
+    "err": {
+     "per_tensor": 0.023193441331386566,
+     "per_head": 0.02069546841084957,
+     "per_channel": 0.011221474967896938,
+     "per_token": 0.010412103496491909,
+     "per_token_head": 0.007710689213126898
+    },
+    "err_per_channel_q999": 0.01797974668443203
+   },
+   "k_rope_pair_corr": 0.3690512776374817
+  },
+  "4": {
+   "k": {
+    "absmax": 13.8125,
+    "channel_ratio": 3.9420289993286133,
+    "head_ratio": 1.2485876083374023,
+    "token_absmax_p50": 9.75,
+    "token_absmax_max": 12.1875,
+    "err": {
+     "per_tensor": 0.017114123329520226,
+     "per_head": 0.01615091785788536,
+     "per_channel": 0.006762298755347729,
+     "per_token": 0.013750668615102768,
+     "per_token_head": 0.01149008609354496
+    },
+    "err_per_channel_q999": 0.009097813628613949,
+    "err_visible_per_channel": 0.008990796282887459,
+    "err_visible_per_channel_smooth": 0.00872350949794054,
+    "err_visible_per_token_head": 0.015276601538062096
+   },
+   "v": {
+    "absmax": 6.0625,
+    "channel_ratio": 5.2080535888671875,
+    "head_ratio": 1.8215962648391724,
+    "token_absmax_p50": 3.25,
+    "token_absmax_max": 5.59375,
+    "err": {
+     "per_tensor": 0.02761007659137249,
+     "per_head": 0.020828932523727417,
+     "per_channel": 0.009568333625793457,
+     "per_token": 0.016242345795035362,
+     "per_token_head": 0.010369985364377499
+    },
+    "err_per_channel_q999": 0.01545837614685297
+   },
+   "k_rope_pair_corr": 0.8790661096572876
+  },
+  "5": {
+   "k": {
+    "absmax": 18.625,
+    "channel_ratio": 4.355555534362793,
+    "head_ratio": 1.9477124214172363,
+    "token_absmax_p50": 13.4375,
+    "token_absmax_max": 17.125,
+    "err": {
+     "per_tensor": 0.02397959493100643,
+     "per_head": 0.01858905702829361,
+     "per_channel": 0.00657887477427721,
+     "per_token": 0.01873192749917507,
+     "per_token_head": 0.013806043192744255
+    },
+    "err_per_channel_q999": 0.00922639574855566,
+    "err_visible_per_channel": 0.009510294534265995,
+    "err_visible_per_channel_smooth": 0.009043712168931961,
+    "err_visible_per_token_head": 0.019957734271883965
+   },
+   "v": {
+    "absmax": 7.03125,
+    "channel_ratio": 2.944000005722046,
+    "head_ratio": 1.5957447290420532,
+    "token_absmax_p50": 2.65625,
+    "token_absmax_max": 7.03125,
+    "err": {
+     "per_tensor": 0.029326384887099266,
+     "per_head": 0.022863129153847694,
+     "per_channel": 0.009337200783193111,
+     "per_token": 0.011664975434541702,
+     "per_token_head": 0.008993335999548435
+    },
+    "err_per_channel_q999": 0.014353248290717602
+   },
+   "k_rope_pair_corr": 0.8423925638198853
+  },
+  "6": {
+   "k": {
+    "absmax": 18.25,
+    "channel_ratio": 5.48356819152832,
+    "head_ratio": 1.5531915426254272,
+    "token_absmax_p50": 14.3125,
+    "token_absmax_max": 18.25,
+    "err": {
+     "per_tensor": 0.022810891270637512,
+     "per_head": 0.017525076866149902,
+     "per_channel": 0.005623370409011841,
+     "per_token": 0.017889613285660744,
+     "per_token_head": 0.012854455038905144
+    },
+    "err_per_channel_q999": 0.00740499934181571,
+    "err_visible_per_channel": 0.009256369434297085,
+    "err_visible_per_channel_smooth": 0.00857509858906269,
+    "err_visible_per_token_head": 0.021159105002880096
+   },
+   "v": {
+    "absmax": 6.59375,
+    "channel_ratio": 3.2461538314819336,
+    "head_ratio": 1.859030842781067,
+    "token_absmax_p50": 2.59375,
+    "token_absmax_max": 5.21875,
+    "err": {
+     "per_tensor": 0.024377217516303062,
+     "per_head": 0.019661344587802887,
+     "per_channel": 0.010043124668300152,
+     "per_token": 0.01280152052640915,
+     "per_token_head": 0.008759372867643833
+    },
+    "err_per_channel_q999": 0.015989791601896286
+   },
+   "k_rope_pair_corr": 0.44140931963920593
+  },
+  "7": {
+   "k": {
+    "absmax": 17.375,
+    "channel_ratio": 4.614108085632324,
+    "head_ratio": 1.1487603187561035,
+    "token_absmax_p50": 10.6875,
+    "token_absmax_max": 15.5,
+    "err": {
+     "per_tensor": 0.020348133519291878,
+     "per_head": 0.01894720457494259,
+     "per_channel": 0.00579947279766202,
+     "per_token": 0.01414809376001358,
+     "per_token_head": 0.013118544593453407
+    },
+    "err_per_channel_q999": 0.007595149800181389,
+    "err_visible_per_channel": 0.009566530585289001,
+    "err_visible_per_channel_smooth": 0.008896082639694214,
+    "err_visible_per_token_head": 0.021639704704284668
+   },
+   "v": {
+    "absmax": 6.90625,
+    "channel_ratio": 1.7792208194732666,
+    "head_ratio": 1.6131386756896973,
+    "token_absmax_p50": 2.265625,
+    "token_absmax_max": 6.25,
+    "err": {
+     "per_tensor": 0.023329339921474457,
+     "per_head": 0.018735645338892937,
+     "per_channel": 0.011603089980781078,
+     "per_token": 0.008896474726498127,
+     "per_token_head": 0.006758450530469418
+    },
+    "err_per_channel_q999": 0.020408498123288155
+   },
+   "k_rope_pair_corr": 0.49644726514816284
+  },
+  "8": {
+   "k": {
+    "absmax": 17.25,
+    "channel_ratio": 3.325301170349121,
+    "head_ratio": 1.6235294342041016,
+    "token_absmax_p50": 10.625,
+    "token_absmax_max": 15.0,
+    "err": {
+     "per_tensor": 0.021082060411572456,
+     "per_head": 0.01721240021288395,
+     "per_channel": 0.0070816148072481155,
+     "per_token": 0.015037493780255318,
+     "per_token_head": 0.011602133512496948
+    },
+    "err_per_channel_q999": 0.009794444777071476,
+    "err_visible_per_channel": 0.009423008188605309,
+    "err_visible_per_channel_smooth": 0.00913865678012371,
+    "err_visible_per_token_head": 0.015438131988048553
+   },
+   "v": {
+    "absmax": 7.3125,
+    "channel_ratio": 2.7857143878936768,
+    "head_ratio": 1.409638524055481,
+    "token_absmax_p50": 2.734375,
+    "token_absmax_max": 7.125,
+    "err": {
+     "per_tensor": 0.026776455342769623,
+     "per_head": 0.023199737071990967,
+     "per_channel": 0.010051792487502098,
+     "per_token": 0.011327479965984821,
+     "per_token_head": 0.00855290237814188
+    },
+    "err_per_channel_q999": 0.015854043886065483
+   },
+   "k_rope_pair_corr": 0.6765363812446594
+  },
+  "9": {
+   "k": {
+    "absmax": 19.75,
+    "channel_ratio": 4.358620643615723,
+    "head_ratio": 1.4170403480529785,
+    "token_absmax_p50": 10.0,
+    "token_absmax_max": 16.125,
+    "err": {
+     "per_tensor": 0.023774446919560432,
+     "per_head": 0.02120903506875038,
+     "per_channel": 0.006746272090822458,
+     "per_token": 0.01484451163560152,
+     "per_token_head": 0.012672178447246552
+    },
+    "err_per_channel_q999": 0.008853339590132236,
+    "err_visible_per_channel": 0.009915459901094437,
+    "err_visible_per_channel_smooth": 0.009046475403010845,
+    "err_visible_per_token_head": 0.018625162541866302
+   },
+   "v": {
+    "absmax": 5.96875,
+    "channel_ratio": 1.5727273225784302,
+    "head_ratio": 1.4253730773925781,
+    "token_absmax_p50": 2.390625,
+    "token_absmax_max": 5.90625,
+    "err": {
+     "per_tensor": 0.01982562057673931,
+     "per_head": 0.016459792852401733,
+     "per_channel": 0.011020299978554249,
+     "per_token": 0.008335101418197155,
+     "per_token_head": 0.006613011937588453
+    },
+    "err_per_channel_q999": 0.018828192725777626
+   },
+   "k_rope_pair_corr": 0.49957698583602905
+  },
+  "10": {
+   "k": {
+    "absmax": 16.0,
+    "channel_ratio": 3.4133334159851074,
+    "head_ratio": 1.1797235012054443,
+    "token_absmax_p50": 11.0625,
+    "token_absmax_max": 14.625,
+    "err": {
+     "per_tensor": 0.019901609048247337,
+     "per_head": 0.018211733549833298,
+     "per_channel": 0.006382286082953215,
+     "per_token": 0.015161442570388317,
+     "per_token_head": 0.012975725345313549
+    },
+    "err_per_channel_q999": 0.008574025705456734,
+    "err_visible_per_channel": 0.00922255590558052,
+    "err_visible_per_channel_smooth": 0.008870968595147133,
+    "err_visible_per_token_head": 0.018750222399830818
+   },
+   "v": {
+    "absmax": 5.125,
+    "channel_ratio": 1.8222222328186035,
+    "head_ratio": 1.3497942686080933,
+    "token_absmax_p50": 2.359375,
+    "token_absmax_max": 4.90625,
+    "err": {
+     "per_tensor": 0.019372565671801567,
+     "per_head": 0.016554752364754677,
+     "per_channel": 0.010607419535517693,
+     "per_token": 0.009820687584578991,
+     "per_token_head": 0.007465281989425421
+    },
+    "err_per_channel_q999": 0.017727810889482498
+   },
+   "k_rope_pair_corr": 0.2588975429534912
+  },
+  "11": {
+   "k": {
+    "absmax": 17.0,
+    "channel_ratio": 3.073446273803711,
+    "head_ratio": 1.3877551555633545,
+    "token_absmax_p50": 9.6875,
+    "token_absmax_max": 14.5,
+    "err": {
+     "per_tensor": 0.019679220393300056,
+     "per_head": 0.017952902242541313,
+     "per_channel": 0.0069998884573578835,
+     "per_token": 0.013338890857994556,
+     "per_token_head": 0.011930519714951515
+    },
+    "err_per_channel_q999": 0.009423338808119297,
+    "err_visible_per_channel": 0.009019862860441208,
+    "err_visible_per_channel_smooth": 0.008695955388247967,
+    "err_visible_per_token_head": 0.015373331494629383
+   },
+   "v": {
+    "absmax": 5.53125,
+    "channel_ratio": 2.239436626434326,
+    "head_ratio": 1.3208955526351929,
+    "token_absmax_p50": 2.765625,
+    "token_absmax_max": 5.53125,
+    "err": {
+     "per_tensor": 0.02018868736922741,
+     "per_head": 0.017876215279102325,
+     "per_channel": 0.009469689801335335,
+     "per_token": 0.010349306277930737,
+     "per_token_head": 0.008359654806554317
+    },
+    "err_per_channel_q999": 0.01458166353404522
+   },
+   "k_rope_pair_corr": 0.6379566192626953
+  },
+  "12": {
+   "k": {
+    "absmax": 21.0,
+    "channel_ratio": 4.97777795791626,
+    "head_ratio": 2.0363636016845703,
+    "token_absmax_p50": 13.625,
+    "token_absmax_max": 21.0,
+    "err": {
+     "per_tensor": 0.02764515019953251,
+     "per_head": 0.01896568387746811,
+     "per_channel": 0.006651911418884993,
+     "per_token": 0.01812901347875595,
+     "per_token_head": 0.011868856847286224
+    },
+    "err_per_channel_q999": 0.008987917564809322,
+    "err_visible_per_channel": 0.009740606881678104,
+    "err_visible_per_channel_smooth": 0.008994970470666885,
+    "err_visible_per_token_head": 0.017379941418766975
+   },
+   "v": {
+    "absmax": 6.6875,
+    "channel_ratio": 2.3387978076934814,
+    "head_ratio": 1.4557822942733765,
+    "token_absmax_p50": 2.703125,
+    "token_absmax_max": 6.6875,
+    "err": {
+     "per_tensor": 0.02290654554963112,
+     "per_head": 0.017826523631811142,
+     "per_channel": 0.00994192436337471,
+     "per_token": 0.009866179898381233,
+     "per_token_head": 0.007718607783317566
+    },
+    "err_per_channel_q999": 0.015945451334118843
+   },
+   "k_rope_pair_corr": 0.724327802658081
+  },
+  "13": {
+   "k": {
+    "absmax": 46.5,
+    "channel_ratio": 9.538461685180664,
+    "head_ratio": 3.526066303253174,
+    "token_absmax_p50": 40.5,
+    "token_absmax_max": 45.0,
+    "err": {
+     "per_tensor": 0.03402242437005043,
+     "per_head": 0.02107456512749195,
+     "per_channel": 0.004507509525865316,
+     "per_token": 0.03059486672282219,
+     "per_token_head": 0.017622608691453934
+    },
+    "err_per_channel_q999": 0.005665460601449013,
+    "err_visible_per_channel": 0.011283895000815392,
+    "err_visible_per_channel_smooth": 0.008916620165109634,
+    "err_visible_per_token_head": 0.04411559924483299
+   },
+   "v": {
+    "absmax": 5.9375,
+    "channel_ratio": 2.0930233001708984,
+    "head_ratio": 1.2666666507720947,
+    "token_absmax_p50": 2.609375,
+    "token_absmax_max": 5.9375,
+    "err": {
+     "per_tensor": 0.020463716238737106,
+     "per_head": 0.018268655985593796,
+     "per_channel": 0.0105885099619627,
+     "per_token": 0.00935821607708931,
+     "per_token_head": 0.007248817943036556
+    },
+    "err_per_channel_q999": 0.017487887293100357
+   },
+   "k_rope_pair_corr": 0.8080618977546692
+  },
+  "14": {
+   "k": {
+    "absmax": 20.125,
+    "channel_ratio": 4.696969509124756,
+    "head_ratio": 1.4504504203796387,
+    "token_absmax_p50": 12.5625,
+    "token_absmax_max": 20.125,
+    "err": {
+     "per_tensor": 0.027654536068439484,
+     "per_head": 0.02107899636030197,
+     "per_channel": 0.007552409078925848,
+     "per_token": 0.017382806167006493,
+     "per_token_head": 0.0122452387586236
+    },
+    "err_per_channel_q999": 0.010494660586118698,
+    "err_visible_per_channel": 0.009813085198402405,
+    "err_visible_per_channel_smooth": 0.009294858202338219,
+    "err_visible_per_token_head": 0.01591062732040882
+   },
+   "v": {
+    "absmax": 7.03125,
+    "channel_ratio": 2.4324324131011963,
+    "head_ratio": 1.5410958528518677,
+    "token_absmax_p50": 2.984375,
+    "token_absmax_max": 7.03125,
+    "err": {
+     "per_tensor": 0.023599110543727875,
+     "per_head": 0.01786840707063675,
+     "per_channel": 0.009743220172822475,
+     "per_token": 0.0104775195941329,
+     "per_token_head": 0.008136670105159283
+    },
+    "err_per_channel_q999": 0.01518288254737854
+   },
+   "k_rope_pair_corr": 0.8172403573989868
+  },
+  "15": {
+   "k": {
+    "absmax": 28.75,
+    "channel_ratio": 6.133333206176758,
+    "head_ratio": 2.7058823108673096,
+    "token_absmax_p50": 21.625,
+    "token_absmax_max": 28.75,
+    "err": {
+     "per_tensor": 0.03311653435230255,
+     "per_head": 0.01989530771970749,
+     "per_channel": 0.00603174464777112,
+     "per_token": 0.0248981025069952,
+     "per_token_head": 0.014124763198196888
+    },
+    "err_per_channel_q999": 0.008235075511038303,
+    "err_visible_per_channel": 0.009774786420166492,
+    "err_visible_per_channel_smooth": 0.00901898741722107,
+    "err_visible_per_token_head": 0.022889958694577217
+   },
+   "v": {
+    "absmax": 6.875,
+    "channel_ratio": 2.3157894611358643,
+    "head_ratio": 1.4102563858032227,
+    "token_absmax_p50": 2.875,
+    "token_absmax_max": 6.875,
+    "err": {
+     "per_tensor": 0.023115674033761024,
+     "per_head": 0.017967727035284042,
+     "per_channel": 0.009511089883744717,
+     "per_token": 0.010267323814332485,
+     "per_token_head": 0.008365287445485592
+    },
+    "err_per_channel_q999": 0.014512416906654835
+   },
+   "k_rope_pair_corr": 0.8216686844825745
+  },
+  "16": {
+   "k": {
+    "absmax": 21.875,
+    "channel_ratio": 4.6052632331848145,
+    "head_ratio": 1.5695067644119263,
+    "token_absmax_p50": 13.9375,
+    "token_absmax_max": 21.875,
+    "err": {
+     "per_tensor": 0.02726699411869049,
+     "per_head": 0.02242211252450943,
+     "per_channel": 0.006807949859648943,
+     "per_token": 0.017320390790700912,
+     "per_token_head": 0.013582120649516582
+    },
+    "err_per_channel_q999": 0.009127658791840076,
+    "err_visible_per_channel": 0.009818577207624912,
+    "err_visible_per_channel_smooth": 0.009034441784024239,
+    "err_visible_per_token_head": 0.01958843134343624
+   },
+   "v": {
+    "absmax": 6.53125,
+    "channel_ratio": 1.907692313194275,
+    "head_ratio": 1.4217686653137207,
+    "token_absmax_p50": 2.875,
+    "token_absmax_max": 5.78125,
+    "err": {
+     "per_tensor": 0.01780402474105358,
+     "per_head": 0.01592717133462429,
+     "per_channel": 0.010203259065747261,
+     "per_token": 0.009255691431462765,
+     "per_token_head": 0.007397760171443224
+    },
+    "err_per_channel_q999": 0.016156911849975586
+   },
+   "k_rope_pair_corr": 0.8032711148262024
+  },
+  "17": {
+   "k": {
+    "absmax": 17.125,
+    "channel_ratio": 3.402777671813965,
+    "head_ratio": 1.212389349937439,
+    "token_absmax_p50": 11.125,
+    "token_absmax_max": 17.125,
+    "err": {
+     "per_tensor": 0.024285387247800827,
+     "per_head": 0.020596932619810104,
+     "per_channel": 0.007502667140215635,
+     "per_token": 0.015817154198884964,
+     "per_token_head": 0.011452848091721535
+    },
+    "err_per_channel_q999": 0.010593223385512829,
+    "err_visible_per_channel": 0.009928081184625626,
+    "err_visible_per_channel_smooth": 0.00935897883027792,
+    "err_visible_per_token_head": 0.0151552464812994
+   },
+   "v": {
+    "absmax": 6.96875,
+    "channel_ratio": 1.9790575504302979,
+    "head_ratio": 1.179894208908081,
+    "token_absmax_p50": 3.171875,
+    "token_absmax_max": 6.875,
+    "err": {
+     "per_tensor": 0.01956884190440178,
+     "per_head": 0.01733814924955368,
+     "per_channel": 0.010228244587779045,
+     "per_token": 0.009302282705903053,
+     "per_token_head": 0.0075332848355174065
+    },
+    "err_per_channel_q999": 0.016534924507141113
+   },
+   "k_rope_pair_corr": 0.7784664630889893
+  },
+  "18": {
+   "k": {
+    "absmax": 18.0,
+    "channel_ratio": 4.056337833404541,
+    "head_ratio": 1.3271889686584473,
+    "token_absmax_p50": 10.8125,
+    "token_absmax_max": 17.75,
+    "err": {
+     "per_tensor": 0.025387465953826904,
+     "per_head": 0.020368894562125206,
+     "per_channel": 0.006978041026741266,
+     "per_token": 0.015751540660858154,
+     "per_token_head": 0.011951209977269173
+    },
+    "err_per_channel_q999": 0.009698036126792431,
+    "err_visible_per_channel": 0.010131525807082653,
+    "err_visible_per_channel_smooth": 0.009492244571447372,
+    "err_visible_per_token_head": 0.017352133989334106
+   },
+   "v": {
+    "absmax": 13.25,
+    "channel_ratio": 2.436781644821167,
+    "head_ratio": 2.174359083175659,
+    "token_absmax_p50": 3.09375,
+    "token_absmax_max": 13.25,
+    "err": {
+     "per_tensor": 0.03586241975426674,
+     "per_head": 0.02244081161916256,
+     "per_channel": 0.01154588907957077,
+     "per_token": 0.008987200446426868,
+     "per_token_head": 0.007045143283903599
+    },
+    "err_per_channel_q999": 0.02060633711516857
+   },
+   "k_rope_pair_corr": 0.6573448777198792
+  },
+  "19": {
+   "k": {
+    "absmax": 51.25,
+    "channel_ratio": 12.615385055541992,
+    "head_ratio": 3.778801918029785,
+    "token_absmax_p50": 46.25,
+    "token_absmax_max": 51.25,
+    "err": {
+     "per_tensor": 0.04093755781650543,
+     "per_head": 0.02375260926783085,
+     "per_channel": 0.004641145933419466,
+     "per_token": 0.03673583269119263,
+     "per_token_head": 0.01956123299896717
+    },
+    "err_per_channel_q999": 0.00605500303208828,
+    "err_visible_per_channel": 0.011143443174660206,
+    "err_visible_per_channel_smooth": 0.009176261723041534,
+    "err_visible_per_token_head": 0.046966735273599625
+   },
+   "v": {
+    "absmax": 7.90625,
+    "channel_ratio": 1.8333333730697632,
+    "head_ratio": 1.454023003578186,
+    "token_absmax_p50": 3.4375,
+    "token_absmax_max": 7.25,
+    "err": {
+     "per_tensor": 0.019572429358959198,
+     "per_head": 0.015803122892975807,
+     "per_channel": 0.010104257613420486,
+     "per_token": 0.009673718363046646,
+     "per_token_head": 0.007299722637981176
+    },
+    "err_per_channel_q999": 0.015645015984773636
+   },
+   "k_rope_pair_corr": 0.69594806432724
+  },
+  "20": {
+   "k": {
+    "absmax": 16.375,
+    "channel_ratio": 3.2387096881866455,
+    "head_ratio": 1.2073732614517212,
+    "token_absmax_p50": 7.625,
+    "token_absmax_max": 13.5625,
+    "err": {
+     "per_tensor": 0.020932650193572044,
+     "per_head": 0.019435826689004898,
+     "per_channel": 0.007895511575043201,
+     "per_token": 0.01215878315269947,
+     "per_token_head": 0.010041567496955395
+    },
+    "err_per_channel_q999": 0.011232350021600723,
+    "err_visible_per_channel": 0.009843836538493633,
+    "err_visible_per_channel_smooth": 0.009383361786603928,
+    "err_visible_per_token_head": 0.012519460171461105
+   },
+   "v": {
+    "absmax": 8.5,
+    "channel_ratio": 2.029850721359253,
+    "head_ratio": 1.545454502105713,
+    "token_absmax_p50": 3.3125,
+    "token_absmax_max": 7.375,
+    "err": {
+     "per_tensor": 0.01839352771639824,
+     "per_head": 0.016109488904476166,
+     "per_channel": 0.010363143868744373,
+     "per_token": 0.00875696912407875,
+     "per_token_head": 0.006971823982894421
+    },
+    "err_per_channel_q999": 0.0164420735090971
+   },
+   "k_rope_pair_corr": 0.6309553384780884
+  },
+  "21": {
+   "k": {
+    "absmax": 18.625,
+    "channel_ratio": 3.8873238563537598,
+    "head_ratio": 1.0797101259231567,
+    "token_absmax_p50": 10.4375,
+    "token_absmax_max": 15.25,
+    "err": {
+     "per_tensor": 0.020772449672222137,
+     "per_head": 0.019966568797826767,
+     "per_channel": 0.007032780442386866,
+     "per_token": 0.014448828995227814,
+     "per_token_head": 0.012871899642050266
+    },
+    "err_per_channel_q999": 0.009612323716282845,
+    "err_visible_per_channel": 0.00973495002835989,
+    "err_visible_per_channel_smooth": 0.009205827489495277,
+    "err_visible_per_token_head": 0.01781759038567543
+   },
+   "v": {
+    "absmax": 9.6875,
+    "channel_ratio": 1.9871795177459717,
+    "head_ratio": 1.5736041069030762,
+    "token_absmax_p50": 3.78125,
+    "token_absmax_max": 9.3125,
+    "err": {
+     "per_tensor": 0.020306415855884552,
+     "per_head": 0.01600630022585392,
+     "per_channel": 0.010522546246647835,
+     "per_token": 0.008586949668824673,
+     "per_token_head": 0.006792475935071707
+    },
+    "err_per_channel_q999": 0.017009999603033066
+   },
+   "k_rope_pair_corr": 0.7182161808013916
+  },
+  "22": {
+   "k": {
+    "absmax": 16.875,
+    "channel_ratio": 3.910447835922241,
+    "head_ratio": 1.0384615659713745,
+    "token_absmax_p50": 9.25,
+    "token_absmax_max": 15.375,
+    "err": {
+     "per_tensor": 0.021576203405857086,
+     "per_head": 0.020519545301795006,
+     "per_channel": 0.007628538645803928,
+     "per_token": 0.013120340183377266,
+     "per_token_head": 0.010993127711117268
+    },
+    "err_per_channel_q999": 0.010664448142051697,
+    "err_visible_per_channel": 0.01002888847142458,
+    "err_visible_per_channel_smooth": 0.009444021619856358,
+    "err_visible_per_token_head": 0.01445215567946434
+   },
+   "v": {
+    "absmax": 10.125,
+    "channel_ratio": 1.6502732038497925,
+    "head_ratio": 1.7608696222305298,
+    "token_absmax_p50": 4.375,
+    "token_absmax_max": 9.4375,
+    "err": {
+     "per_tensor": 0.018121950328350067,
+     "per_head": 0.01575346663594246,
+     "per_channel": 0.010438036173582077,
+     "per_token": 0.008838413283228874,
+     "per_token_head": 0.006866953335702419
+    },
+    "err_per_channel_q999": 0.016778793185949326
+   },
+   "k_rope_pair_corr": 0.8361117243766785
+  },
+  "23": {
+   "k": {
+    "absmax": 19.5,
+    "channel_ratio": 4.219178199768066,
+    "head_ratio": 1.3276596069335938,
+    "token_absmax_p50": 10.375,
+    "token_absmax_max": 17.5,
+    "err": {
+     "per_tensor": 0.02448541671037674,
+     "per_head": 0.021555693820118904,
+     "per_channel": 0.007364049553871155,
+     "per_token": 0.0148165849968791,
+     "per_token_head": 0.011910158209502697
+    },
+    "err_per_channel_q999": 0.010156349278986454,
+    "err_visible_per_channel": 0.009941690601408482,
+    "err_visible_per_channel_smooth": 0.009321451187133789,
+    "err_visible_per_token_head": 0.016079077497124672
+   },
+   "v": {
+    "absmax": 16.5,
+    "channel_ratio": 1.795918345451355,
+    "head_ratio": 2.190871477127075,
+    "token_absmax_p50": 5.75,
+    "token_absmax_max": 16.5,
+    "err": {
+     "per_tensor": 0.025805629789829254,
+     "per_head": 0.01792793720960617,
+     "per_channel": 0.01154334843158722,
+     "per_token": 0.009573712013661861,
+     "per_token_head": 0.007374041248112917
+    },
+    "err_per_channel_q999": 0.020088987424969673
+   },
+   "k_rope_pair_corr": 0.7134205102920532
+  },
+  "24": {
+   "k": {
+    "absmax": 19.5,
+    "channel_ratio": 4.763636589050293,
+    "head_ratio": 1.1908396482467651,
+    "token_absmax_p50": 11.9375,
+    "token_absmax_max": 18.0,
+    "err": {
+     "per_tensor": 0.02583489939570427,
+     "per_head": 0.022857695817947388,
+     "per_channel": 0.007217623759061098,
+     "per_token": 0.017244605347514153,
+     "per_token_head": 0.013215871527791023
+    },
+    "err_per_channel_q999": 0.01006621215492487,
+    "err_visible_per_channel": 0.009948083199560642,
+    "err_visible_per_channel_smooth": 0.009354712441563606,
+    "err_visible_per_token_head": 0.018215490505099297
+   },
+   "v": {
+    "absmax": 18.0,
+    "channel_ratio": 1.96891188621521,
+    "head_ratio": 1.959183692932129,
+    "token_absmax_p50": 5.59375,
+    "token_absmax_max": 14.5,
+    "err": {
+     "per_tensor": 0.02157972939312458,
+     "per_head": 0.017279990017414093,
+     "per_channel": 0.01110060978680849,
+     "per_token": 0.008846130222082138,
+     "per_token_head": 0.006858468521386385
+    },
+    "err_per_channel_q999": 0.018582506105303764
+   },
+   "k_rope_pair_corr": 0.7991334199905396
+  },
+  "25": {
+   "k": {
+    "absmax": 22.625,
+    "channel_ratio": 4.763157844543457,
+    "head_ratio": 1.792079210281372,
+    "token_absmax_p50": 11.8125,
+    "token_absmax_max": 18.5,
+    "err": {
+     "per_tensor": 0.027136437594890594,
+     "per_head": 0.021898530423641205,
+     "per_channel": 0.007081135641783476,
+     "per_token": 0.017596568912267685,
+     "per_token_head": 0.013265925459563732
+    },
+    "err_per_channel_q999": 0.009856365621089935,
+    "err_visible_per_channel": 0.010108870454132557,
+    "err_visible_per_channel_smooth": 0.0094296270981431,
+    "err_visible_per_token_head": 0.018938129767775536
+   },
+   "v": {
+    "absmax": 28.0,
+    "channel_ratio": 2.0089685916900635,
+    "head_ratio": 2.559999942779541,
+    "token_absmax_p50": 7.59375,
+    "token_absmax_max": 27.375,
+    "err": {
+     "per_tensor": 0.031017987057566643,
+     "per_head": 0.019726861268281937,
+     "per_channel": 0.01189109031111002,
+     "per_token": 0.009600878693163395,
+     "per_token_head": 0.007268616463989019
+    },
+    "err_per_channel_q999": 0.020926306024193764
+   },
+   "k_rope_pair_corr": 0.655218780040741
+  },
+  "26": {
+   "k": {
+    "absmax": 22.0,
+    "channel_ratio": 5.915966510772705,
+    "head_ratio": 1.5784753561019897,
+    "token_absmax_p50": 8.625,
+    "token_absmax_max": 16.75,
+    "err": {
+     "per_tensor": 0.02698461152613163,
+     "per_head": 0.023495327681303024,
+     "per_channel": 0.007646623533219099,
+     "per_token": 0.014280328527092934,
+     "per_token_head": 0.011625498533248901
+    },
+    "err_per_channel_q999": 0.01070932112634182,
+    "err_visible_per_channel": 0.010164777748286724,
+    "err_visible_per_channel_smooth": 0.009472536854445934,
+    "err_visible_per_token_head": 0.015453946776688099
+   },
+   "v": {
+    "absmax": 28.0,
+    "channel_ratio": 1.8482142686843872,
+    "head_ratio": 1.756862759590149,
+    "token_absmax_p50": 10.375,
+    "token_absmax_max": 28.0,
+    "err": {
+     "per_tensor": 0.02204015851020813,
+     "per_head": 0.018151966854929924,
+     "per_channel": 0.011970150284469128,
+     "per_token": 0.008697635494172573,
+     "per_token_head": 0.006668027490377426
+    },
+    "err_per_channel_q999": 0.021135585382580757
+   },
+   "k_rope_pair_corr": 0.7244523167610168
+  },
+  "27": {
+   "k": {
+    "absmax": 422.0,
+    "channel_ratio": 73.79235076904297,
+    "head_ratio": 20.585365295410156,
+    "token_absmax_p50": 416.0,
+    "token_absmax_max": 422.0,
+    "err": {
+     "per_tensor": 0.019813422113656998,
+     "per_head": 0.011588486842811108,
+     "per_channel": 0.0022915189620107412,
+     "per_token": 0.019573180004954338,
+     "per_token_head": 0.011382958851754665
+    },
+    "err_per_channel_q999": 0.0022854094859212637,
+    "err_visible_per_channel": 0.09446108341217041,
+    "err_visible_per_channel_smooth": 0.010038877837359905,
+    "err_visible_per_token_head": 0.4692287743091583
+   },
+   "v": {
+    "absmax": 70.5,
+    "channel_ratio": 7.673469543457031,
+    "head_ratio": 1.5666667222976685,
+    "token_absmax_p50": 11.625,
+    "token_absmax_max": 70.5,
+    "err": {
+     "per_tensor": 0.048103611916303635,
+     "per_head": 0.032214872539043427,
+     "per_channel": 0.013035153038799763,
+     "per_token": 0.00838867761194706,
+     "per_token_head": 0.0067305369302630424
+    },
+    "err_per_channel_q999": 0.025651317089796066
+   },
+   "k_rope_pair_corr": 0.7996659278869629
+  }
+ },
+ "mean_err": {
+  "k": {
+   "per_tensor": 0.02458175927001451,
+   "per_head": 0.019029337646705762,
+   "per_channel": 0.0060571900103241205,
+   "per_token": 0.018160113732197454,
+   "per_token_head": 0.012866579395319735,
+   "err_visible_per_channel": 0.015293833267475878,
+   "err_visible_per_channel_smooth": 0.009027101548521646,
+   "err_visible_per_token_head": 0.04956612403371504
+  },
+  "v": {
+   "per_tensor": 0.024989559315145016,
+   "per_head": 0.019604578680757965,
+   "per_channel": 0.010620404300945145,
+   "per_token": 0.010385459721354502,
+   "per_token_head": 0.007856344222091138
+  }
+ }
+}

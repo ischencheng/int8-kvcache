@@ -1,0 +1,438 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(MainProcess pid=7) INFO 10-25 21:47:44 [api_utils.py:286] non-default args: {'max_model_len': 4096, 'gpu_memory_utilization': 0.85, 'disable_log_stats': True, 'enforce_eager': True, 'model': 'Qwen/Qwen2.5-7B-Instruct'}
+(MainProcess pid=7) WARNING 10-25 21:47:44 [arg_utils.py:1945] The global random seed is set to 0. Since VLLM_ENABLE_V1_MULTIPROCESSING is set to False, this may affect the random state of the Python process that launched vLLM.
+(MainProcess pid=7) INFO 10-25 21:48:03 [model.py:733] Resolved architecture: Qwen2ForCausalLM
+(MainProcess pid=7) INFO 10-25 21:48:03 [model.py:2152] Using max model len 4096
+(MainProcess pid=7) INFO 10-25 21:48:03 [scheduler.py:307] Chunked prefill is enabled with max_num_batched_tokens=8192.
+(MainProcess pid=7) WARNING 10-25 21:48:03 [vllm.py:1703] Enforce eager set, disabling torch.compile, CUDAGraphs, and JIT kernel warmup. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none and --kernel_config.enable_jit_warmup=False
+(MainProcess pid=7) WARNING 10-25 21:48:03 [vllm.py:1727] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+(MainProcess pid=7) INFO 10-25 21:48:03 [kernel.py:467] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'], gelu_and_mul_sparse=['triton', 'native'])
+(MainProcess pid=7) INFO 10-25 21:48:03 [vllm.py:1929] Cudagraph is disabled under eager mode
+(MainProcess pid=7) INFO 10-25 21:48:03 [compilation.py:317] Enabled custom fusions: norm_quant, act_quant
+
+Fetching 10 files:   0%|          | 0/10 [00:00<?, ?it/s]
+Fetching 10 files:  20%|██        | 2/10 [00:00<00:00, 13.38it/s]
+Fetching 10 files:  90%|█████████ | 9/10 [00:00<00:00, 36.79it/s]
+Fetching 10 files: 100%|██████████| 10/10 [00:00<00:00, 30.90it/s]
+(MainProcess pid=7) INFO 10-25 21:48:07 [core.py:133] Initializing a V1 LLM engine (v0.32.0) with config: model='Qwen/Qwen2.5-7B-Instruct', speculative_config=None, tokenizer='Qwen/Qwen2.5-7B-Instruct', skip_tokenizer_init=False, tokenizer_mode=auto, revision=main, tokenizer_revision=main, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=4096, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=None, quantization_config=None, enforce_eager=True, aux_output_config=AuxOutputConfig(enable_return_routed_experts=False, max_bytes=None), kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, per_request_spec_decode_metrics='none', kv_cache_metrics=False, kv_cache_metrics_sample=0.01, custom_histogram_buckets=None, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False, jit_monitor_mode='warn', jit_monitor_verbose=False), seed=0, served_model_name=Qwen/Qwen2.5-7B-Instruct, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.NONE: 0>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['all'], 'ir_enable_torch_wrap': False, 'splitting_ops': [], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'cudagraph_decoder_replay': True, 'decoder_replay_cudagraph_capture_sizes': [], 'decoder_replay_trim_threshold': 768, 'compile_sizes': [], 'compile_ranges_endpoints': [8192], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.NONE: 0>, 'cudagraph_num_of_warmups': 0, 'cudagraph_capture_sizes': [], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': True, 'fuse_act_quant': True, 'fuse_attn_quant': False, 'fuse_allreduce_rms': False, 'enable_qk_norm_rope_fusion': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False, 'fuse_qk_norm_rope_kvcache': False}, 'max_cudagraph_capture_size': 0, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': False, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'], gelu_and_mul_sparse=['triton', 'native']), enable_flashinfer_autotune=True, enable_rocm_segmented_attn_autotune=False, enable_cutedsl_warmup=True, enable_jit_warmup=False, moe_backend='auto', sparse_indexer_topk_backend='auto', linear_backend='auto', linear_backend_per_quant=None)
+(MainProcess pid=7) INFO 10-25 21:48:10 [parallel_state.py:1906] world_size=1 rank=0 local_rank=0 distributed_init_method=file:///tmp/vllm_dist_426b6b068b2a4d94bcde12ec9d426318 backend=nccl
+(MainProcess pid=7) INFO 10-25 21:48:10 [parallel_state.py:2350] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, ETP rank 0, EP rank N/A, EPLB rank N/A
+(MainProcess pid=7) INFO 10-25 21:48:10 [gpu_worker.py:518] Using V2 Model Runner
+(MainProcess pid=7) INFO 10-25 21:48:12 [model_runner.py:392] Loading model from scratch...
+(MainProcess pid=7) INFO 10-25 21:48:14 [cuda.py:506] Using FLASH_ATTN attention backend out of potential backends: ['FLASH_ATTN', 'FLASHINFER', 'TRITON_ATTN', 'FLEX_ATTENTION'].
+(MainProcess pid=7) INFO 10-25 21:48:14 [flash_attn.py:1117] Using FlashAttention version 2
+(MainProcess pid=7) INFO 10-25 21:48:14 [base_loader.py:82] Initializing model took 2.431845 seconds
+(MainProcess pid=7) INFO 10-25 21:49:30 [weight_utils.py:532] Time spent downloading weights for Qwen/Qwen2.5-7B-Instruct: 76.044253 seconds
+(MainProcess pid=7) INFO 10-25 21:49:30 [weight_utils.py:1108] Filesystem type for checkpoints: 9P. Checkpoint size: 14.19 GiB. Available RAM: 1017.38 GiB.
+(MainProcess pid=7) INFO 10-25 21:49:30 [weight_utils.py:1131] Auto-prefetch is disabled because the filesystem (9P) is not a recognized network FS (NFS/Lustre). If you want to force prefetching, start vLLM with --safetensors-load-strategy=prefetch.
+
+Loading safetensors checkpoint shards:   0% Completed | 0/4 [00:00<?, ?it/s]
+
+Loading safetensors checkpoint shards:  25% Completed | 1/4 [00:01<00:03,  1.21s/it]
+
+Loading safetensors checkpoint shards:  50% Completed | 2/4 [00:02<00:02,  1.26s/it]
+
+Loading safetensors checkpoint shards:  75% Completed | 3/4 [00:03<00:01,  1.28s/it]
+
+Loading safetensors checkpoint shards: 100% Completed | 4/4 [00:08<00:00,  2.79s/it]
+
+Loading safetensors checkpoint shards: 100% Completed | 4/4 [00:08<00:00,  2.23s/it]
+
+(MainProcess pid=7) INFO 10-25 21:49:39 [default_loader.py:501] Loading weights took 9.03 seconds
+(MainProcess pid=7) INFO 10-25 21:49:42 [model_runner.py:424] Model loading took 14.29 GiB memory and 90.822218 seconds
+(MainProcess pid=7) INFO 10-25 21:49:42 [topk_topp_sampler.py:124] Using FlashInfer for top-p & top-k sampling.
+(MainProcess pid=7) WARNING 10-25 21:49:42 [torch_utils.py:283] OMP_NUM_THREADS=8 is set; leaving Torch threads at 8 for serving. Multi-threaded torch CPU ops during serving can degrade performance through spin-wait contention and cgroup CPU-quota throttling.
+(MainProcess pid=7) INFO 10-25 21:49:42 [utils.py:347] Using LBNHC KV cache layout.
+(MainProcess pid=7) INFO 10-25 21:49:48 [gpu_worker.py:759] Available KV cache memory: 51.71 GiB
+(MainProcess pid=7) INFO 10-25 21:49:48 [kv_cache_utils.py:2327] GPU KV cache size: 968,272 tokens, Maximum concurrency for 4,096 tokens per request: 236.39x
+(MainProcess pid=7) INFO 10-25 21:49:48 [gpu_worker.py:1034] Free memory on device (78.86/79.27 GiB) on startup. Desired GPU memory utilization is (0.85, 67.38 GiB). Actual usage is 14.58 GiB for consumed memory (weights + non-torch), 1.09 GiB for peak activation, and 0.0 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=55367690752` (51.57 GiB) to fit into requested memory, or `--kv-cache-memory=67689966080` (63.04 GiB) to fully utilize gpu memory. Current kv cache memory in use is 51.71 GiB.
+(MainProcess pid=7) INFO 10-25 21:49:48 [core.py:402] init engine (profile, create kv cache, warmup model) took 6.54 s
+(MainProcess pid=7) INFO 10-25 21:49:49 [hf.py:648] Detected the chat template content format to be 'string'. You can set `--chat-template-content-format` to override this.
+
+Rendering conversations:   0%|          | 0/230 [00:00<?, ?it/s]
+Rendering conversations:  38%|███▊      | 87/230 [00:00<00:00, 868.21it/s]
+Rendering conversations:  79%|███████▉  | 182/230 [00:00<00:00, 912.79it/s]
+Rendering conversations: 100%|██████████| 230/230 [00:00<00:00, 911.55it/s]
+
+Processed prompts:   0%|          | 0/230 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]
+Processed prompts:   0%|          | 1/230 [00:09<36:18,  9.51s/it, est. speed input: 7.36 toks/s, output: 13.56 toks/s]
+Processed prompts:   1%|          | 2/230 [00:09<15:33,  4.10s/it, est. speed input: 14.87 toks/s, output: 26.69 toks/s]
+Processed prompts:   1%|▏         | 3/230 [00:10<09:02,  2.39s/it, est. speed input: 22.81 toks/s, output: 39.72 toks/s]
+Processed prompts:   2%|▏         | 5/230 [00:10<04:02,  1.08s/it, est. speed input: 38.45 toks/s, output: 66.73 toks/s]
+Processed prompts:   3%|▎         | 6/230 [00:10<03:15,  1.15it/s, est. speed input: 43.90 toks/s, output: 78.62 toks/s]
+Processed prompts:   3%|▎         | 7/230 [00:10<02:27,  1.51it/s, est. speed input: 49.95 toks/s, output: 91.77 toks/s]
+Processed prompts:   3%|▎         | 8/230 [00:11<01:56,  1.91it/s, est. speed input: 57.22 toks/s, output: 104.55 toks/s]
+Processed prompts:   4%|▍         | 10/230 [00:11<01:17,  2.84it/s, est. speed input: 74.10 toks/s, output: 130.44 toks/s]
+Processed prompts:   6%|▌         | 13/230 [00:11<00:52,  4.11it/s, est. speed input: 94.99 toks/s, output: 168.72 toks/s]
+Processed prompts:   7%|▋         | 16/230 [00:11<00:33,  6.39it/s, est. speed input: 120.14 toks/s, output: 211.10 toks/s]
+Processed prompts:   8%|▊         | 18/230 [00:12<00:46,  4.53it/s, est. speed input: 127.43 toks/s, output: 228.32 toks/s]
+Processed prompts:   9%|▉         | 21/230 [00:12<00:35,  5.89it/s, est. speed input: 143.73 toks/s, output: 268.46 toks/s]
+Processed prompts:  10%|█         | 24/230 [00:13<00:26,  7.76it/s, est. speed input: 164.66 toks/s, output: 310.33 toks/s]
+Processed prompts:  11%|█▏        | 26/230 [00:13<00:25,  8.15it/s, est. speed input: 175.61 toks/s, output: 335.86 toks/s]
+Processed prompts:  12%|█▏        | 28/230 [00:13<00:25,  8.01it/s, est. speed input: 184.07 toks/s, output: 359.61 toks/s]
+Processed prompts:  14%|█▍        | 32/230 [00:13<00:16, 12.13it/s, est. speed input: 209.62 toks/s, output: 418.07 toks/s]
+Processed prompts:  15%|█▌        | 35/230 [00:13<00:14, 13.74it/s, est. speed input: 229.75 toks/s, output: 459.14 toks/s]
+Processed prompts:  17%|█▋        | 38/230 [00:13<00:12, 15.18it/s, est. speed input: 253.68 toks/s, output: 500.16 toks/s]
+Processed prompts:  18%|█▊        | 41/230 [00:14<00:13, 13.74it/s, est. speed input: 267.37 toks/s, output: 536.65 toks/s]
+Processed prompts:  19%|█▉        | 44/230 [00:14<00:13, 14.10it/s, est. speed input: 282.81 toks/s, output: 575.38 toks/s]
+Processed prompts:  20%|██        | 47/230 [00:14<00:12, 14.49it/s, est. speed input: 297.33 toks/s, output: 614.05 toks/s]
+Processed prompts:  23%|██▎       | 53/230 [00:14<00:09, 19.16it/s, est. speed input: 331.42 toks/s, output: 698.87 toks/s]
+Processed prompts:  24%|██▍       | 56/230 [00:14<00:08, 20.98it/s, est. speed input: 353.26 toks/s, output: 741.02 toks/s]
+Processed prompts:  26%|██▌       | 60/230 [00:14<00:07, 22.46it/s, est. speed input: 373.23 toks/s, output: 796.22 toks/s]
+Processed prompts:  27%|██▋       | 63/230 [00:15<00:08, 19.91it/s, est. speed input: 385.95 toks/s, output: 832.58 toks/s]
+Processed prompts:  29%|██▊       | 66/230 [00:15<00:08, 18.27it/s, est. speed input: 400.33 toks/s, output: 869.07 toks/s]
+Processed prompts:  30%|███       | 69/230 [00:15<00:10, 14.96it/s, est. speed input: 410.52 toks/s, output: 899.81 toks/s]
+Processed prompts:  31%|███       | 71/230 [00:15<00:10, 14.68it/s, est. speed input: 419.11 toks/s, output: 923.27 toks/s]
+Processed prompts:  32%|███▏      | 73/230 [00:16<00:12, 12.48it/s, est. speed input: 425.33 toks/s, output: 941.53 toks/s]
+Processed prompts:  33%|███▎      | 75/230 [00:16<00:11, 13.71it/s, est. speed input: 434.46 toks/s, output: 967.62 toks/s]
+Processed prompts:  34%|███▍      | 78/230 [00:16<00:10, 14.19it/s, est. speed input: 446.86 toks/s, output: 1003.83 toks/s]
+Processed prompts:  36%|███▌      | 82/230 [00:16<00:08, 17.48it/s, est. speed input: 462.76 toks/s, output: 1059.15 toks/s]
+Processed prompts:  37%|███▋      | 85/230 [00:16<00:07, 19.95it/s, est. speed input: 482.89 toks/s, output: 1101.05 toks/s]
+Processed prompts:  38%|███▊      | 88/230 [00:16<00:07, 18.35it/s, est. speed input: 497.70 toks/s, output: 1136.85 toks/s]
+Processed prompts:  40%|███▉      | 91/230 [00:16<00:07, 18.95it/s, est. speed input: 514.28 toks/s, output: 1175.67 toks/s]
+Processed prompts:  41%|████      | 94/230 [00:17<00:08, 15.17it/s, est. speed input: 521.16 toks/s, output: 1204.24 toks/s]
+Processed prompts:  42%|████▏     | 96/230 [00:17<00:09, 14.82it/s, est. speed input: 527.08 toks/s, output: 1226.91 toks/s]
+Processed prompts:  43%|████▎     | 100/230 [00:17<00:07, 18.01it/s, est. speed input: 546.67 toks/s, output: 1281.96 toks/s]
+Processed prompts:  44%|████▍     | 102/230 [00:17<00:07, 16.87it/s, est. speed input: 554.21 toks/s, output: 1304.19 toks/s]
+Processed prompts:  46%|████▌     | 106/230 [00:17<00:06, 20.00it/s, est. speed input: 572.68 toks/s, output: 1359.83 toks/s]
+Processed prompts:  49%|████▊     | 112/230 [00:18<00:04, 24.08it/s, est. speed input: 601.07 toks/s, output: 1444.20 toks/s]
+Processed prompts:  50%|█████     | 115/230 [00:18<00:05, 21.56it/s, est. speed input: 611.58 toks/s, output: 1479.17 toks/s]
+Processed prompts:  52%|█████▏    | 119/230 [00:18<00:04, 23.35it/s, est. speed input: 627.28 toks/s, output: 1534.07 toks/s]
+Processed prompts:  54%|█████▍    | 125/230 [00:18<00:03, 28.66it/s, est. speed input: 652.74 toks/s, output: 1621.73 toks/s]
+Processed prompts:  56%|█████▌    | 128/230 [00:18<00:03, 26.71it/s, est. speed input: 663.28 toks/s, output: 1659.41 toks/s]
+Processed prompts:  57%|█████▋    | 131/230 [00:18<00:03, 25.35it/s, est. speed input: 675.65 toks/s, output: 1697.38 toks/s]
+Processed prompts:  58%|█████▊    | 134/230 [00:19<00:05, 19.16it/s, est. speed input: 681.99 toks/s, output: 1723.55 toks/s]
+Processed prompts:  60%|█████▉    | 137/230 [00:19<00:04, 19.92it/s, est. speed input: 692.24 toks/s, output: 1761.93 toks/s]
+Processed prompts:  61%|██████▏   | 141/230 [00:19<00:04, 20.68it/s, est. speed input: 708.84 toks/s, output: 1812.99 toks/s]
+Processed prompts:  63%|██████▎   | 145/230 [00:19<00:03, 23.02it/s, est. speed input: 724.17 toks/s, output: 1868.02 toks/s]
+Processed prompts:  64%|██████▍   | 148/230 [00:19<00:03, 22.97it/s, est. speed input: 735.69 toks/s, output: 1906.25 toks/s]
+Processed prompts:  66%|██████▌   | 152/230 [00:19<00:03, 24.96it/s, est. speed input: 751.39 toks/s, output: 1961.17 toks/s]
+Processed prompts:  67%|██████▋   | 155/230 [00:20<00:04, 16.29it/s, est. speed input: 755.91 toks/s, output: 1976.37 toks/s]
+Processed prompts:  69%|██████▊   | 158/230 [00:20<00:05, 13.95it/s, est. speed input: 760.11 toks/s, output: 1998.48 toks/s]
+Processed prompts:  70%|██████▉   | 160/230 [00:20<00:05, 12.12it/s, est. speed input: 761.51 toks/s, output: 2008.89 toks/s]
+Processed prompts:  70%|███████   | 162/230 [00:20<00:06, 10.11it/s, est. speed input: 761.01 toks/s, output: 2013.56 toks/s]
+Processed prompts:  71%|███████▏  | 164/230 [00:21<00:06, 10.09it/s, est. speed input: 762.86 toks/s, output: 2029.35 toks/s]
+Processed prompts:  73%|███████▎  | 167/230 [00:21<00:05, 12.24it/s, est. speed input: 775.01 toks/s, output: 2067.43 toks/s]
+Processed prompts:  74%|███████▍  | 170/230 [00:21<00:04, 14.23it/s, est. speed input: 787.54 toks/s, output: 2106.01 toks/s]
+Processed prompts:  75%|███████▌  | 173/230 [00:21<00:03, 15.91it/s, est. speed input: 800.27 toks/s, output: 2144.50 toks/s]
+Processed prompts:  77%|███████▋  | 176/230 [00:21<00:04, 13.00it/s, est. speed input: 803.67 toks/s, output: 2165.00 toks/s]
+Processed prompts:  77%|███████▋  | 178/230 [00:22<00:04, 10.98it/s, est. speed input: 803.55 toks/s, output: 2173.13 toks/s]
+Processed prompts:  78%|███████▊  | 180/230 [00:22<00:04, 10.97it/s, est. speed input: 806.74 toks/s, output: 2190.66 toks/s]
+Processed prompts:  79%|███████▉  | 182/230 [00:22<00:06,  6.86it/s, est. speed input: 794.98 toks/s, output: 2168.77 toks/s]
+Processed prompts:  80%|███████▉  | 183/230 [00:23<00:07,  5.93it/s, est. speed input: 789.42 toks/s, output: 2159.42 toks/s]
+Processed prompts:  80%|████████  | 184/230 [00:23<00:08,  5.47it/s, est. speed input: 785.94 toks/s, output: 2154.63 toks/s]
+Processed prompts:  80%|████████  | 185/230 [00:23<00:08,  5.42it/s, est. speed input: 786.36 toks/s, output: 2155.08 toks/s]
+Processed prompts:  81%|████████▏ | 187/230 [00:23<00:07,  6.00it/s, est. speed input: 789.11 toks/s, output: 2165.98 toks/s]
+Processed prompts:  82%|████████▏ | 189/230 [00:24<00:07,  5.78it/s, est. speed input: 785.09 toks/s, output: 2168.61 toks/s]
+Processed prompts:  83%|████████▎ | 190/230 [00:24<00:06,  5.97it/s, est. speed input: 785.31 toks/s, output: 2173.76 toks/s]
+Processed prompts:  83%|████████▎ | 191/230 [00:24<00:07,  5.30it/s, est. speed input: 783.52 toks/s, output: 2168.50 toks/s]
+Processed prompts:  83%|████████▎ | 192/230 [00:25<00:12,  3.16it/s, est. speed input: 765.75 toks/s, output: 2125.09 toks/s]
+Processed prompts:  84%|████████▍ | 193/230 [00:25<00:11,  3.32it/s, est. speed input: 763.22 toks/s, output: 2122.16 toks/s]
+Processed prompts:  85%|████████▍ | 195/230 [00:26<00:08,  4.09it/s, est. speed input: 764.55 toks/s, output: 2131.02 toks/s]
+Processed prompts:  85%|████████▌ | 196/230 [00:26<00:12,  2.78it/s, est. speed input: 748.36 toks/s, output: 2090.21 toks/s]
+Processed prompts:  86%|████████▌ | 198/230 [00:27<00:11,  2.71it/s, est. speed input: 737.58 toks/s, output: 2068.59 toks/s]
+Processed prompts:  87%|████████▋ | 199/230 [00:28<00:16,  1.88it/s, est. speed input: 715.43 toks/s, output: 2007.62 toks/s]
+Processed prompts:  87%|████████▋ | 201/230 [00:31<00:22,  1.27it/s, est. speed input: 671.08 toks/s, output: 1889.96 toks/s]
+Processed prompts:  88%|████████▊ | 202/230 [00:31<00:20,  1.38it/s, est. speed input: 664.27 toks/s, output: 1879.08 toks/s]
+Processed prompts:  88%|████████▊ | 203/230 [00:31<00:17,  1.58it/s, est. speed input: 662.29 toks/s, output: 1878.20 toks/s]
+Processed prompts:  89%|████████▊ | 204/230 [00:32<00:17,  1.46it/s, est. speed input: 648.03 toks/s, output: 1848.80 toks/s]
+Processed prompts:  89%|████████▉ | 205/230 [00:33<00:19,  1.30it/s, est. speed input: 641.71 toks/s, output: 1813.18 toks/s]
+Processed prompts:  90%|████████▉ | 206/230 [00:36<00:30,  1.27s/it, est. speed input: 600.14 toks/s, output: 1704.37 toks/s]
+Processed prompts:  90%|█████████ | 207/230 [00:36<00:22,  1.05it/s, est. speed input: 600.86 toks/s, output: 1716.14 toks/s]
+Processed prompts:  90%|█████████ | 208/230 [00:38<00:29,  1.33s/it, est. speed input: 568.34 toks/s, output: 1635.95 toks/s]
+Processed prompts:  91%|█████████ | 209/230 [00:39<00:23,  1.11s/it, est. speed input: 563.14 toks/s, output: 1631.45 toks/s]
+Processed prompts:  91%|█████████▏| 210/230 [00:41<00:27,  1.38s/it, est. speed input: 539.62 toks/s, output: 1571.55 toks/s]
+Processed prompts:  92%|█████████▏| 211/230 [00:43<00:30,  1.59s/it, est. speed input: 516.24 toks/s, output: 1516.55 toks/s]
+Processed prompts:  92%|█████████▏| 212/230 [00:45<00:30,  1.69s/it, est. speed input: 496.12 toks/s, output: 1471.84 toks/s]
+Processed prompts:  93%|█████████▎| 213/230 [00:46<00:24,  1.45s/it, est. speed input: 490.15 toks/s, output: 1464.51 toks/s]
+Processed prompts:  93%|█████████▎| 214/230 [00:46<00:17,  1.10s/it, est. speed input: 491.60 toks/s, output: 1476.66 toks/s]
+Processed prompts:  93%|█████████▎| 215/230 [00:49<00:27,  1.81s/it, est. speed input: 460.26 toks/s, output: 1394.63 toks/s]
+Processed prompts:  94%|█████████▍| 216/230 [00:51<00:24,  1.77s/it, est. speed input: 448.30 toks/s, output: 1370.22 toks/s]
+Processed prompts:  94%|█████████▍| 217/230 [00:55<00:29,  2.30s/it, est. speed input: 421.38 toks/s, output: 1303.06 toks/s]
+Processed prompts:  95%|█████████▍| 218/230 [00:58<00:30,  2.56s/it, est. speed input: 400.54 toks/s, output: 1253.21 toks/s]
+Processed prompts:  95%|█████████▌| 219/230 [00:59<00:24,  2.20s/it, est. speed input: 392.97 toks/s, output: 1246.12 toks/s]
+Processed prompts:  96%|█████████▌| 220/230 [01:01<00:19,  1.93s/it, est. speed input: 387.46 toks/s, output: 1240.56 toks/s]
+Processed prompts:  96%|█████████▌| 221/230 [01:02<00:15,  1.69s/it, est. speed input: 382.15 toks/s, output: 1239.33 toks/s]
+Processed prompts:  97%|█████████▋| 222/230 [01:03<00:12,  1.62s/it, est. speed input: 375.40 toks/s, output: 1232.27 toks/s]
+Processed prompts:  97%|█████████▋| 223/230 [01:04<00:08,  1.26s/it, est. speed input: 375.06 toks/s, output: 1245.30 toks/s]
+Processed prompts:  97%|█████████▋| 224/230 [01:06<00:10,  1.74s/it, est. speed input: 360.80 toks/s, output: 1213.33 toks/s]
+Processed prompts:  98%|█████████▊| 225/230 [01:08<00:08,  1.62s/it, est. speed input: 355.31 toks/s, output: 1210.61 toks/s]
+Processed prompts:  98%|█████████▊| 226/230 [01:12<00:09,  2.39s/it, est. speed input: 336.28 toks/s, output: 1162.16 toks/s]
+Processed prompts:  99%|█████████▊| 227/230 [01:32<00:23,  7.78s/it, est. speed input: 265.12 toks/s, output: 929.34 toks/s] 
+Processed prompts: 100%|██████████| 230/230 [01:32<00:00,  7.78s/it, est. speed input: 271.18 toks/s, output: 995.56 toks/s]
+Processed prompts: 100%|██████████| 230/230 [01:32<00:00,  2.48it/s, est. speed input: 271.18 toks/s, output: 995.56 toks/s]
+{
+  "model": "Qwen/Qwen2.5-7B-Instruct",
+  "num_prompts": 230,
+  "total_tokens": 117529,
+  "max_seq_len": 2289,
+  "dumped_layers": [
+    "model.layers.0.self_attn.attn",
+    "model.layers.14.self_attn.attn",
+    "model.layers.27.self_attn.attn"
+  ],
+  "sampled_tokens_per_layer": {
+    "model.layers.0.self_attn.attn": 16384
+  }
+}
+| layer | K max | K ch ratio | K head ratio | V max | V ch ratio | K per_tensor | K per_head | K per_channel | K per_token | K per_token_head | V per_tensor | V per_head | V per_channel | V per_token | V per_token_head |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 0 | 173.0 | 40.1 | 1.9 | 3.25 | 3.5 | 0.0146 | 0.0110 | 0.0025 | 0.0144 | 0.0107 | 0.0276 | 0.0244 | 0.0103 | 0.0163 | 0.0115 |
+| 1 | 67.0 | 24.4 | 4.7 | 2.55 | 4.5 | 0.0205 | 0.0114 | 0.0028 | 0.0201 | 0.0108 | 0.0352 | 0.0247 | 0.0105 | 0.0121 | 0.0089 |
+| 2 | 33.8 | 5.7 | 3.6 | 4.31 | 3.0 | 0.0253 | 0.0165 | 0.0044 | 0.0216 | 0.0133 | 0.0347 | 0.0264 | 0.0109 | 0.0140 | 0.0098 |
+| 3 | 75.0 | 15.7 | 4.3 | 3.48 | 2.9 | 0.0313 | 0.0187 | 0.0031 | 0.0296 | 0.0173 | 0.0232 | 0.0207 | 0.0112 | 0.0104 | 0.0077 |
+| 4 | 13.8 | 3.9 | 1.2 | 6.06 | 5.2 | 0.0171 | 0.0162 | 0.0068 | 0.0138 | 0.0115 | 0.0276 | 0.0208 | 0.0096 | 0.0162 | 0.0104 |
+| 5 | 18.6 | 4.4 | 1.9 | 7.03 | 2.9 | 0.0240 | 0.0186 | 0.0066 | 0.0187 | 0.0138 | 0.0293 | 0.0229 | 0.0093 | 0.0117 | 0.0090 |
+| 6 | 18.2 | 5.5 | 1.6 | 6.59 | 3.2 | 0.0228 | 0.0175 | 0.0056 | 0.0179 | 0.0129 | 0.0244 | 0.0197 | 0.0100 | 0.0128 | 0.0088 |
+| 7 | 17.4 | 4.6 | 1.1 | 6.91 | 1.8 | 0.0203 | 0.0189 | 0.0058 | 0.0141 | 0.0131 | 0.0233 | 0.0187 | 0.0116 | 0.0089 | 0.0068 |
+| 8 | 17.2 | 3.3 | 1.6 | 7.31 | 2.8 | 0.0211 | 0.0172 | 0.0071 | 0.0150 | 0.0116 | 0.0268 | 0.0232 | 0.0101 | 0.0113 | 0.0086 |
+| 9 | 19.8 | 4.4 | 1.4 | 5.97 | 1.6 | 0.0238 | 0.0212 | 0.0067 | 0.0148 | 0.0127 | 0.0198 | 0.0165 | 0.0110 | 0.0083 | 0.0066 |
+| 10 | 16.0 | 3.4 | 1.2 | 5.12 | 1.8 | 0.0199 | 0.0182 | 0.0064 | 0.0152 | 0.0130 | 0.0194 | 0.0166 | 0.0106 | 0.0098 | 0.0075 |
+| 11 | 17.0 | 3.1 | 1.4 | 5.53 | 2.2 | 0.0197 | 0.0180 | 0.0070 | 0.0133 | 0.0119 | 0.0202 | 0.0179 | 0.0095 | 0.0103 | 0.0084 |
+| 12 | 21.0 | 5.0 | 2.0 | 6.69 | 2.3 | 0.0276 | 0.0190 | 0.0067 | 0.0181 | 0.0119 | 0.0229 | 0.0178 | 0.0099 | 0.0099 | 0.0077 |
+| 13 | 46.5 | 9.5 | 3.5 | 5.94 | 2.1 | 0.0340 | 0.0211 | 0.0045 | 0.0306 | 0.0176 | 0.0205 | 0.0183 | 0.0106 | 0.0094 | 0.0072 |
+| 14 | 20.1 | 4.7 | 1.5 | 7.03 | 2.4 | 0.0277 | 0.0211 | 0.0076 | 0.0174 | 0.0122 | 0.0236 | 0.0179 | 0.0097 | 0.0105 | 0.0081 |
+| 15 | 28.8 | 6.1 | 2.7 | 6.88 | 2.3 | 0.0331 | 0.0199 | 0.0060 | 0.0249 | 0.0141 | 0.0231 | 0.0180 | 0.0095 | 0.0103 | 0.0084 |
+| 16 | 21.9 | 4.6 | 1.6 | 6.53 | 1.9 | 0.0273 | 0.0224 | 0.0068 | 0.0173 | 0.0136 | 0.0178 | 0.0159 | 0.0102 | 0.0093 | 0.0074 |
+| 17 | 17.1 | 3.4 | 1.2 | 6.97 | 2.0 | 0.0243 | 0.0206 | 0.0075 | 0.0158 | 0.0115 | 0.0196 | 0.0173 | 0.0102 | 0.0093 | 0.0075 |
+| 18 | 18.0 | 4.1 | 1.3 | 13.25 | 2.4 | 0.0254 | 0.0204 | 0.0070 | 0.0158 | 0.0120 | 0.0359 | 0.0224 | 0.0115 | 0.0090 | 0.0070 |
+| 19 | 51.2 | 12.6 | 3.8 | 7.91 | 1.8 | 0.0409 | 0.0238 | 0.0046 | 0.0367 | 0.0196 | 0.0196 | 0.0158 | 0.0101 | 0.0097 | 0.0073 |
+| 20 | 16.4 | 3.2 | 1.2 | 8.50 | 2.0 | 0.0209 | 0.0194 | 0.0079 | 0.0122 | 0.0100 | 0.0184 | 0.0161 | 0.0104 | 0.0088 | 0.0070 |
+| 21 | 18.6 | 3.9 | 1.1 | 9.69 | 2.0 | 0.0208 | 0.0200 | 0.0070 | 0.0144 | 0.0129 | 0.0203 | 0.0160 | 0.0105 | 0.0086 | 0.0068 |
+| 22 | 16.9 | 3.9 | 1.0 | 10.12 | 1.7 | 0.0216 | 0.0205 | 0.0076 | 0.0131 | 0.0110 | 0.0181 | 0.0158 | 0.0104 | 0.0088 | 0.0069 |
+| 23 | 19.5 | 4.2 | 1.3 | 16.50 | 1.8 | 0.0245 | 0.0216 | 0.0074 | 0.0148 | 0.0119 | 0.0258 | 0.0179 | 0.0115 | 0.0096 | 0.0074 |
+| 24 | 19.5 | 4.8 | 1.2 | 18.00 | 2.0 | 0.0258 | 0.0229 | 0.0072 | 0.0172 | 0.0132 | 0.0216 | 0.0173 | 0.0111 | 0.0088 | 0.0069 |
+| 25 | 22.6 | 4.8 | 1.8 | 28.00 | 2.0 | 0.0271 | 0.0219 | 0.0071 | 0.0176 | 0.0133 | 0.0310 | 0.0197 | 0.0119 | 0.0096 | 0.0073 |
+| 26 | 22.0 | 5.9 | 1.6 | 28.00 | 1.8 | 0.0270 | 0.0235 | 0.0076 | 0.0143 | 0.0116 | 0.0220 | 0.0182 | 0.0120 | 0.0087 | 0.0067 |
+| 27 | 422.0 | 73.8 | 20.6 | 70.50 | 7.7 | 0.0198 | 0.0116 | 0.0023 | 0.0196 | 0.0114 | 0.0481 | 0.0322 | 0.0130 | 0.0084 | 0.0067 |
+mean over layers: {
+ "k": {
+  "per_tensor": 0.02458175927001451,
+  "per_head": 0.019029337646705762,
+  "per_channel": 0.0060571900103241205,
+  "per_token": 0.018160113732197454,
+  "per_token_head": 0.012866579395319735
+ },
+ "v": {
+  "per_tensor": 0.024989559315145016,
+  "per_head": 0.019604578680757965,
+  "per_channel": 0.010620404300945145,
+  "per_token": 0.010385459721354502,
+  "per_token_head": 0.007856344222091138
+ }
+}
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(MainProcess pid=289) INFO 10-25 21:52:18 [api_utils.py:286] non-default args: {'max_model_len': 4096, 'gpu_memory_utilization': 0.85, 'disable_log_stats': True, 'enforce_eager': True, 'model': 'Qwen/Qwen2.5-1.5B-Instruct'}
+(MainProcess pid=289) WARNING 10-25 21:52:18 [arg_utils.py:1945] The global random seed is set to 0. Since VLLM_ENABLE_V1_MULTIPROCESSING is set to False, this may affect the random state of the Python process that launched vLLM.
+(MainProcess pid=289) INFO 10-25 21:52:18 [model.py:733] Resolved architecture: Qwen2ForCausalLM
+(MainProcess pid=289) INFO 10-25 21:52:18 [model.py:2152] Using max model len 4096
+(MainProcess pid=289) INFO 10-25 21:52:18 [scheduler.py:307] Chunked prefill is enabled with max_num_batched_tokens=8192.
+(MainProcess pid=289) WARNING 10-25 21:52:19 [vllm.py:1703] Enforce eager set, disabling torch.compile, CUDAGraphs, and JIT kernel warmup. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none and --kernel_config.enable_jit_warmup=False
+(MainProcess pid=289) WARNING 10-25 21:52:19 [vllm.py:1727] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+(MainProcess pid=289) INFO 10-25 21:52:19 [kernel.py:467] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'], gelu_and_mul_sparse=['triton', 'native'])
+(MainProcess pid=289) INFO 10-25 21:52:19 [vllm.py:1929] Cudagraph is disabled under eager mode
+(MainProcess pid=289) INFO 10-25 21:52:19 [compilation.py:317] Enabled custom fusions: norm_quant, act_quant
+
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]
+Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 636.30it/s]
+(MainProcess pid=289) INFO 10-25 21:52:23 [core.py:133] Initializing a V1 LLM engine (v0.32.0) with config: model='Qwen/Qwen2.5-1.5B-Instruct', speculative_config=None, tokenizer='Qwen/Qwen2.5-1.5B-Instruct', skip_tokenizer_init=False, tokenizer_mode=auto, revision=main, tokenizer_revision=main, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=4096, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=None, quantization_config=None, enforce_eager=True, aux_output_config=AuxOutputConfig(enable_return_routed_experts=False, max_bytes=None), kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, per_request_spec_decode_metrics='none', kv_cache_metrics=False, kv_cache_metrics_sample=0.01, custom_histogram_buckets=None, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False, jit_monitor_mode='warn', jit_monitor_verbose=False), seed=0, served_model_name=Qwen/Qwen2.5-1.5B-Instruct, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.NONE: 0>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['all'], 'ir_enable_torch_wrap': False, 'splitting_ops': [], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'cudagraph_decoder_replay': True, 'decoder_replay_cudagraph_capture_sizes': [], 'decoder_replay_trim_threshold': 768, 'compile_sizes': [], 'compile_ranges_endpoints': [8192], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.NONE: 0>, 'cudagraph_num_of_warmups': 0, 'cudagraph_capture_sizes': [], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': True, 'fuse_act_quant': True, 'fuse_attn_quant': False, 'fuse_allreduce_rms': False, 'enable_qk_norm_rope_fusion': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False, 'fuse_qk_norm_rope_kvcache': False}, 'max_cudagraph_capture_size': 0, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': False, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'], gelu_and_mul_sparse=['triton', 'native']), enable_flashinfer_autotune=True, enable_rocm_segmented_attn_autotune=False, enable_cutedsl_warmup=True, enable_jit_warmup=False, moe_backend='auto', sparse_indexer_topk_backend='auto', linear_backend='auto', linear_backend_per_quant=None)
+(MainProcess pid=289) INFO 10-25 21:52:26 [parallel_state.py:1906] world_size=1 rank=0 local_rank=0 distributed_init_method=file:///tmp/vllm_dist_fc4ad5db4d454cdb957070fd506691bd backend=nccl
+(MainProcess pid=289) INFO 10-25 21:52:26 [parallel_state.py:2350] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, ETP rank 0, EP rank N/A, EPLB rank N/A
+(MainProcess pid=289) INFO 10-25 21:52:26 [gpu_worker.py:518] Using V2 Model Runner
+(MainProcess pid=289) INFO 10-25 21:52:28 [model_runner.py:392] Loading model from scratch...
+(MainProcess pid=289) INFO 10-25 21:52:30 [cuda.py:506] Using FLASH_ATTN attention backend out of potential backends: ['FLASH_ATTN', 'FLASHINFER', 'TRITON_ATTN', 'FLEX_ATTENTION'].
+(MainProcess pid=289) INFO 10-25 21:52:30 [flash_attn.py:1117] Using FlashAttention version 2
+(MainProcess pid=289) INFO 10-25 21:52:30 [base_loader.py:82] Initializing model took 2.661892 seconds
+(MainProcess pid=289) INFO 10-25 21:52:31 [weight_utils.py:1108] Filesystem type for checkpoints: 9P. Checkpoint size: 2.88 GiB. Available RAM: 1017.73 GiB.
+(MainProcess pid=289) INFO 10-25 21:52:31 [weight_utils.py:1131] Auto-prefetch is disabled because the filesystem (9P) is not a recognized network FS (NFS/Lustre). If you want to force prefetching, start vLLM with --safetensors-load-strategy=prefetch.
+
+Loading safetensors checkpoint shards:   0% Completed | 0/1 [00:00<?, ?it/s]
+
+Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:02<00:00,  2.24s/it]
+
+Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:02<00:00,  2.24s/it]
+
+(MainProcess pid=289) INFO 10-25 21:52:33 [default_loader.py:501] Loading weights took 2.34 seconds
+(MainProcess pid=289) INFO 10-25 21:52:36 [model_runner.py:424] Model loading took 2.98 GiB memory and 8.556533 seconds
+(MainProcess pid=289) INFO 10-25 21:52:36 [topk_topp_sampler.py:124] Using FlashInfer for top-p & top-k sampling.
+(MainProcess pid=289) WARNING 10-25 21:52:36 [torch_utils.py:283] OMP_NUM_THREADS=8 is set; leaving Torch threads at 8 for serving. Multi-threaded torch CPU ops during serving can degrade performance through spin-wait contention and cgroup CPU-quota throttling.
+(MainProcess pid=289) INFO 10-25 21:52:36 [utils.py:347] Using LBNHC KV cache layout.
+(MainProcess pid=289) INFO 10-25 21:52:40 [gpu_worker.py:759] Available KV cache memory: 63.57 GiB
+(MainProcess pid=289) INFO 10-25 21:52:40 [kv_cache_utils.py:2327] GPU KV cache size: 2,380,592 tokens, Maximum concurrency for 4,096 tokens per request: 581.20x
+(MainProcess pid=289) INFO 10-25 21:52:40 [gpu_worker.py:1034] Free memory on device (78.86/79.27 GiB) on startup. Desired GPU memory utilization is (0.85, 67.38 GiB). Actual usage is 3.31 GiB for consumed memory (weights + non-torch), 0.5 GiB for peak activation, and 0.0 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=68099500544` (63.42 GiB) to fit into requested memory, or `--kv-cache-memory=80421775872` (74.9 GiB) to fully utilize gpu memory. Current kv cache memory in use is 63.57 GiB.
+(MainProcess pid=289) INFO 10-25 21:52:41 [core.py:402] init engine (profile, create kv cache, warmup model) took 5.01 s
+(MainProcess pid=289) INFO 10-25 21:52:42 [hf.py:648] Detected the chat template content format to be 'string'. You can set `--chat-template-content-format` to override this.
+
+Rendering conversations:   0%|          | 0/230 [00:00<?, ?it/s]
+Rendering conversations:  44%|████▍     | 101/230 [00:00<00:00, 1006.71it/s]
+Rendering conversations:  90%|█████████ | 208/230 [00:00<00:00, 1042.17it/s]
+Rendering conversations: 100%|██████████| 230/230 [00:00<00:00, 1037.67it/s]
+
+Processed prompts:   0%|          | 0/230 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]
+Processed prompts:   0%|          | 1/230 [00:08<30:44,  8.06s/it, est. speed input: 11.05 toks/s, output: 15.77 toks/s]
+Processed prompts:   1%|          | 2/230 [00:08<12:57,  3.41s/it, est. speed input: 19.48 toks/s, output: 31.29 toks/s]
+Processed prompts:   1%|▏         | 3/230 [00:09<09:56,  2.63s/it, est. speed input: 24.82 toks/s, output: 42.28 toks/s]
+Processed prompts:   2%|▏         | 4/230 [00:10<06:14,  1.66s/it, est. speed input: 35.21 toks/s, output: 57.83 toks/s]
+Processed prompts:   3%|▎         | 6/230 [00:10<03:07,  1.19it/s, est. speed input: 51.82 toks/s, output: 88.59 toks/s]
+Processed prompts:   3%|▎         | 8/230 [00:10<01:51,  1.99it/s, est. speed input: 70.07 toks/s, output: 120.17 toks/s]
+Processed prompts:   4%|▍         | 10/230 [00:10<01:17,  2.82it/s, est. speed input: 83.96 toks/s, output: 149.88 toks/s]
+Processed prompts:   5%|▌         | 12/230 [00:10<00:56,  3.86it/s, est. speed input: 98.26 toks/s, output: 179.97 toks/s]
+Processed prompts:   6%|▌         | 14/230 [00:11<00:45,  4.73it/s, est. speed input: 113.47 toks/s, output: 208.84 toks/s]
+Processed prompts:   7%|▋         | 15/230 [00:11<00:41,  5.17it/s, est. speed input: 119.07 toks/s, output: 222.92 toks/s]
+Processed prompts:   7%|▋         | 17/230 [00:11<00:33,  6.45it/s, est. speed input: 132.63 toks/s, output: 252.29 toks/s]
+Processed prompts:   8%|▊         | 19/230 [00:11<00:36,  5.75it/s, est. speed input: 141.04 toks/s, output: 276.30 toks/s]
+Processed prompts:   9%|▊         | 20/230 [00:11<00:35,  5.95it/s, est. speed input: 148.66 toks/s, output: 289.52 toks/s]
+Processed prompts:  10%|▉         | 22/230 [00:12<00:27,  7.45it/s, est. speed input: 165.11 toks/s, output: 319.09 toks/s]
+Processed prompts:  11%|█         | 25/230 [00:12<00:19, 10.26it/s, est. speed input: 186.63 toks/s, output: 364.73 toks/s]
+Processed prompts:  12%|█▏        | 28/230 [00:12<00:16, 12.40it/s, est. speed input: 204.27 toks/s, output: 409.67 toks/s]
+Processed prompts:  13%|█▎        | 31/230 [00:12<00:13, 14.75it/s, est. speed input: 224.51 toks/s, output: 454.95 toks/s]
+Processed prompts:  14%|█▍        | 33/230 [00:12<00:14, 13.19it/s, est. speed input: 238.00 toks/s, output: 480.97 toks/s]
+Processed prompts:  15%|█▌        | 35/230 [00:12<00:15, 12.56it/s, est. speed input: 249.66 toks/s, output: 507.24 toks/s]
+Processed prompts:  16%|█▌        | 37/230 [00:13<00:20,  9.35it/s, est. speed input: 256.49 toks/s, output: 526.58 toks/s]
+Processed prompts:  17%|█▋        | 39/230 [00:13<00:17, 10.72it/s, est. speed input: 266.39 toks/s, output: 555.18 toks/s]
+Processed prompts:  18%|█▊        | 41/230 [00:13<00:18, 10.35it/s, est. speed input: 274.44 toks/s, output: 579.70 toks/s]
+Processed prompts:  19%|█▉        | 44/230 [00:13<00:14, 12.85it/s, est. speed input: 292.04 toks/s, output: 623.63 toks/s]
+Processed prompts:  20%|██        | 46/230 [00:13<00:13, 13.19it/s, est. speed input: 301.71 toks/s, output: 650.60 toks/s]
+Processed prompts:  21%|██        | 48/230 [00:14<00:18,  9.66it/s, est. speed input: 312.38 toks/s, output: 667.74 toks/s]
+Processed prompts:  22%|██▏       | 51/230 [00:14<00:14, 12.62it/s, est. speed input: 329.68 toks/s, output: 712.96 toks/s]
+Processed prompts:  24%|██▍       | 56/230 [00:14<00:10, 15.86it/s, est. speed input: 362.03 toks/s, output: 785.38 toks/s]
+Processed prompts:  25%|██▌       | 58/230 [00:14<00:10, 16.23it/s, est. speed input: 375.50 toks/s, output: 813.07 toks/s]
+Processed prompts:  27%|██▋       | 61/230 [00:14<00:09, 16.96it/s, est. speed input: 390.04 toks/s, output: 854.65 toks/s]
+Processed prompts:  28%|██▊       | 65/230 [00:15<00:09, 17.91it/s, est. speed input: 413.97 toks/s, output: 910.17 toks/s]
+Processed prompts:  29%|██▉       | 67/230 [00:15<00:08, 18.13it/s, est. speed input: 423.99 toks/s, output: 937.52 toks/s]
+Processed prompts:  30%|███       | 69/230 [00:15<00:09, 16.74it/s, est. speed input: 437.19 toks/s, output: 962.06 toks/s]
+Processed prompts:  33%|███▎      | 75/230 [00:15<00:06, 23.67it/s, est. speed input: 472.21 toks/s, output: 1054.54 toks/s]
+Processed prompts:  34%|███▍      | 78/230 [00:15<00:08, 17.00it/s, est. speed input: 481.34 toks/s, output: 1084.08 toks/s]
+Processed prompts:  35%|███▍      | 80/230 [00:16<00:13, 11.15it/s, est. speed input: 481.57 toks/s, output: 1089.50 toks/s]
+Processed prompts:  36%|███▌      | 83/230 [00:16<00:12, 11.95it/s, est. speed input: 491.55 toks/s, output: 1126.44 toks/s]
+Processed prompts:  38%|███▊      | 87/230 [00:16<00:10, 13.92it/s, est. speed input: 511.69 toks/s, output: 1180.39 toks/s]
+Processed prompts:  40%|███▉      | 91/230 [00:16<00:09, 15.43it/s, est. speed input: 528.80 toks/s, output: 1233.82 toks/s]
+Processed prompts:  41%|████      | 94/230 [00:16<00:08, 16.31it/s, est. speed input: 541.50 toks/s, output: 1273.84 toks/s]
+Processed prompts:  42%|████▏     | 96/230 [00:17<00:07, 16.76it/s, est. speed input: 549.39 toks/s, output: 1300.30 toks/s]
+Processed prompts:  44%|████▍     | 102/230 [00:17<00:05, 25.06it/s, est. speed input: 584.18 toks/s, output: 1395.03 toks/s]
+Processed prompts:  46%|████▌     | 106/230 [00:17<00:05, 22.93it/s, est. speed input: 599.50 toks/s, output: 1447.10 toks/s]
+Processed prompts:  47%|████▋     | 109/230 [00:17<00:05, 21.66it/s, est. speed input: 613.72 toks/s, output: 1485.26 toks/s]
+Processed prompts:  49%|████▉     | 113/230 [00:17<00:04, 24.57it/s, est. speed input: 629.81 toks/s, output: 1544.16 toks/s]
+Processed prompts:  50%|█████     | 116/230 [00:17<00:05, 22.75it/s, est. speed input: 642.07 toks/s, output: 1581.93 toks/s]
+Processed prompts:  52%|█████▏    | 119/230 [00:18<00:06, 16.25it/s, est. speed input: 647.52 toks/s, output: 1604.76 toks/s]
+Processed prompts:  53%|█████▎    | 122/230 [00:18<00:08, 12.63it/s, est. speed input: 648.90 toks/s, output: 1623.64 toks/s]
+Processed prompts:  54%|█████▍    | 124/230 [00:18<00:07, 13.54it/s, est. speed input: 656.17 toks/s, output: 1649.01 toks/s]
+Processed prompts:  56%|█████▌    | 128/230 [00:18<00:05, 17.82it/s, est. speed input: 674.63 toks/s, output: 1708.68 toks/s]
+Processed prompts:  57%|█████▋    | 131/230 [00:18<00:04, 19.81it/s, est. speed input: 690.33 toks/s, output: 1750.54 toks/s]
+Processed prompts:  58%|█████▊    | 134/230 [00:19<00:06, 15.27it/s, est. speed input: 698.24 toks/s, output: 1774.45 toks/s]
+Processed prompts:  60%|█████▉    | 137/230 [00:19<00:05, 16.35it/s, est. speed input: 708.20 toks/s, output: 1812.35 toks/s]
+Processed prompts:  61%|██████    | 140/230 [00:19<00:05, 15.98it/s, est. speed input: 718.67 toks/s, output: 1845.97 toks/s]
+Processed prompts:  62%|██████▏   | 142/230 [00:19<00:05, 15.32it/s, est. speed input: 722.46 toks/s, output: 1866.64 toks/s]
+Processed prompts:  63%|██████▎   | 144/230 [00:19<00:05, 16.01it/s, est. speed input: 732.74 toks/s, output: 1891.31 toks/s]
+Processed prompts:  63%|██████▎   | 146/230 [00:19<00:04, 16.83it/s, est. speed input: 738.54 toks/s, output: 1916.52 toks/s]
+Processed prompts:  64%|██████▍   | 148/230 [00:19<00:04, 17.40it/s, est. speed input: 749.63 toks/s, output: 1941.43 toks/s]
+Processed prompts:  65%|██████▌   | 150/230 [00:20<00:06, 11.90it/s, est. speed input: 748.12 toks/s, output: 1946.86 toks/s]
+Processed prompts:  67%|██████▋   | 154/230 [00:20<00:04, 15.87it/s, est. speed input: 763.29 toks/s, output: 2002.83 toks/s]
+Processed prompts:  68%|██████▊   | 157/230 [00:20<00:04, 17.10it/s, est. speed input: 776.69 toks/s, output: 2040.99 toks/s]
+Processed prompts:  70%|██████▉   | 160/230 [00:20<00:04, 15.37it/s, est. speed input: 783.05 toks/s, output: 2069.97 toks/s]
+Processed prompts:  70%|███████   | 162/230 [00:21<00:05, 12.87it/s, est. speed input: 783.35 toks/s, output: 2081.58 toks/s]
+Processed prompts:  73%|███████▎  | 167/230 [00:21<00:04, 13.52it/s, est. speed input: 796.10 toks/s, output: 2134.96 toks/s]
+Processed prompts:  75%|███████▍  | 172/230 [00:21<00:03, 16.73it/s, est. speed input: 813.25 toks/s, output: 2204.14 toks/s]
+Processed prompts:  76%|███████▌  | 174/230 [00:21<00:04, 13.35it/s, est. speed input: 813.08 toks/s, output: 2210.80 toks/s]
+Processed prompts:  77%|███████▋  | 176/230 [00:21<00:03, 13.50it/s, est. speed input: 818.08 toks/s, output: 2232.04 toks/s]
+Processed prompts:  77%|███████▋  | 178/230 [00:22<00:04, 11.91it/s, est. speed input: 820.96 toks/s, output: 2243.94 toks/s]
+Processed prompts:  78%|███████▊  | 180/230 [00:22<00:04, 10.20it/s, est. speed input: 819.27 toks/s, output: 2251.26 toks/s]
+Processed prompts:  79%|███████▉  | 182/230 [00:22<00:05,  8.72it/s, est. speed input: 816.41 toks/s, output: 2254.96 toks/s]
+Processed prompts:  80%|███████▉  | 183/230 [00:22<00:05,  8.43it/s, est. speed input: 816.84 toks/s, output: 2259.09 toks/s]
+Processed prompts:  80%|████████  | 184/230 [00:23<00:06,  7.65it/s, est. speed input: 813.78 toks/s, output: 2259.00 toks/s]
+Processed prompts:  81%|████████  | 186/230 [00:23<00:06,  7.16it/s, est. speed input: 813.92 toks/s, output: 2264.39 toks/s]
+Processed prompts:  82%|████████▏ | 188/230 [00:23<00:05,  7.26it/s, est. speed input: 813.14 toks/s, output: 2274.63 toks/s]
+Processed prompts:  83%|████████▎ | 190/230 [00:24<00:05,  7.14it/s, est. speed input: 812.13 toks/s, output: 2283.01 toks/s]
+Processed prompts:  83%|████████▎ | 192/230 [00:24<00:05,  7.31it/s, est. speed input: 811.19 toks/s, output: 2294.70 toks/s]
+Processed prompts:  84%|████████▍ | 194/230 [00:24<00:04,  8.18it/s, est. speed input: 813.81 toks/s, output: 2314.00 toks/s]
+Processed prompts:  85%|████████▌ | 196/230 [00:24<00:03,  9.47it/s, est. speed input: 820.71 toks/s, output: 2337.58 toks/s]
+Processed prompts:  86%|████████▌ | 198/230 [00:24<00:04,  7.82it/s, est. speed input: 816.79 toks/s, output: 2340.45 toks/s]
+Processed prompts:  87%|████████▋ | 199/230 [00:25<00:05,  5.85it/s, est. speed input: 813.68 toks/s, output: 2324.59 toks/s]
+Processed prompts:  87%|████████▋ | 200/230 [00:25<00:04,  6.12it/s, est. speed input: 813.54 toks/s, output: 2330.70 toks/s]
+Processed prompts:  87%|████████▋ | 201/230 [00:25<00:05,  5.67it/s, est. speed input: 811.51 toks/s, output: 2328.88 toks/s]
+Processed prompts:  88%|████████▊ | 202/230 [00:26<00:09,  2.87it/s, est. speed input: 787.89 toks/s, output: 2270.04 toks/s]
+Processed prompts:  88%|████████▊ | 203/230 [00:26<00:08,  3.05it/s, est. speed input: 783.28 toks/s, output: 2265.79 toks/s]
+Processed prompts:  89%|████████▊ | 204/230 [00:27<00:10,  2.38it/s, est. speed input: 769.69 toks/s, output: 2229.11 toks/s]
+Processed prompts:  89%|████████▉ | 205/230 [00:29<00:18,  1.34it/s, est. speed input: 732.04 toks/s, output: 2124.97 toks/s]
+Processed prompts:  90%|█████████ | 207/230 [00:29<00:10,  2.12it/s, est. speed input: 733.61 toks/s, output: 2144.72 toks/s]
+Processed prompts:  90%|█████████ | 208/230 [00:29<00:10,  2.15it/s, est. speed input: 737.19 toks/s, output: 2131.07 toks/s]
+Processed prompts:  91%|█████████ | 209/230 [00:30<00:08,  2.40it/s, est. speed input: 734.66 toks/s, output: 2130.23 toks/s]
+Processed prompts:  91%|█████████▏| 210/230 [00:32<00:18,  1.07it/s, est. speed input: 684.86 toks/s, output: 1995.40 toks/s]
+Processed prompts:  92%|█████████▏| 211/230 [00:33<00:17,  1.12it/s, est. speed input: 672.20 toks/s, output: 1966.16 toks/s]
+Processed prompts:  92%|█████████▏| 212/230 [00:39<00:43,  2.39s/it, est. speed input: 569.20 toks/s, output: 1677.52 toks/s]
+Processed prompts:  93%|█████████▎| 213/230 [00:39<00:30,  1.78s/it, est. speed input: 569.48 toks/s, output: 1685.27 toks/s]
+Processed prompts:  93%|█████████▎| 214/230 [00:41<00:27,  1.70s/it, est. speed input: 553.30 toks/s, output: 1643.81 toks/s]
+Processed prompts:  93%|█████████▎| 215/230 [00:41<00:19,  1.32s/it, est. speed input: 550.07 toks/s, output: 1646.34 toks/s]
+Processed prompts:  94%|█████████▍| 216/230 [00:42<00:17,  1.26s/it, est. speed input: 539.53 toks/s, output: 1623.80 toks/s]
+Processed prompts:  94%|█████████▍| 217/230 [00:43<00:14,  1.10s/it, est. speed input: 533.42 toks/s, output: 1616.01 toks/s]
+Processed prompts:  95%|█████████▍| 218/230 [00:44<00:13,  1.11s/it, est. speed input: 523.95 toks/s, output: 1594.97 toks/s]
+Processed prompts:  95%|█████████▌| 219/230 [00:45<00:10,  1.07it/s, est. speed input: 523.14 toks/s, output: 1595.90 toks/s]
+Processed prompts:  96%|█████████▌| 220/230 [00:52<00:30,  3.02s/it, est. speed input: 448.04 toks/s, output: 1377.66 toks/s]
+Processed prompts:  96%|█████████▌| 221/230 [01:04<00:50,  5.58s/it, est. speed input: 370.69 toks/s, output: 1150.94 toks/s]
+Processed prompts:  97%|█████████▋| 222/230 [01:04<00:32,  4.04s/it, est. speed input: 370.08 toks/s, output: 1163.55 toks/s]
+Processed prompts:  97%|█████████▋| 223/230 [01:28<01:10, 10.02s/it, est. speed input: 271.50 toks/s, output: 871.37 toks/s] 
+Processed prompts:  97%|█████████▋| 224/230 [01:33<00:51,  8.51s/it, est. speed input: 258.57 toks/s, output: 846.86 toks/s]
+Processed prompts: 100%|██████████| 230/230 [01:33<00:00,  8.51s/it, est. speed input: 267.84 toks/s, output: 977.66 toks/s]
+Processed prompts: 100%|██████████| 230/230 [01:33<00:00,  2.45it/s, est. speed input: 267.84 toks/s, output: 977.66 toks/s]
+{
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "num_prompts": 230,
+  "total_tokens": 116998,
+  "max_seq_len": 2239,
+  "dumped_layers": [
+    "model.layers.0.self_attn.attn",
+    "model.layers.14.self_attn.attn",
+    "model.layers.27.self_attn.attn"
+  ],
+  "sampled_tokens_per_layer": {
+    "model.layers.0.self_attn.attn": 16384
+  }
+}
+| layer | K max | K ch ratio | K head ratio | V max | V ch ratio | K per_tensor | K per_head | K per_channel | K per_token | K per_token_head | V per_tensor | V per_head | V per_channel | V per_token | V per_token_head |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 0 | 320.0 | 60.2 | 1.2 | 4.41 | 3.2 | 0.0103 | 0.0095 | 0.0024 | 0.0101 | 0.0092 | 0.0265 | 0.0232 | 0.0086 | 0.0179 | 0.0142 |
+| 1 | 103.0 | 26.9 | 5.2 | 3.12 | 2.5 | 0.0240 | 0.0172 | 0.0024 | 0.0236 | 0.0168 | 0.0192 | 0.0167 | 0.0083 | 0.0164 | 0.0124 |
+| 2 | 24.2 | 5.1 | 1.1 | 4.69 | 1.8 | 0.0222 | 0.0204 | 0.0050 | 0.0174 | 0.0143 | 0.0174 | 0.0157 | 0.0096 | 0.0093 | 0.0080 |
+| 3 | 22.5 | 5.0 | 1.1 | 5.62 | 2.5 | 0.0225 | 0.0217 | 0.0057 | 0.0171 | 0.0157 | 0.0224 | 0.0199 | 0.0098 | 0.0107 | 0.0089 |
+| 4 | 18.0 | 3.9 | 1.3 | 6.72 | 2.6 | 0.0222 | 0.0200 | 0.0066 | 0.0140 | 0.0126 | 0.0237 | 0.0207 | 0.0101 | 0.0094 | 0.0080 |
+| 5 | 13.1 | 3.6 | 1.0 | 7.03 | 2.8 | 0.0172 | 0.0170 | 0.0067 | 0.0115 | 0.0108 | 0.0212 | 0.0196 | 0.0098 | 0.0129 | 0.0103 |
+| 6 | 12.4 | 2.9 | 1.1 | 6.97 | 3.4 | 0.0139 | 0.0138 | 0.0067 | 0.0105 | 0.0092 | 0.0251 | 0.0236 | 0.0094 | 0.0127 | 0.0107 |
+| 7 | 38.5 | 9.9 | 2.5 | 5.75 | 2.2 | 0.0267 | 0.0202 | 0.0039 | 0.0242 | 0.0177 | 0.0214 | 0.0195 | 0.0097 | 0.0102 | 0.0087 |
+| 8 | 15.8 | 3.1 | 1.3 | 9.69 | 3.9 | 0.0176 | 0.0159 | 0.0068 | 0.0105 | 0.0096 | 0.0185 | 0.0182 | 0.0096 | 0.0091 | 0.0083 |
+| 9 | 18.8 | 3.9 | 1.2 | 6.03 | 2.3 | 0.0218 | 0.0204 | 0.0067 | 0.0131 | 0.0124 | 0.0192 | 0.0190 | 0.0096 | 0.0096 | 0.0085 |
+| 10 | 21.9 | 4.4 | 1.4 | 6.97 | 2.2 | 0.0238 | 0.0207 | 0.0065 | 0.0139 | 0.0126 | 0.0184 | 0.0181 | 0.0101 | 0.0091 | 0.0081 |
+| 11 | 19.5 | 4.0 | 1.1 | 6.06 | 2.2 | 0.0224 | 0.0217 | 0.0068 | 0.0141 | 0.0130 | 0.0178 | 0.0171 | 0.0095 | 0.0096 | 0.0085 |
+| 12 | 15.1 | 3.2 | 1.1 | 7.81 | 2.7 | 0.0179 | 0.0175 | 0.0072 | 0.0109 | 0.0099 | 0.0205 | 0.0193 | 0.0094 | 0.0093 | 0.0083 |
+| 13 | 13.1 | 2.5 | 1.2 | 7.62 | 2.8 | 0.0150 | 0.0141 | 0.0067 | 0.0115 | 0.0099 | 0.0223 | 0.0196 | 0.0093 | 0.0104 | 0.0091 |
+| 14 | 17.2 | 4.3 | 1.1 | 8.31 | 2.7 | 0.0225 | 0.0212 | 0.0074 | 0.0111 | 0.0102 | 0.0193 | 0.0185 | 0.0096 | 0.0103 | 0.0091 |
+| 15 | 56.0 | 12.2 | 4.0 | 6.91 | 1.8 | 0.0216 | 0.0156 | 0.0031 | 0.0197 | 0.0140 | 0.0181 | 0.0172 | 0.0105 | 0.0085 | 0.0075 |
+| 16 | 14.4 | 2.9 | 1.2 | 8.25 | 2.5 | 0.0208 | 0.0193 | 0.0075 | 0.0116 | 0.0105 | 0.0221 | 0.0200 | 0.0100 | 0.0102 | 0.0084 |
+| 17 | 14.8 | 3.8 | 1.1 | 9.38 | 2.6 | 0.0199 | 0.0195 | 0.0070 | 0.0121 | 0.0112 | 0.0210 | 0.0201 | 0.0112 | 0.0088 | 0.0078 |
+| 18 | 18.2 | 3.9 | 1.1 | 10.06 | 2.7 | 0.0195 | 0.0183 | 0.0059 | 0.0149 | 0.0132 | 0.0190 | 0.0168 | 0.0094 | 0.0094 | 0.0081 |
+| 19 | 18.1 | 4.6 | 1.3 | 8.50 | 2.1 | 0.0223 | 0.0198 | 0.0069 | 0.0151 | 0.0121 | 0.0195 | 0.0179 | 0.0097 | 0.0087 | 0.0077 |
+| 20 | 18.6 | 4.1 | 1.3 | 7.75 | 1.8 | 0.0220 | 0.0212 | 0.0073 | 0.0132 | 0.0117 | 0.0162 | 0.0149 | 0.0100 | 0.0081 | 0.0071 |
+| 21 | 18.2 | 4.2 | 1.5 | 9.00 | 2.1 | 0.0244 | 0.0214 | 0.0072 | 0.0133 | 0.0113 | 0.0189 | 0.0176 | 0.0096 | 0.0090 | 0.0081 |
+| 22 | 19.8 | 3.6 | 1.3 | 9.50 | 1.7 | 0.0233 | 0.0202 | 0.0071 | 0.0129 | 0.0114 | 0.0203 | 0.0177 | 0.0109 | 0.0085 | 0.0073 |
+| 23 | 16.4 | 3.5 | 1.0 | 11.50 | 1.9 | 0.0200 | 0.0198 | 0.0077 | 0.0114 | 0.0103 | 0.0200 | 0.0173 | 0.0105 | 0.0106 | 0.0090 |
+| 24 | 19.1 | 3.4 | 1.5 | 17.12 | 2.2 | 0.0212 | 0.0197 | 0.0074 | 0.0119 | 0.0102 | 0.0232 | 0.0187 | 0.0117 | 0.0093 | 0.0078 |
+| 25 | 18.0 | 3.7 | 1.4 | 15.19 | 1.6 | 0.0229 | 0.0207 | 0.0072 | 0.0152 | 0.0123 | 0.0173 | 0.0173 | 0.0114 | 0.0091 | 0.0079 |
+| 26 | 14.5 | 3.4 | 1.1 | 29.25 | 2.1 | 0.0208 | 0.0202 | 0.0076 | 0.0114 | 0.0107 | 0.0267 | 0.0227 | 0.0130 | 0.0081 | 0.0073 |
+| 27 | 16.2 | 4.1 | 1.2 | 43.50 | 2.7 | 0.0230 | 0.0221 | 0.0076 | 0.0137 | 0.0126 | 0.0396 | 0.0331 | 0.0148 | 0.0087 | 0.0076 |
+mean over layers: {
+ "k": {
+  "per_tensor": 0.02077312022447586,
+  "per_head": 0.01888865525169032,
+  "per_channel": 0.006322478310071996,
+  "per_token": 0.013921212704320039,
+  "per_token_head": 0.01198380340688995
+ },
+ "v": {
+  "per_tensor": 0.021245996800384352,
+  "per_head": 0.019280427002481053,
+  "per_channel": 0.01017692917957902,
+  "per_token": 0.010133848159707018,
+  "per_token_head": 0.008672346394242985
+ }
+}
+
+[modal_app] exit=0 wall=440s

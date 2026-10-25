@@ -1,0 +1,14 @@
+{
+  "model": "Qwen/Qwen2.5-7B-Instruct",
+  "num_prompts": 230,
+  "total_tokens": 117529,
+  "max_seq_len": 2289,
+  "dumped_layers": [
+    "model.layers.0.self_attn.attn",
+    "model.layers.14.self_attn.attn",
+    "model.layers.27.self_attn.attn"
+  ],
+  "sampled_tokens_per_layer": {
+    "model.layers.0.self_attn.attn": 16384
+  }
+}
