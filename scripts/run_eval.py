@@ -34,7 +34,9 @@ def main():
     from kvq import data, evaluate
 
     rows = data.gsm8k(args.n) if args.task == "gsm8k" else data.aime24()
-    kwargs = dict(max_model_len=args.max_model_len, gpu_memory_utilization=0.85, seed=0)
+    # disable_log_stats=False: offline LLM turns stats off by default, and get_metrics() (spec-decode
+    # acceptance counters) then raises "Stat logging disabled".
+    kwargs = dict(max_model_len=args.max_model_len, gpu_memory_utilization=0.85, seed=0, disable_log_stats=False)
     kwargs.update(json.loads(args.llm))
     llm = LLM(args.model, **kwargs)
     sp = SamplingParams(temperature=args.temperature, top_p=0.95 if args.temperature > 0 else 1.0,

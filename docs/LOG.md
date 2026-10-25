@@ -389,3 +389,19 @@ v3 在 A100 上的有效带宽 1.45 TB/s（峰值约 2.0 TB/s），比 FA2 bf16 
   `mma.sync` + cp.async，在 H100 上没用到这些新硬件，长上下文小 batch（1 × 32k）落后 14%。
 - 在 H100 上 Triton int8 明显落后于 CUDA（128 × 32k：2447 vs 1761 µs），Triton 版的 int8 dot 布局和流水在 Hopper 上效率不高。
 - vLLM 原生 int8_per_token_head 在 H100 上同样比 bf16 慢。
+
+## Step 6c 补测：静态方案 decode 路径（int8 算术）的 ΔNLL
+
+把所有行都放到 MODE 2（`KVQ_INT8_MAX_Q=1000000`，prefill 也走 int8 QK/PV），teacher-forcing 才覆盖 decode 的数值
+（`results/06-static-nllB/`）：
+
+| 静态配置 | ΔNLL gsm8k | ΔNLL aime24（2k 级长回答） |
+|---|---|---|
+| per_channel max，不加 smooth-K | +0.0023 | **+0.0112** |
+| per_channel max + smooth-K | +0.0004 | +0.0019 |
+| 同上 + q 每 32 通道 scale | −0.0000 | +0.0015 |
+| per_head max + smooth-K | −0.0002 | +0.0006 |
+| wikitext 校准的 per_channel + smooth-K | −0.0006 | +0.0000 |
+
+和生成准确率一致：不加 smooth-K 的 int8 QK 明显退化，而且**长文本上退化大 5 倍**（误差随上下文累积）；
+加 smooth-K 后长文本 ΔNLL ≤ 0.002。
