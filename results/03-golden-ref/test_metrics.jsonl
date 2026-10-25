@@ -1,0 +1,16 @@
+{"test": "vllm_reproduces_dump", "case": "qwen2.5-7b:0", "batch": 10, "max_seq": 1536, "equal": true}
+{"test": "vllm_reproduces_dump", "case": "qwen2.5-7b:14", "batch": 10, "max_seq": 1536, "equal": true}
+{"test": "vllm_reproduces_dump", "case": "qwen2.5-7b:27", "batch": 10, "max_seq": 1536, "equal": true}
+{"test": "vllm_reproduces_dump", "case": "qwen2.5-1.5b:0", "batch": 8, "max_seq": 1536, "equal": true}
+{"test": "vllm_reproduces_dump", "case": "qwen2.5-1.5b:14", "batch": 8, "max_seq": 1536, "equal": true}
+{"test": "vllm_reproduces_dump", "case": "qwen2.5-1.5b:27", "batch": 8, "max_seq": 1536, "equal": true}
+{"test": "ref_matches_dump", "case": "qwen2.5-7b:0", "max_abs": 0.0078125, "mean_abs": 2.1214966182014905e-05, "rel_l2": 0.0011475813807919621, "cos": 0.9999994039535522}
+{"test": "ref_matches_dump", "case": "qwen2.5-7b:14", "max_abs": 0.015625, "mean_abs": 6.929789378773421e-05, "rel_l2": 0.0011604494648054242, "cos": 0.9999992251396179}
+{"test": "ref_matches_dump", "case": "qwen2.5-7b:27", "max_abs": 0.03125, "mean_abs": 0.00023119800607673824, "rel_l2": 0.0009350374457426369, "cos": 0.9999995231628418}
+{"test": "ref_matches_dump", "case": "qwen2.5-1.5b:0", "max_abs": 0.015625, "mean_abs": 3.235591793782078e-05, "rel_l2": 0.000816160929389298, "cos": 0.9999996423721313}
+{"test": "ref_matches_dump", "case": "qwen2.5-1.5b:14", "max_abs": 0.015625, "mean_abs": 0.0001047381229000166, "rel_l2": 0.0010505883255973458, "cos": 0.9999995231628418}
+{"test": "ref_matches_dump", "case": "qwen2.5-1.5b:27", "max_abs": 0.0625, "mean_abs": 0.00018805892614182085, "rel_l2": 0.0010832869447767735, "cos": 0.999999463558197}
+{"test": "ref_matches_fa_random", "heads": [28, 4], "q_lens": [1, 1, 1, 1, 1, 1, 1, 1], "max_abs": 0.0078125, "mean_abs": 0.00011012274626409635, "rel_l2": 0.0008622360182926059, "cos": 0.9999997615814209}
+{"test": "ref_matches_fa_random", "heads": [12, 2], "q_lens": [1, 1, 1, 1, 1, 1, 1, 1], "max_abs": 0.00390625, "mean_abs": 0.0001231979113072157, "rel_l2": 0.0009395899251103401, "cos": 0.9999996423721313}
+{"test": "ref_matches_fa_random", "heads": [28, 4], "q_lens": [1, 1, 7, 33, 128, 1], "max_abs": 0.015625, "mean_abs": 0.0001951480080606416, "rel_l2": 0.0017905737040564418, "cos": 0.9999984502792358}
+{"test": "ref_matches_fa_random", "heads": [12, 2], "q_lens": [1, 1, 7, 33, 128, 1], "max_abs": 0.015625, "mean_abs": 0.0001945196563610807, "rel_l2": 0.0017566794995218515, "cos": 0.9999985694885254}

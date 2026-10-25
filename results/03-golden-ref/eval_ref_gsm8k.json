@@ -1,0 +1,19 @@
+{
+ "label": "ref",
+ "task": "gsm8k",
+ "model": "Qwen/Qwen2.5-7B-Instruct",
+ "n_prompts": 250,
+ "n_samples": 250,
+ "accuracy": 0.916,
+ "wall_s": 49.93502736091614,
+ "gen_tokens": 73071,
+ "env": [
+  "KVQ_ATTN=ref"
+ ],
+ "llm": {
+  "max_model_len": 4096,
+  "gpu_memory_utilization": 0.85,
+  "seed": 0,
+  "enforce_eager": true
+ }
+}

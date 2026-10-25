@@ -11,3 +11,7 @@ def register():
         from kvq import capture
 
         capture.install()
+    if os.environ.get("KVQ_ATTN"):
+        from kvq import override
+
+        override.install()

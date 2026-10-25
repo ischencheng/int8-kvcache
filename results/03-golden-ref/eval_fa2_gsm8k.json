@@ -1,0 +1,17 @@
+{
+ "label": "fa2",
+ "task": "gsm8k",
+ "model": "Qwen/Qwen2.5-7B-Instruct",
+ "n_prompts": 250,
+ "n_samples": 250,
+ "accuracy": 0.916,
+ "wall_s": 20.188315391540527,
+ "gen_tokens": 72895,
+ "env": [],
+ "llm": {
+  "max_model_len": 4096,
+  "gpu_memory_utilization": 0.85,
+  "seed": 0,
+  "enforce_eager": true
+ }
+}
