@@ -1,0 +1,20 @@
+{
+ "label": "bisect_static",
+ "task": "gsm8k",
+ "model": "Qwen/Qwen2.5-7B-Instruct",
+ "n_prompts": 50,
+ "n_samples": 50,
+ "accuracy": 0.92,
+ "wall_s": 32.07736849784851,
+ "gen_tokens": 14427,
+ "env": [
+  "KVQ_SCALES=/cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors",
+  "KVQ_ATTN=static:B_channel_smooth"
+ ],
+ "llm": {
+  "max_model_len": 4096,
+  "gpu_memory_utilization": 0.85,
+  "seed": 0,
+  "enforce_eager": true
+ }
+}

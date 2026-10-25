@@ -1,0 +1,42 @@
+diff -ru a/vllm/config/cache.py b/vllm/config/cache.py
+--- a/vllm/config/cache.py	2026-10-25 18:28:16
++++ b/vllm/config/cache.py	2026-10-25 18:28:16
+@@ -54,6 +54,7 @@
+     "int4_per_token_head",
+     "int8_per_token_head",
+     "fp8_per_token_head",
++    "int8_static",
+     "nvfp4",
+     "nvfp4_4over6",
+ ]
+diff -ru a/vllm/utils/torch_utils.py b/vllm/utils/torch_utils.py
+--- a/vllm/utils/torch_utils.py	2026-10-25 18:28:16
++++ b/vllm/utils/torch_utils.py	2026-10-25 18:28:16
+@@ -42,6 +42,7 @@
+     "int8": torch.int8,
+     "int4_per_token_head": torch.uint8,
+     "int8_per_token_head": torch.int8,
++    "int8_static": torch.int8,
+     "fp8_per_token_head": torch.uint8,
+     "fp8_inc": torch.float8_e4m3fn,
+     "fp8_ds_mla": torch.uint8,
+diff -ru a/vllm/v1/kv_cache_interface.py b/vllm/v1/kv_cache_interface.py
+--- a/vllm/v1/kv_cache_interface.py	2026-10-25 18:28:16
++++ b/vllm/v1/kv_cache_interface.py	2026-10-25 18:28:16
+@@ -57,6 +57,7 @@
+     TURBOQUANT_3BIT_NC = 9
+     NVFP4_DS_MLA = 10  # opaque-bytes NVFP4 DS-MLA layouts (FlashMLA sparse)
+     ULTRAQUANT_4BIT = 11  # packed FP4 values + UE8M0 group scales
++    INT8_STATIC = 12  # int8 with calibrated static scales held by the backend
+ 
+     @property
+     def is_per_token_head(self) -> bool:
+@@ -94,6 +95,8 @@
+         return KVQuantMode.INT4_PER_TOKEN_HEAD
+     if kv_cache_dtype == "int8_per_token_head":
+         return KVQuantMode.INT8_PER_TOKEN_HEAD
++    if kv_cache_dtype == "int8_static":
++        return KVQuantMode.INT8_STATIC
+     if kv_cache_dtype == "fp8_per_token_head":
+         return KVQuantMode.FP8_PER_TOKEN_HEAD
+     # Must precede the ``nvfp4`` prefix test below, which would otherwise match.

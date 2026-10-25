@@ -1,0 +1,364 @@
++ python3 scripts/calibrate.py --calib math --n 64
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(MainProcess pid=7) INFO 10-25 22:32:42 [api_utils.py:286] non-default args: {'max_model_len': 4096, 'gpu_memory_utilization': 0.85, 'disable_log_stats': True, 'enforce_eager': True, 'model': 'Qwen/Qwen2.5-7B-Instruct'}
+(MainProcess pid=7) WARNING 10-25 22:32:42 [arg_utils.py:1945] The global random seed is set to 0. Since VLLM_ENABLE_V1_MULTIPROCESSING is set to False, this may affect the random state of the Python process that launched vLLM.
+(MainProcess pid=7) INFO 10-25 22:32:59 [model.py:733] Resolved architecture: Qwen2ForCausalLM
+(MainProcess pid=7) INFO 10-25 22:32:59 [model.py:2152] Using max model len 4096
+(MainProcess pid=7) INFO 10-25 22:32:59 [scheduler.py:307] Chunked prefill is enabled with max_num_batched_tokens=8192.
+(MainProcess pid=7) WARNING 10-25 22:32:59 [vllm.py:1703] Enforce eager set, disabling torch.compile, CUDAGraphs, and JIT kernel warmup. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none and --kernel_config.enable_jit_warmup=False
+(MainProcess pid=7) WARNING 10-25 22:32:59 [vllm.py:1727] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+(MainProcess pid=7) INFO 10-25 22:32:59 [kernel.py:467] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'], gelu_and_mul_sparse=['triton', 'native'])
+(MainProcess pid=7) INFO 10-25 22:32:59 [vllm.py:1929] Cudagraph is disabled under eager mode
+(MainProcess pid=7) INFO 10-25 22:32:59 [compilation.py:317] Enabled custom fusions: norm_quant, act_quant
+
+Fetching 10 files:   0%|          | 0/10 [00:00<?, ?it/s]
+Fetching 10 files: 100%|██████████| 10/10 [00:00<00:00, 698.58it/s]
+(MainProcess pid=7) INFO 10-25 22:33:02 [core.py:133] Initializing a V1 LLM engine (v0.32.0) with config: model='Qwen/Qwen2.5-7B-Instruct', speculative_config=None, tokenizer='Qwen/Qwen2.5-7B-Instruct', skip_tokenizer_init=False, tokenizer_mode=auto, revision=main, tokenizer_revision=main, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=4096, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=None, quantization_config=None, enforce_eager=True, aux_output_config=AuxOutputConfig(enable_return_routed_experts=False, max_bytes=None), kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, per_request_spec_decode_metrics='none', kv_cache_metrics=False, kv_cache_metrics_sample=0.01, custom_histogram_buckets=None, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False, jit_monitor_mode='warn', jit_monitor_verbose=False), seed=0, served_model_name=Qwen/Qwen2.5-7B-Instruct, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.NONE: 0>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['all'], 'ir_enable_torch_wrap': False, 'splitting_ops': [], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'cudagraph_decoder_replay': True, 'decoder_replay_cudagraph_capture_sizes': [], 'decoder_replay_trim_threshold': 768, 'compile_sizes': [], 'compile_ranges_endpoints': [8192], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.NONE: 0>, 'cudagraph_num_of_warmups': 0, 'cudagraph_capture_sizes': [], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': True, 'fuse_act_quant': True, 'fuse_attn_quant': False, 'fuse_allreduce_rms': False, 'enable_qk_norm_rope_fusion': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False, 'fuse_qk_norm_rope_kvcache': False}, 'max_cudagraph_capture_size': 0, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': False, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'], gelu_and_mul_sparse=['triton', 'native']), enable_flashinfer_autotune=True, enable_rocm_segmented_attn_autotune=False, enable_cutedsl_warmup=True, enable_jit_warmup=False, moe_backend='auto', sparse_indexer_topk_backend='auto', linear_backend='auto', linear_backend_per_quant=None)
+(MainProcess pid=7) INFO 10-25 22:33:05 [parallel_state.py:1906] world_size=1 rank=0 local_rank=0 distributed_init_method=file:///tmp/vllm_dist_40a190e4ad554787aab8324bc42674b0 backend=nccl
+(MainProcess pid=7) INFO 10-25 22:33:05 [parallel_state.py:2350] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, ETP rank 0, EP rank N/A, EPLB rank N/A
+(MainProcess pid=7) INFO 10-25 22:33:05 [gpu_worker.py:518] Using V2 Model Runner
+(MainProcess pid=7) INFO 10-25 22:33:06 [model_runner.py:392] Loading model from scratch...
+(MainProcess pid=7) INFO 10-25 22:33:08 [cuda.py:506] Using FLASH_ATTN attention backend out of potential backends: ['FLASH_ATTN', 'FLASHINFER', 'TRITON_ATTN', 'FLEX_ATTENTION'].
+(MainProcess pid=7) INFO 10-25 22:33:08 [flash_attn.py:1117] Using FlashAttention version 2
+(MainProcess pid=7) INFO 10-25 22:33:09 [base_loader.py:82] Initializing model took 2.442604 seconds
+(MainProcess pid=7) INFO 10-25 22:33:09 [weight_utils.py:1108] Filesystem type for checkpoints: 9P. Checkpoint size: 14.19 GiB. Available RAM: 772.71 GiB.
+(MainProcess pid=7) INFO 10-25 22:33:09 [weight_utils.py:1131] Auto-prefetch is disabled because the filesystem (9P) is not a recognized network FS (NFS/Lustre). If you want to force prefetching, start vLLM with --safetensors-load-strategy=prefetch.
+
+Loading safetensors checkpoint shards:   0% Completed | 0/4 [00:00<?, ?it/s]
+
+Loading safetensors checkpoint shards:  25% Completed | 1/4 [00:02<00:08,  2.71s/it]
+
+Loading safetensors checkpoint shards:  50% Completed | 2/4 [00:05<00:05,  2.53s/it]
+
+Loading safetensors checkpoint shards:  75% Completed | 3/4 [00:07<00:02,  2.50s/it]
+
+Loading safetensors checkpoint shards: 100% Completed | 4/4 [00:09<00:00,  2.42s/it]
+
+Loading safetensors checkpoint shards: 100% Completed | 4/4 [00:09<00:00,  2.47s/it]
+
+(MainProcess pid=7) INFO 10-25 22:33:19 [default_loader.py:501] Loading weights took 10.02 seconds
+(MainProcess pid=7) INFO 10-25 22:33:21 [model_runner.py:424] Model loading took 14.29 GiB memory and 14.954770 seconds
+(MainProcess pid=7) INFO 10-25 22:33:21 [topk_topp_sampler.py:124] Using FlashInfer for top-p & top-k sampling.
+(MainProcess pid=7) WARNING 10-25 22:33:21 [torch_utils.py:284] OMP_NUM_THREADS=8 is set; leaving Torch threads at 8 for serving. Multi-threaded torch CPU ops during serving can degrade performance through spin-wait contention and cgroup CPU-quota throttling.
+(MainProcess pid=7) INFO 10-25 22:33:21 [utils.py:347] Using LBNHC KV cache layout.
+(MainProcess pid=7) INFO 10-25 22:33:25 [gpu_worker.py:759] Available KV cache memory: 51.71 GiB
+(MainProcess pid=7) INFO 10-25 22:33:25 [kv_cache_utils.py:2327] GPU KV cache size: 968,272 tokens, Maximum concurrency for 4,096 tokens per request: 236.39x
+(MainProcess pid=7) INFO 10-25 22:33:25 [gpu_worker.py:1034] Free memory on device (78.86/79.27 GiB) on startup. Desired GPU memory utilization is (0.85, 67.38 GiB). Actual usage is 14.58 GiB for consumed memory (weights + non-torch), 1.09 GiB for peak activation, and 0.0 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=55367690752` (51.57 GiB) to fit into requested memory, or `--kv-cache-memory=67689966080` (63.04 GiB) to fully utilize gpu memory. Current kv cache memory in use is 51.71 GiB.
+(MainProcess pid=7) INFO 10-25 22:33:25 [core.py:402] init engine (profile, create kv cache, warmup model) took 4.46 s
+(MainProcess pid=7) INFO 10-25 22:33:26 [hf.py:648] Detected the chat template content format to be 'string'. You can set `--chat-template-content-format` to override this.
+
+Rendering conversations:   0%|          | 0/64 [00:00<?, ?it/s]
+Rendering conversations: 100%|██████████| 64/64 [00:00<00:00, 1419.19it/s]
+
+Processed prompts:   0%|          | 0/64 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]
+Processed prompts:   2%|▏         | 1/64 [00:08<08:28,  8.08s/it, est. speed input: 10.15 toks/s, output: 19.56 toks/s]
+Processed prompts:   3%|▎         | 2/64 [00:08<03:46,  3.65s/it, est. speed input: 20.97 toks/s, output: 38.11 toks/s]
+Processed prompts:   8%|▊         | 5/64 [00:08<01:04,  1.09s/it, est. speed input: 50.18 toks/s, output: 95.95 toks/s]
+Processed prompts:   9%|▉         | 6/64 [00:09<00:49,  1.17it/s, est. speed input: 60.21 toks/s, output: 114.10 toks/s]
+Processed prompts:  12%|█▎        | 8/64 [00:09<00:31,  1.80it/s, est. speed input: 79.21 toks/s, output: 150.03 toks/s]
+Processed prompts:  14%|█▍        | 9/64 [00:09<00:28,  1.95it/s, est. speed input: 83.47 toks/s, output: 164.47 toks/s]
+Processed prompts:  16%|█▌        | 10/64 [00:09<00:23,  2.33it/s, est. speed input: 89.95 toks/s, output: 181.92 toks/s]
+Processed prompts:  17%|█▋        | 11/64 [00:10<00:23,  2.27it/s, est. speed input: 94.28 toks/s, output: 194.07 toks/s]
+Processed prompts:  20%|██        | 13/64 [00:10<00:15,  3.27it/s, est. speed input: 108.92 toks/s, output: 229.86 toks/s]
+Processed prompts:  23%|██▎       | 15/64 [00:10<00:12,  4.04it/s, est. speed input: 122.42 toks/s, output: 263.95 toks/s]
+Processed prompts:  25%|██▌       | 16/64 [00:11<00:11,  4.15it/s, est. speed input: 128.86 toks/s, output: 279.43 toks/s]
+Processed prompts:  30%|██▉       | 19/64 [00:11<00:07,  6.30it/s, est. speed input: 147.30 toks/s, output: 335.82 toks/s]
+Processed prompts:  31%|███▏      | 20/64 [00:11<00:07,  5.98it/s, est. speed input: 154.08 toks/s, output: 350.65 toks/s]
+Processed prompts:  34%|███▍      | 22/64 [00:11<00:05,  7.70it/s, est. speed input: 167.98 toks/s, output: 388.52 toks/s]
+Processed prompts:  38%|███▊      | 24/64 [00:11<00:05,  6.78it/s, est. speed input: 179.53 toks/s, output: 417.93 toks/s]
+Processed prompts:  39%|███▉      | 25/64 [00:12<00:09,  3.92it/s, est. speed input: 177.36 toks/s, output: 415.66 toks/s]
+Processed prompts:  42%|████▏     | 27/64 [00:12<00:06,  5.35it/s, est. speed input: 193.18 toks/s, output: 453.79 toks/s]
+Processed prompts:  45%|████▌     | 29/64 [00:13<00:06,  5.18it/s, est. speed input: 204.42 toks/s, output: 481.44 toks/s]
+Processed prompts:  48%|████▊     | 31/64 [00:13<00:07,  4.45it/s, est. speed input: 210.59 toks/s, output: 503.02 toks/s]
+Processed prompts:  52%|█████▏    | 33/64 [00:14<00:05,  5.37it/s, est. speed input: 220.75 toks/s, output: 538.04 toks/s]
+Processed prompts:  55%|█████▍    | 35/64 [00:14<00:04,  6.51it/s, est. speed input: 235.34 toks/s, output: 574.49 toks/s]
+Processed prompts:  59%|█████▉    | 38/64 [00:14<00:03,  7.38it/s, est. speed input: 251.16 toks/s, output: 625.17 toks/s]
+Processed prompts:  62%|██████▎   | 40/64 [00:14<00:03,  6.27it/s, est. speed input: 256.51 toks/s, output: 649.12 toks/s]
+Processed prompts:  66%|██████▌   | 42/64 [00:15<00:03,  7.28it/s, est. speed input: 269.70 toks/s, output: 685.30 toks/s]
+Processed prompts:  67%|██████▋   | 43/64 [00:15<00:02,  7.06it/s, est. speed input: 272.01 toks/s, output: 699.68 toks/s]
+Processed prompts:  69%|██████▉   | 44/64 [00:15<00:03,  5.64it/s, est. speed input: 271.52 toks/s, output: 706.80 toks/s]
+Processed prompts:  70%|███████   | 45/64 [00:15<00:03,  5.81it/s, est. speed input: 275.97 toks/s, output: 721.64 toks/s]
+Processed prompts:  75%|███████▌  | 48/64 [00:16<00:02,  7.49it/s, est. speed input: 297.60 toks/s, output: 773.95 toks/s]
+Processed prompts:  77%|███████▋  | 49/64 [00:16<00:02,  5.73it/s, est. speed input: 301.55 toks/s, output: 779.05 toks/s]
+Processed prompts:  78%|███████▊  | 50/64 [00:16<00:02,  5.40it/s, est. speed input: 307.02 toks/s, output: 790.30 toks/s]
+Processed prompts:  80%|███████▉  | 51/64 [00:17<00:03,  3.65it/s, est. speed input: 301.78 toks/s, output: 786.08 toks/s]
+Processed prompts:  81%|████████▏ | 52/64 [00:17<00:02,  4.26it/s, est. speed input: 306.95 toks/s, output: 802.88 toks/s]
+Processed prompts:  83%|████████▎ | 53/64 [00:18<00:04,  2.64it/s, est. speed input: 300.17 toks/s, output: 790.32 toks/s]
+Processed prompts:  84%|████████▍ | 54/64 [00:18<00:03,  2.71it/s, est. speed input: 300.42 toks/s, output: 797.84 toks/s]
+Processed prompts:  86%|████████▌ | 55/64 [00:18<00:03,  2.69it/s, est. speed input: 299.45 toks/s, output: 804.09 toks/s]
+Processed prompts:  88%|████████▊ | 56/64 [00:19<00:02,  2.84it/s, est. speed input: 301.32 toks/s, output: 813.87 toks/s]
+Processed prompts:  89%|████████▉ | 57/64 [00:19<00:02,  2.97it/s, est. speed input: 302.89 toks/s, output: 823.78 toks/s]
+Processed prompts:  92%|█████████▏| 59/64 [00:19<00:01,  4.16it/s, est. speed input: 314.49 toks/s, output: 858.23 toks/s]
+Processed prompts:  94%|█████████▍| 60/64 [00:20<00:01,  3.51it/s, est. speed input: 313.02 toks/s, output: 862.82 toks/s]
+Processed prompts:  95%|█████████▌| 61/64 [00:21<00:01,  2.08it/s, est. speed input: 303.15 toks/s, output: 842.84 toks/s]
+Processed prompts:  97%|█████████▋| 62/64 [00:21<00:01,  1.73it/s, est. speed input: 298.69 toks/s, output: 833.73 toks/s]
+Processed prompts:  98%|█████████▊| 63/64 [00:22<00:00,  2.00it/s, est. speed input: 301.88 toks/s, output: 845.31 toks/s]
+Processed prompts: 100%|██████████| 64/64 [00:22<00:00,  2.00it/s, est. speed input: 307.53 toks/s, output: 868.30 toks/s]
+Processed prompts: 100%|██████████| 64/64 [00:22<00:00,  2.87it/s, est. speed input: 307.53 toks/s, output: 868.30 toks/s]
+{
+ "tokens": 25173,
+ "variants": [
+  "math_per_channel_max.safetensors",
+  "math_per_channel_max_smooth.safetensors",
+  "math_per_channel_q0.999_smooth.safetensors",
+  "math_per_channel_q0.9999_smooth.safetensors",
+  "math_per_head_max.safetensors",
+  "math_per_head_max_smooth.safetensors"
+ ]
+}
++ S=/cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors
++ EAGER='{"enforce_eager":true}'
++ INT8='{"enforce_eager":true,"kv_cache_dtype":"int8_static","attention_config":{"backend":"CUSTOM"}}'
++ python3 scripts/run_eval.py --label int8_static_torch --n 50 --env KVQ_SCALES=/cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors --env KVQ_CFG=B_channel_smooth --llm '{"enforce_eager":true,"kv_cache_dtype":"int8_static","attention_config":{"backend":"CUSTOM"}}'
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(MainProcess pid=159) INFO 10-25 22:34:13 [api_utils.py:286] non-default args: {'kv_cache_dtype': 'int8_static', 'max_model_len': 4096, 'gpu_memory_utilization': 0.85, 'disable_log_stats': True, 'enforce_eager': True, 'attention_config': AttentionConfig(backend=<AttentionBackendEnum.CUSTOM: None>, minimax_m3_msa_decode_backend='triton', backend_per_kind={}, flash_attn_version=None, flash_attn_max_num_splits_for_cuda_graph=32, tokenspeed_mla_min_split_kv=1, tq_max_kv_splits_for_cuda_graph=32, use_trtllm_attention=None, disable_flashinfer_q_quantization=False, mla_prefill_backend=None, use_prefill_query_quantization=False, indexer_kv_dtype='auto', indexer_sparse_logits=False, hisparse_config=None, use_non_causal=False, sparse_mla_force_mqa=False, sparse_mla_prefill_workspace_factor=None, flex_attn_block_m=None, flex_attn_block_n=None, flex_attn_q_block_size=None, flex_attn_kv_block_size=None), 'model': 'Qwen/Qwen2.5-7B-Instruct'}
+(MainProcess pid=159) INFO 10-25 22:34:13 [model.py:733] Resolved architecture: Qwen2ForCausalLM
+(MainProcess pid=159) INFO 10-25 22:34:13 [model.py:2152] Using max model len 4096
+(MainProcess pid=159) INFO 10-25 22:34:13 [scheduler.py:307] Chunked prefill is enabled with max_num_batched_tokens=8192.
+(MainProcess pid=159) WARNING 10-25 22:34:13 [vllm.py:1703] Enforce eager set, disabling torch.compile, CUDAGraphs, and JIT kernel warmup. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none and --kernel_config.enable_jit_warmup=False
+(MainProcess pid=159) WARNING 10-25 22:34:13 [vllm.py:1727] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+(MainProcess pid=159) INFO 10-25 22:34:13 [kernel.py:467] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'], gelu_and_mul_sparse=['triton', 'native'])
+(MainProcess pid=159) INFO 10-25 22:34:13 [vllm.py:1929] Cudagraph is disabled under eager mode
+(MainProcess pid=159) INFO 10-25 22:34:13 [compilation.py:317] Enabled custom fusions: norm_quant, act_quant
+
+Fetching 10 files:   0%|          | 0/10 [00:00<?, ?it/s]
+Fetching 10 files: 100%|██████████| 10/10 [00:00<00:00, 695.61it/s]
+(EngineCore pid=196) INFO 10-25 22:34:17 [core.py:133] Initializing a V1 LLM engine (v0.32.0) with config: model='Qwen/Qwen2.5-7B-Instruct', speculative_config=None, tokenizer='Qwen/Qwen2.5-7B-Instruct', skip_tokenizer_init=False, tokenizer_mode=auto, revision=main, tokenizer_revision=main, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=4096, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=None, quantization_config=None, enforce_eager=True, aux_output_config=AuxOutputConfig(enable_return_routed_experts=False, max_bytes=None), kv_cache_dtype=int8_static, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, per_request_spec_decode_metrics='none', kv_cache_metrics=False, kv_cache_metrics_sample=0.01, custom_histogram_buckets=None, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False, jit_monitor_mode='warn', jit_monitor_verbose=False), seed=0, served_model_name=Qwen/Qwen2.5-7B-Instruct, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.NONE: 0>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['all'], 'ir_enable_torch_wrap': False, 'splitting_ops': [], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'cudagraph_decoder_replay': True, 'decoder_replay_cudagraph_capture_sizes': [], 'decoder_replay_trim_threshold': 768, 'compile_sizes': [], 'compile_ranges_endpoints': [8192], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.NONE: 0>, 'cudagraph_num_of_warmups': 0, 'cudagraph_capture_sizes': [], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': True, 'fuse_act_quant': True, 'fuse_attn_quant': False, 'fuse_allreduce_rms': False, 'enable_qk_norm_rope_fusion': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False, 'fuse_qk_norm_rope_kvcache': False}, 'max_cudagraph_capture_size': 0, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': False, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'], gelu_and_mul_sparse=['triton', 'native']), enable_flashinfer_autotune=True, enable_rocm_segmented_attn_autotune=False, enable_cutedsl_warmup=True, enable_jit_warmup=False, moe_backend='auto', sparse_indexer_topk_backend='auto', linear_backend='auto', linear_backend_per_quant=None)
+(EngineCore pid=196) INFO 10-25 22:34:19 [parallel_state.py:1906] world_size=1 rank=0 local_rank=0 distributed_init_method=file:///tmp/vllm_dist_cb4ca9edb42d4ecb99b30ae8240b612d backend=nccl
+(EngineCore pid=196) INFO 10-25 22:34:19 [parallel_state.py:2350] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, ETP rank 0, EP rank N/A, EPLB rank N/A
+(EngineCore pid=196) INFO 10-25 22:34:19 [gpu_worker.py:518] Using V2 Model Runner
+(EngineCore pid=196) INFO 10-25 22:34:21 [model_runner.py:392] Loading model from scratch...
+(EngineCore pid=196) INFO 10-25 22:34:21 [cuda.py:446] Using AttentionBackendEnum.CUSTOM backend.
+(EngineCore pid=196) INFO 10-25 22:34:21 [base_loader.py:82] Initializing model took 0.405303 seconds
+(EngineCore pid=196) INFO 10-25 22:34:21 [weight_utils.py:1108] Filesystem type for checkpoints: 9P. Checkpoint size: 14.19 GiB. Available RAM: 772.44 GiB.
+(EngineCore pid=196) INFO 10-25 22:34:21 [weight_utils.py:1131] Auto-prefetch is disabled because the filesystem (9P) is not a recognized network FS (NFS/Lustre). If you want to force prefetching, start vLLM with --safetensors-load-strategy=prefetch.
+
+Loading safetensors checkpoint shards:   0% Completed | 0/4 [00:00<?, ?it/s]
+
+Loading safetensors checkpoint shards:  25% Completed | 1/4 [00:00<00:01,  1.96it/s]
+
+Loading safetensors checkpoint shards:  50% Completed | 2/4 [00:01<00:01,  1.58it/s]
+
+Loading safetensors checkpoint shards:  75% Completed | 3/4 [00:01<00:00,  1.49it/s]
+
+Loading safetensors checkpoint shards: 100% Completed | 4/4 [00:02<00:00,  1.57it/s]
+
+Loading safetensors checkpoint shards: 100% Completed | 4/4 [00:02<00:00,  1.58it/s]
+
+(EngineCore pid=196) INFO 10-25 22:34:24 [default_loader.py:501] Loading weights took 2.67 seconds
+(EngineCore pid=196) INFO 10-25 22:34:25 [model_runner.py:424] Model loading took 14.29 GiB memory and 5.257597 seconds
+(EngineCore pid=196) INFO 10-25 22:34:27 [topk_topp_sampler.py:124] Using FlashInfer for top-p & top-k sampling.
+(EngineCore pid=196) WARNING 10-25 22:34:27 [torch_utils.py:284] OMP_NUM_THREADS=8 is set; leaving Torch threads at 8 for serving. Multi-threaded torch CPU ops during serving can degrade performance through spin-wait contention and cgroup CPU-quota throttling.
+(EngineCore pid=196) INFO 10-25 22:34:27 [utils.py:347] Using LBNHC KV cache layout.
+(EngineCore pid=196) INFO 10-25 22:34:29 [gpu_worker.py:759] Available KV cache memory: 51.71 GiB
+(EngineCore pid=196) INFO 10-25 22:34:29 [kv_cache_utils.py:2327] GPU KV cache size: 1,936,544 tokens, Maximum concurrency for 4,096 tokens per request: 472.79x
+(EngineCore pid=196) INFO 10-25 22:34:29 [gpu_worker.py:1034] Free memory on device (78.86/79.27 GiB) on startup. Desired GPU memory utilization is (0.85, 67.38 GiB). Actual usage is 14.58 GiB for consumed memory (weights + non-torch), 1.09 GiB for peak activation, and 0.0 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=55367690752` (51.57 GiB) to fit into requested memory, or `--kv-cache-memory=67689966080` (63.04 GiB) to fully utilize gpu memory. Current kv cache memory in use is 51.71 GiB.
+(EngineCore pid=196) INFO 10-25 22:34:30 [core.py:402] init engine (profile, create kv cache, warmup model) took 3.40 s
+(EngineCore pid=196) WARNING 10-25 22:34:30 [serial_utils.py:78] Allowing insecure serialization using pickle due to VLLM_ALLOW_INSECURE_SERIALIZATION=1
+(EngineCore pid=196) INFO 10-25 22:34:30 [kernel.py:467] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'], gelu_and_mul_sparse=['triton', 'native'])
+(MainProcess pid=159) WARNING 10-25 22:34:30 [serial_utils.py:78] Allowing insecure serialization using pickle due to VLLM_ALLOW_INSECURE_SERIALIZATION=1
+(MainProcess pid=159) INFO 10-25 22:34:31 [hf.py:648] Detected the chat template content format to be 'string'. You can set `--chat-template-content-format` to override this.
+
+Rendering conversations:   0%|          | 0/50 [00:00<?, ?it/s]
+Rendering conversations: 100%|██████████| 50/50 [00:00<00:00, 1224.93it/s]
+
+Processed prompts:   0%|          | 0/50 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]
+Processed prompts:   2%|▏         | 1/50 [00:09<08:08,  9.97s/it, est. speed input: 7.02 toks/s, output: 12.94 toks/s]
+Processed prompts:   4%|▍         | 2/50 [00:10<03:40,  4.60s/it, est. speed input: 14.42 toks/s, output: 25.06 toks/s]
+Processed prompts:   6%|▌         | 3/50 [00:11<02:01,  2.59s/it, est. speed input: 21.35 toks/s, output: 37.79 toks/s]
+Processed prompts:   8%|▊         | 4/50 [00:11<01:27,  1.90s/it, est. speed input: 28.76 toks/s, output: 48.40 toks/s]
+Processed prompts:  12%|█▏        | 6/50 [00:12<00:46,  1.05s/it, est. speed input: 42.63 toks/s, output: 72.25 toks/s]
+Processed prompts:  14%|█▍        | 7/50 [00:12<00:39,  1.10it/s, est. speed input: 47.42 toks/s, output: 82.75 toks/s]
+Processed prompts:  16%|█▌        | 8/50 [00:14<00:42,  1.02s/it, est. speed input: 48.24 toks/s, output: 88.79 toks/s]
+Processed prompts:  18%|█▊        | 9/50 [00:14<00:36,  1.11it/s, est. speed input: 52.91 toks/s, output: 98.97 toks/s]
+Processed prompts:  20%|██        | 10/50 [00:15<00:28,  1.40it/s, est. speed input: 58.13 toks/s, output: 110.97 toks/s]
+Processed prompts:  24%|██▍       | 12/50 [00:15<00:16,  2.30it/s, est. speed input: 69.30 toks/s, output: 136.90 toks/s]
+Processed prompts:  26%|██▌       | 13/50 [00:15<00:14,  2.55it/s, est. speed input: 74.09 toks/s, output: 148.36 toks/s]
+Processed prompts:  28%|██▊       | 14/50 [00:16<00:14,  2.44it/s, est. speed input: 77.69 toks/s, output: 157.93 toks/s]
+Processed prompts:  30%|███       | 15/50 [00:16<00:12,  2.70it/s, est. speed input: 82.19 toks/s, output: 169.20 toks/s]
+Processed prompts:  34%|███▍      | 17/50 [00:16<00:08,  3.98it/s, est. speed input: 91.87 toks/s, output: 194.86 toks/s]
+Processed prompts:  36%|███▌      | 18/50 [00:16<00:08,  3.69it/s, est. speed input: 94.79 toks/s, output: 204.87 toks/s]
+Processed prompts:  38%|███▊      | 19/50 [00:17<00:11,  2.71it/s, est. speed input: 98.03 toks/s, output: 211.12 toks/s]
+Processed prompts:  40%|████      | 20/50 [00:17<00:11,  2.54it/s, est. speed input: 99.73 toks/s, output: 219.63 toks/s]
+Processed prompts:  42%|████▏     | 21/50 [00:18<00:12,  2.34it/s, est. speed input: 102.44 toks/s, output: 227.47 toks/s]
+Processed prompts:  44%|████▍     | 22/50 [00:19<00:12,  2.20it/s, est. speed input: 105.16 toks/s, output: 235.28 toks/s]
+Processed prompts:  48%|████▊     | 24/50 [00:19<00:08,  3.24it/s, est. speed input: 113.77 toks/s, output: 260.05 toks/s]
+Processed prompts:  50%|█████     | 25/50 [00:20<00:11,  2.19it/s, est. speed input: 113.54 toks/s, output: 262.32 toks/s]
+Processed prompts:  54%|█████▍    | 27/50 [00:20<00:08,  2.65it/s, est. speed input: 123.12 toks/s, output: 283.57 toks/s]
+Processed prompts:  60%|██████    | 30/50 [00:22<00:08,  2.47it/s, est. speed input: 129.76 toks/s, output: 307.58 toks/s]
+Processed prompts:  66%|██████▌   | 33/50 [00:22<00:05,  3.20it/s, est. speed input: 140.33 toks/s, output: 342.48 toks/s]
+Processed prompts:  70%|███████   | 35/50 [00:22<00:03,  3.81it/s, est. speed input: 147.93 toks/s, output: 366.94 toks/s]
+Processed prompts:  76%|███████▌  | 38/50 [00:24<00:03,  3.12it/s, est. speed input: 154.43 toks/s, output: 389.09 toks/s]
+Processed prompts:  78%|███████▊  | 39/50 [00:25<00:05,  2.17it/s, est. speed input: 150.47 toks/s, output: 384.28 toks/s]
+Processed prompts:  80%|████████  | 40/50 [00:26<00:06,  1.55it/s, est. speed input: 145.72 toks/s, output: 376.92 toks/s]
+Processed prompts:  82%|████████▏ | 41/50 [00:27<00:05,  1.71it/s, est. speed input: 147.66 toks/s, output: 386.52 toks/s]
+Processed prompts:  84%|████████▍ | 42/50 [00:27<00:03,  2.01it/s, est. speed input: 150.30 toks/s, output: 398.16 toks/s]
+Processed prompts:  88%|████████▊ | 44/50 [00:27<00:02,  2.80it/s, est. speed input: 157.79 toks/s, output: 422.93 toks/s]
+Processed prompts:  90%|█████████ | 45/50 [00:29<00:03,  1.58it/s, est. speed input: 154.20 toks/s, output: 413.84 toks/s]
+Processed prompts:  92%|█████████▏| 46/50 [00:29<00:02,  1.69it/s, est. speed input: 155.46 toks/s, output: 421.93 toks/s]
+Processed prompts:  94%|█████████▍| 47/50 [00:30<00:01,  1.80it/s, est. speed input: 157.01 toks/s, output: 430.09 toks/s]
+Processed prompts:  96%|█████████▌| 48/50 [00:30<00:01,  1.84it/s, est. speed input: 158.31 toks/s, output: 437.54 toks/s]
+Processed prompts:  98%|█████████▊| 49/50 [00:30<00:00,  2.25it/s, est. speed input: 161.30 toks/s, output: 449.37 toks/s]
+Processed prompts: 100%|██████████| 50/50 [00:36<00:00,  2.04s/it, est. speed input: 138.32 toks/s, output: 389.99 toks/s]
+Processed prompts: 100%|██████████| 50/50 [00:36<00:00,  2.04s/it, est. speed input: 138.32 toks/s, output: 389.99 toks/s]
+Processed prompts: 100%|██████████| 50/50 [00:36<00:00,  1.35it/s, est. speed input: 138.32 toks/s, output: 389.99 toks/s]
+{
+ "label": "int8_static_torch",
+ "task": "gsm8k",
+ "model": "Qwen/Qwen2.5-7B-Instruct",
+ "n_prompts": 50,
+ "n_samples": 50,
+ "accuracy": 0.92,
+ "wall_s": 37.0390362739563,
+ "gen_tokens": 14427,
+ "env": [
+  "KVQ_SCALES=/cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors",
+  "KVQ_CFG=B_channel_smooth"
+ ],
+ "llm": {
+  "max_model_len": 4096,
+  "gpu_memory_utilization": 0.85,
+  "seed": 0,
+  "enforce_eager": true,
+  "kv_cache_dtype": "int8_static",
+  "attention_config": {
+   "backend": "CUSTOM"
+  }
+ }
+}
+(MainProcess pid=159) INFO 10-25 22:35:08 [utils.py:628] [shutdown] Process manager: send sigterm to process EngineCore
+(EngineCore pid=196) INFO 10-25 22:35:08 [core.py:1454] [shutdown] EngineCore: trigger received signal=SIGTERM
+(EngineCore pid=196) INFO 10-25 22:35:08 [core.py:1635] [shutdown] EngineCore: start mode=abort timeout=0s
+(EngineCore pid=196) INFO 10-25 22:35:08 [core.py:1666] [shutdown] EngineCore: request processing complete; starting resource teardown
+(EngineCore pid=196) INFO 10-25 22:35:08 [core.py:1499] [shutdown] EngineCore: exiting busy loop
++ python3 scripts/run_eval.py --label bisect_static --n 50 --env KVQ_SCALES=/cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors --env KVQ_ATTN=static:B_channel_smooth --llm '{"enforce_eager":true}'
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(MainProcess pid=297) INFO 10-25 22:35:27 [api_utils.py:286] non-default args: {'max_model_len': 4096, 'gpu_memory_utilization': 0.85, 'disable_log_stats': True, 'enforce_eager': True, 'model': 'Qwen/Qwen2.5-7B-Instruct'}
+(MainProcess pid=297) INFO 10-25 22:35:27 [model.py:733] Resolved architecture: Qwen2ForCausalLM
+(MainProcess pid=297) INFO 10-25 22:35:27 [model.py:2152] Using max model len 4096
+(MainProcess pid=297) INFO 10-25 22:35:27 [scheduler.py:307] Chunked prefill is enabled with max_num_batched_tokens=8192.
+(MainProcess pid=297) WARNING 10-25 22:35:27 [vllm.py:1703] Enforce eager set, disabling torch.compile, CUDAGraphs, and JIT kernel warmup. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none and --kernel_config.enable_jit_warmup=False
+(MainProcess pid=297) WARNING 10-25 22:35:27 [vllm.py:1727] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+(MainProcess pid=297) INFO 10-25 22:35:27 [kernel.py:467] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'], gelu_and_mul_sparse=['triton', 'native'])
+(MainProcess pid=297) INFO 10-25 22:35:27 [vllm.py:1929] Cudagraph is disabled under eager mode
+(MainProcess pid=297) INFO 10-25 22:35:27 [compilation.py:317] Enabled custom fusions: norm_quant, act_quant
+
+Fetching 10 files:   0%|          | 0/10 [00:00<?, ?it/s]
+Fetching 10 files: 100%|██████████| 10/10 [00:00<00:00, 782.24it/s]
+(EngineCore pid=333) INFO 10-25 22:35:30 [core.py:133] Initializing a V1 LLM engine (v0.32.0) with config: model='Qwen/Qwen2.5-7B-Instruct', speculative_config=None, tokenizer='Qwen/Qwen2.5-7B-Instruct', skip_tokenizer_init=False, tokenizer_mode=auto, revision=main, tokenizer_revision=main, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=4096, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=None, quantization_config=None, enforce_eager=True, aux_output_config=AuxOutputConfig(enable_return_routed_experts=False, max_bytes=None), kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, per_request_spec_decode_metrics='none', kv_cache_metrics=False, kv_cache_metrics_sample=0.01, custom_histogram_buckets=None, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False, jit_monitor_mode='warn', jit_monitor_verbose=False), seed=0, served_model_name=Qwen/Qwen2.5-7B-Instruct, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.NONE: 0>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['all'], 'ir_enable_torch_wrap': False, 'splitting_ops': [], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'cudagraph_decoder_replay': True, 'decoder_replay_cudagraph_capture_sizes': [], 'decoder_replay_trim_threshold': 768, 'compile_sizes': [], 'compile_ranges_endpoints': [8192], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.NONE: 0>, 'cudagraph_num_of_warmups': 0, 'cudagraph_capture_sizes': [], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': True, 'fuse_act_quant': True, 'fuse_attn_quant': False, 'fuse_allreduce_rms': False, 'enable_qk_norm_rope_fusion': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False, 'fuse_qk_norm_rope_kvcache': False}, 'max_cudagraph_capture_size': 0, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': False, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'], gelu_and_mul_sparse=['triton', 'native']), enable_flashinfer_autotune=True, enable_rocm_segmented_attn_autotune=False, enable_cutedsl_warmup=True, enable_jit_warmup=False, moe_backend='auto', sparse_indexer_topk_backend='auto', linear_backend='auto', linear_backend_per_quant=None)
+(EngineCore pid=333) INFO 10-25 22:35:33 [parallel_state.py:1906] world_size=1 rank=0 local_rank=0 distributed_init_method=file:///tmp/vllm_dist_9dfec67a16ec4e72b55bac45722c727c backend=nccl
+(EngineCore pid=333) INFO 10-25 22:35:33 [parallel_state.py:2350] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, ETP rank 0, EP rank N/A, EPLB rank N/A
+(EngineCore pid=333) INFO 10-25 22:35:33 [gpu_worker.py:518] Using V2 Model Runner
+(EngineCore pid=333) INFO 10-25 22:35:34 [model_runner.py:392] Loading model from scratch...
+(EngineCore pid=333) INFO 10-25 22:35:36 [cuda.py:506] Using FLASH_ATTN attention backend out of potential backends: ['FLASH_ATTN', 'FLASHINFER', 'TRITON_ATTN', 'FLEX_ATTENTION'].
+(EngineCore pid=333) INFO 10-25 22:35:36 [flash_attn.py:1117] Using FlashAttention version 2
+(EngineCore pid=333) INFO 10-25 22:35:36 [base_loader.py:82] Initializing model took 2.029977 seconds
+(EngineCore pid=333) INFO 10-25 22:35:36 [weight_utils.py:1108] Filesystem type for checkpoints: 9P. Checkpoint size: 14.19 GiB. Available RAM: 772.08 GiB.
+(EngineCore pid=333) INFO 10-25 22:35:36 [weight_utils.py:1131] Auto-prefetch is disabled because the filesystem (9P) is not a recognized network FS (NFS/Lustre). If you want to force prefetching, start vLLM with --safetensors-load-strategy=prefetch.
+
+Loading safetensors checkpoint shards:   0% Completed | 0/4 [00:00<?, ?it/s]
+
+Loading safetensors checkpoint shards:  25% Completed | 1/4 [00:00<00:01,  1.97it/s]
+
+Loading safetensors checkpoint shards:  50% Completed | 2/4 [00:01<00:01,  1.80it/s]
+
+Loading safetensors checkpoint shards:  75% Completed | 3/4 [00:01<00:00,  1.71it/s]
+
+Loading safetensors checkpoint shards: 100% Completed | 4/4 [00:02<00:00,  1.73it/s]
+
+Loading safetensors checkpoint shards: 100% Completed | 4/4 [00:02<00:00,  1.75it/s]
+
+(EngineCore pid=333) INFO 10-25 22:35:39 [default_loader.py:501] Loading weights took 2.44 seconds
+(EngineCore pid=333) INFO 10-25 22:35:40 [model_runner.py:424] Model loading took 14.29 GiB memory and 6.548338 seconds
+(EngineCore pid=333) INFO 10-25 22:35:40 [topk_topp_sampler.py:124] Using FlashInfer for top-p & top-k sampling.
+(EngineCore pid=333) WARNING 10-25 22:35:40 [torch_utils.py:284] OMP_NUM_THREADS=8 is set; leaving Torch threads at 8 for serving. Multi-threaded torch CPU ops during serving can degrade performance through spin-wait contention and cgroup CPU-quota throttling.
+(EngineCore pid=333) INFO 10-25 22:35:40 [utils.py:347] Using LBNHC KV cache layout.
+(EngineCore pid=333) INFO 10-25 22:35:42 [gpu_worker.py:759] Available KV cache memory: 51.71 GiB
+(EngineCore pid=333) INFO 10-25 22:35:42 [kv_cache_utils.py:2327] GPU KV cache size: 968,272 tokens, Maximum concurrency for 4,096 tokens per request: 236.39x
+(EngineCore pid=333) INFO 10-25 22:35:43 [gpu_worker.py:1034] Free memory on device (78.86/79.27 GiB) on startup. Desired GPU memory utilization is (0.85, 67.38 GiB). Actual usage is 14.58 GiB for consumed memory (weights + non-torch), 1.09 GiB for peak activation, and 0.0 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=55367690752` (51.57 GiB) to fit into requested memory, or `--kv-cache-memory=67689966080` (63.04 GiB) to fully utilize gpu memory. Current kv cache memory in use is 51.71 GiB.
+(EngineCore pid=333) INFO 10-25 22:35:43 [core.py:402] init engine (profile, create kv cache, warmup model) took 2.82 s
+(EngineCore pid=333) WARNING 10-25 22:35:43 [serial_utils.py:78] Allowing insecure serialization using pickle due to VLLM_ALLOW_INSECURE_SERIALIZATION=1
+(EngineCore pid=333) INFO 10-25 22:35:43 [kernel.py:467] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'], gelu_and_mul_sparse=['triton', 'native'])
+(MainProcess pid=297) WARNING 10-25 22:35:43 [serial_utils.py:78] Allowing insecure serialization using pickle due to VLLM_ALLOW_INSECURE_SERIALIZATION=1
+(MainProcess pid=297) INFO 10-25 22:35:43 [hf.py:648] Detected the chat template content format to be 'string'. You can set `--chat-template-content-format` to override this.
+
+Rendering conversations:   0%|          | 0/50 [00:00<?, ?it/s]
+Rendering conversations: 100%|██████████| 50/50 [00:00<00:00, 1183.74it/s]
+
+Processed prompts:   0%|          | 0/50 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]
+Processed prompts:   2%|▏         | 1/50 [00:08<07:13,  8.84s/it, est. speed input: 7.92 toks/s, output: 14.59 toks/s]
+Processed prompts:   4%|▍         | 2/50 [00:09<03:15,  4.08s/it, est. speed input: 16.28 toks/s, output: 28.28 toks/s]
+Processed prompts:   6%|▌         | 3/50 [00:09<01:47,  2.29s/it, est. speed input: 24.10 toks/s, output: 42.66 toks/s]
+Processed prompts:   8%|▊         | 4/50 [00:10<01:17,  1.68s/it, est. speed input: 32.50 toks/s, output: 54.71 toks/s]
+Processed prompts:  12%|█▏        | 6/50 [00:11<00:40,  1.08it/s, est. speed input: 48.24 toks/s, output: 81.76 toks/s]
+Processed prompts:  14%|█▍        | 7/50 [00:11<00:34,  1.25it/s, est. speed input: 53.69 toks/s, output: 93.70 toks/s]
+Processed prompts:  16%|█▌        | 8/50 [00:12<00:37,  1.11it/s, est. speed input: 54.66 toks/s, output: 100.60 toks/s]
+Processed prompts:  18%|█▊        | 9/50 [00:13<00:32,  1.26it/s, est. speed input: 59.93 toks/s, output: 112.10 toks/s]
+Processed prompts:  20%|██        | 10/50 [00:13<00:25,  1.59it/s, est. speed input: 65.86 toks/s, output: 125.74 toks/s]
+Processed prompts:  24%|██▍       | 12/50 [00:13<00:14,  2.63it/s, est. speed input: 78.56 toks/s, output: 155.19 toks/s]
+Processed prompts:  26%|██▌       | 13/50 [00:13<00:12,  2.91it/s, est. speed input: 84.00 toks/s, output: 168.22 toks/s]
+Processed prompts:  28%|██▊       | 14/50 [00:14<00:12,  2.80it/s, est. speed input: 88.14 toks/s, output: 179.17 toks/s]
+Processed prompts:  30%|███       | 15/50 [00:14<00:11,  3.12it/s, est. speed input: 93.31 toks/s, output: 192.11 toks/s]
+Processed prompts:  34%|███▍      | 17/50 [00:14<00:07,  4.59it/s, est. speed input: 104.32 toks/s, output: 221.28 toks/s]
+Processed prompts:  36%|███▌      | 18/50 [00:14<00:07,  4.33it/s, est. speed input: 107.79 toks/s, output: 232.96 toks/s]
+Processed prompts:  38%|███▊      | 19/50 [00:15<00:09,  3.20it/s, est. speed input: 111.64 toks/s, output: 240.44 toks/s]
+Processed prompts:  40%|████      | 20/50 [00:15<00:09,  3.01it/s, est. speed input: 113.74 toks/s, output: 250.49 toks/s]
+Processed prompts:  42%|████▏     | 21/50 [00:16<00:10,  2.76it/s, est. speed input: 116.91 toks/s, output: 259.60 toks/s]
+Processed prompts:  44%|████▍     | 22/50 [00:16<00:10,  2.59it/s, est. speed input: 120.08 toks/s, output: 268.65 toks/s]
+Processed prompts:  48%|████▊     | 24/50 [00:16<00:06,  3.79it/s, est. speed input: 129.92 toks/s, output: 296.97 toks/s]
+Processed prompts:  50%|█████     | 25/50 [00:17<00:09,  2.58it/s, est. speed input: 129.87 toks/s, output: 300.06 toks/s]
+Processed prompts:  54%|█████▍    | 27/50 [00:18<00:07,  3.15it/s, est. speed input: 141.04 toks/s, output: 324.86 toks/s]
+Processed prompts:  60%|██████    | 30/50 [00:19<00:06,  2.93it/s, est. speed input: 148.94 toks/s, output: 353.02 toks/s]
+Processed prompts:  66%|██████▌   | 33/50 [00:19<00:04,  3.77it/s, est. speed input: 161.08 toks/s, output: 393.12 toks/s]
+Processed prompts:  70%|███████   | 35/50 [00:19<00:03,  4.49it/s, est. speed input: 169.85 toks/s, output: 421.30 toks/s]
+Processed prompts:  76%|███████▌  | 38/50 [00:20<00:03,  3.72it/s, est. speed input: 177.78 toks/s, output: 447.90 toks/s]
+Processed prompts:  78%|███████▊  | 39/50 [00:21<00:04,  2.60it/s, est. speed input: 173.55 toks/s, output: 443.22 toks/s]
+Processed prompts:  80%|████████  | 40/50 [00:23<00:05,  1.83it/s, est. speed input: 168.25 toks/s, output: 435.21 toks/s]
+Processed prompts:  82%|████████▏ | 41/50 [00:23<00:04,  2.02it/s, est. speed input: 170.51 toks/s, output: 446.34 toks/s]
+Processed prompts:  84%|████████▍ | 42/50 [00:23<00:03,  2.37it/s, est. speed input: 173.56 toks/s, output: 459.80 toks/s]
+Processed prompts:  88%|████████▊ | 44/50 [00:23<00:01,  3.28it/s, est. speed input: 182.16 toks/s, output: 488.26 toks/s]
+Processed prompts:  90%|█████████ | 45/50 [00:25<00:02,  1.83it/s, est. speed input: 178.03 toks/s, output: 477.81 toks/s]
+Processed prompts:  92%|█████████▏| 46/50 [00:25<00:02,  1.98it/s, est. speed input: 179.59 toks/s, output: 487.44 toks/s]
+Processed prompts:  94%|█████████▍| 47/50 [00:26<00:01,  2.11it/s, est. speed input: 181.45 toks/s, output: 497.06 toks/s]
+Processed prompts:  96%|█████████▌| 48/50 [00:26<00:00,  2.16it/s, est. speed input: 182.99 toks/s, output: 505.75 toks/s]
+Processed prompts:  98%|█████████▊| 49/50 [00:26<00:00,  2.63it/s, est. speed input: 186.46 toks/s, output: 519.48 toks/s]
+Processed prompts: 100%|██████████| 50/50 [00:32<00:00,  1.77s/it, est. speed input: 159.76 toks/s, output: 450.42 toks/s]
+Processed prompts: 100%|██████████| 50/50 [00:32<00:00,  1.77s/it, est. speed input: 159.76 toks/s, output: 450.42 toks/s]
+Processed prompts: 100%|██████████| 50/50 [00:32<00:00,  1.56it/s, est. speed input: 159.76 toks/s, output: 450.42 toks/s]
+{
+ "label": "bisect_static",
+ "task": "gsm8k",
+ "model": "Qwen/Qwen2.5-7B-Instruct",
+ "n_prompts": 50,
+ "n_samples": 50,
+ "accuracy": 0.92,
+ "wall_s": 32.07736849784851,
+ "gen_tokens": 14427,
+ "env": [
+  "KVQ_SCALES=/cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors",
+  "KVQ_ATTN=static:B_channel_smooth"
+ ],
+ "llm": {
+  "max_model_len": 4096,
+  "gpu_memory_utilization": 0.85,
+  "seed": 0,
+  "enforce_eager": true
+ }
+}
+(MainProcess pid=297) INFO 10-25 22:36:16 [utils.py:628] [shutdown] Process manager: send sigterm to process EngineCore
+(EngineCore pid=333) INFO 10-25 22:36:16 [core.py:1454] [shutdown] EngineCore: trigger received signal=SIGTERM
+(EngineCore pid=333) INFO 10-25 22:36:16 [core.py:1635] [shutdown] EngineCore: start mode=abort timeout=0s
+(EngineCore pid=333) INFO 10-25 22:36:16 [core.py:1666] [shutdown] EngineCore: request processing complete; starting resource teardown
+(EngineCore pid=333) INFO 10-25 22:36:16 [core.py:1499] [shutdown] EngineCore: exiting busy loop
++ python3 scripts/compare_runs.py /tmp/out/eval_bisect_static_gsm8k.jsonl /tmp/out/eval_int8_static_torch_gsm8k.jsonl
+{
+ "n": 50,
+ "acc_a": 0.92,
+ "acc_b": 0.92,
+ "identical_outputs": 1.0,
+ "gained": 0,
+ "lost": 0,
+ "mean_common_prefix_frac": 1.0
+}
+
+[modal_app] exit=0 wall=242s

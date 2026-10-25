@@ -24,8 +24,12 @@ def gather_pages(cache, block_table, max_len):
     return cache[block_table[:, :pages].long()].flatten(1, 2)[:, :max_len]
 
 
-def run_paged(attend, q, k_cache, v_cache, cu_seqlens_q, seq_lens, block_table, causal=True, max_rows=512):
-    """Call attend(qb [b,R,Hq,D], k [b,K,Hkv,D], v [b,K,Hkv,D], mask [b,R,K], valid [b,K]) -> [b,R,Hq,Dv]."""
+def run_paged(attend, q, k_cache, v_cache, cu_seqlens_q, seq_lens, block_table, causal=True, max_rows=512,
+              attend_multi=None):
+    """Call attend(qb [b,R,Hq,D], k [b,K,Hkv,D], v [b,K,Hkv,D], mask [b,R,K], valid [b,K]) -> [b,R,Hq,Dv].
+
+    attend_multi, if given, is used instead for requests with more than one query token."""
+    attend_multi = attend_multi or attend
     out = torch.empty(q.shape[0], q.shape[1], v_cache.shape[-1], dtype=q.dtype, device=q.device)
     dev = q.device
     q_lens = (cu_seqlens_q[1:] - cu_seqlens_q[:-1]).tolist()
@@ -50,8 +54,8 @@ def run_paged(attend, q, k_cache, v_cache, cu_seqlens_q, seq_lens, block_table, 
             e = min(n, s + max_rows)
             qpos = lens[i] - n + torch.arange(s, e, device=dev)
             mask = (kpos[None] <= qpos[:, None]) if causal else valid.expand(e - s, -1)
-            out[starts[i] + s:starts[i] + e] = attend(q[starts[i] + s:starts[i] + e][None], k, v, mask[None],
-                                                      valid)[0].to(q.dtype)
+            out[starts[i] + s:starts[i] + e] = attend_multi(q[starts[i] + s:starts[i] + e][None], k, v,
+                                                            mask[None], valid)[0].to(q.dtype)
     return out
 
 

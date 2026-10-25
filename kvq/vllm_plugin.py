@@ -7,6 +7,10 @@ import os
 
 
 def register():
+    # Registering by class path does not import the backend module here.
+    from vllm.v1.attention.backends.registry import AttentionBackendEnum, register_backend
+
+    register_backend(AttentionBackendEnum.CUSTOM, "kvq.vllm_int8.backend.Int8StaticBackend")
     if os.environ.get("KVQ_CAPTURE") == "1":
         from kvq import capture
 

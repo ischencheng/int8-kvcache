@@ -23,14 +23,25 @@ def layer_index(name):
 
 
 def _record(name, key, value):
+    """Running per-(kv_head, channel) stats: |x| max, signed max/min and sum (for smooth-K)."""
+    new = {}
+    for side, x in (("k", key), ("v", value)):
+        xf = x.float()
+        new[f"{side}_absmax"] = xf.abs().amax(0)
+        new[f"{side}_max"] = xf.amax(0)
+        new[f"{side}_min"] = xf.amin(0)
+        new[f"{side}_sum"] = xf.double().sum(0)
     st = STATE["stats"].get(name)
-    kmax = key.abs().amax(0).float()
-    vmax = value.abs().amax(0).float()
     if st is None:
-        STATE["stats"][name] = st = {"k_absmax": kmax, "v_absmax": vmax, "tokens": 0}
+        STATE["stats"][name] = st = {**new, "tokens": 0}
     else:
-        torch.maximum(st["k_absmax"], kmax, out=st["k_absmax"])
-        torch.maximum(st["v_absmax"], vmax, out=st["v_absmax"])
+        for key_ in new:
+            if key_.endswith("_sum"):
+                st[key_] += new[key_]
+            elif key_.endswith("_min"):
+                torch.minimum(st[key_], new[key_], out=st[key_])
+            else:
+                torch.maximum(st[key_], new[key_], out=st[key_])
     st["tokens"] += key.shape[0]
     # Reservoir-free sampling: keep every token until the budget, then a random
     # 1/8 of each new batch. Enough for quantiles and plots.
@@ -96,10 +107,12 @@ def install():
 
 
 def collect(worker=None):
-    out = {"stats": {}, "samples": {}, "dumps": STATE["dumps"]}
+    from vllm.distributed import get_tensor_model_parallel_rank, get_tensor_model_parallel_world_size
+
+    out = {"stats": {}, "samples": {}, "dumps": STATE["dumps"],
+           "tp_rank": get_tensor_model_parallel_rank(), "tp_size": get_tensor_model_parallel_world_size()}
     for name, st in STATE["stats"].items():
-        out["stats"][name] = {"k_absmax": st["k_absmax"].cpu(), "v_absmax": st["v_absmax"].cpu(),
-                              "tokens": st["tokens"]}
+        out["stats"][name] = {k: (v.cpu() if torch.is_tensor(v) else v) for k, v in st.items()}
     for name, smp in STATE["samples"].items():
         out["samples"][name] = {"k": torch.cat(smp["k"]), "v": torch.cat(smp["v"])}
     return out

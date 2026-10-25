@@ -69,11 +69,15 @@ def quantize_kv(k, v, valid, cfg, static=None):
     return quant.quantize(k, ks), ks, quant.quantize(v, vs), vs
 
 
+def attend_dequant(qb, kq, ks, vq, vs, mask, softmax_scale):
+    """Implementation A on already-quantized K/V: dequantize (fp32 -> bf16) and run bf16 attention."""
+    return attend_bf16(qb, quant.dequantize(kq, ks, torch.bfloat16), quant.dequantize(vq, vs, torch.bfloat16),
+                       mask, softmax_scale)
+
+
 def attend_impl_a(qb, k, v, mask, valid, softmax_scale, cfg, static=None):
     kq, ks, vq, vs = quantize_kv(k, v, valid, cfg, static)
-    k_deq = quant.dequantize(kq, ks, torch.bfloat16)
-    v_deq = quant.dequantize(vq, vs, torch.bfloat16)
-    return attend_bf16(qb, k_deq, v_deq, mask, softmax_scale)
+    return attend_dequant(qb, kq, ks, vq, vs, mask, softmax_scale)
 
 
 def _quant_q(qf, q_gran):
@@ -101,14 +105,14 @@ def _quant_p(e, cfg):
     return t.flatten(-2)[..., :K]
 
 
-def attend_impl_b(qb, k, v, mask, valid, softmax_scale, cfg, static=None):
+def attend_int8(qb, kq, ks, vq, vs, mask, softmax_scale, cfg):
+    """Implementation B on already-quantized K/V (int8 values + broadcastable scales)."""
     assert cfg.v_gran != "per_token_head", "a per-token V scale sits on the PV contraction dim"
-    kq, ks, vq, vs = quantize_kv(k, v, valid, cfg, static)
-    hkv = k.shape[2]
+    hkv = kq.shape[2]
     qg = group_heads(qb, hkv).double()                       # [b, R, Hkv, G, D]
     # --- QK ---
-    if cfg.k_gran == "per_channel":
-        qf = qg * ks.double()[:, :, :, None, :]              # fold s_k[h, d] into q
+    if ks.shape[-1] > 1:                                     # per_channel: fold s_k[h, d] into q
+        qf = qg * ks.double()[:, :, :, None, :]
         k_post = 1.0
     else:
         qf = qg
@@ -139,6 +143,11 @@ def attend_impl_b(qb, k, v, mask, valid, softmax_scale, cfg, static=None):
     return o.flatten(2, 3).float()
 
 
+def attend_impl_b(qb, k, v, mask, valid, softmax_scale, cfg, static=None):
+    kq, ks, vq, vs = quantize_kv(k, v, valid, cfg, static)
+    return attend_int8(qb, kq, ks, vq, vs, mask, softmax_scale, cfg)
+
+
 def paged_int8_attention(cfg, static=None):
     """A drop-in paged attention function (same signature as paged_attention_ref)."""
     attend = attend_impl_a if cfg.impl == "A" else attend_impl_b
@@ -146,6 +155,41 @@ def paged_int8_attention(cfg, static=None):
     def fn(q, k_cache, v_cache, cu_seqlens_q, seq_lens, block_table, softmax_scale, causal=True):
         return run_paged(lambda qb, k, v, mask, valid: attend(qb, k, v, mask, valid, softmax_scale, cfg, static),
                          q, k_cache, v_cache, cu_seqlens_q, seq_lens, block_table, causal)
+
+    return fn
+
+
+def paged_static_attention(cfg, static, cache_is_int8):
+    """Static-scale attention as the INT8 backend runs it: decode rows use the INT8
+    arithmetic (B), multi-token rows (prefill / chunked prefill) dequantize (A).
+
+    cache_is_int8=True : the cache already holds int8 (the real static backend).
+    cache_is_int8=False: the cache is bf16 and is quantized with the static scales at
+                         read time (the stage-6 bisect tool: same math, no framework change).
+    """
+    ks, vs = static["k_scale"][None, None], static["v_scale"][None, None]
+    mu = static.get("k_mu")
+
+    def prep(k, v):
+        if cache_is_int8:
+            return k, v
+        kf = k.float() - (mu[None, None] if mu is not None else 0)
+        return quant.quantize(kf, ks), quant.quantize(v, vs)
+
+    def decode(qb, k, v, mask, valid):
+        kq, vq = prep(k, v)
+        return attend_int8(qb, kq, ks, vq, vs, mask, softmax_scale_[0], cfg)
+
+    def prefill(qb, k, v, mask, valid):
+        kq, vq = prep(k, v)
+        return attend_dequant(qb, kq, ks, vq, vs, mask, softmax_scale_[0])
+
+    softmax_scale_ = [None]
+
+    def fn(q, k_cache, v_cache, cu_seqlens_q, seq_lens, block_table, softmax_scale, causal=True):
+        softmax_scale_[0] = softmax_scale
+        return run_paged(decode, q, k_cache, v_cache, cu_seqlens_q, seq_lens, block_table, causal,
+                         attend_multi=prefill)
 
     return fn
 

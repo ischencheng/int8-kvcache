@@ -140,3 +140,36 @@
 4. q 用 per-tensor（课程正文的写法）不可用：动态 scale 被整个 batch 里最大的 q 决定，平均 37%。
 5. 为了让 scale 计算不碰到 padding 位置的脏数据（gather 出来超出 seq_len 的行是别的请求的页），
    动态 absmax/均值都必须先按 `valid` mask。
+
+## Step 6a 静态量化的框架改造（阶段六 a–e，PyTorch 版）
+
+改动分两层：
+1. **vLLM 源码 patch**（`patches/vllm-0.32.0-int8-static-kv.patch`，镜像构建时打到已安装的 vLLM 上），只做"类型登记"：
+   - `vllm/config/cache.py`：`CacheDType` 加 `"int8_static"`（pydantic 用 Literal 校验，插件里改不了，只能改源码）；
+   - `vllm/utils/torch_utils.py`：`"int8_static" → torch.int8`，于是 KV cache 按 1 字节/元素分配，block 数自动翻倍；
+   - `vllm/v1/kv_cache_interface.py`：`KVQuantMode.INT8_STATIC`，让 `is_quantized_kv_cache()` 等判断把它当成量化 cache。
+2. **自定义 attention backend**（`kvq/vllm_int8/backend.py`），插件里 `register_backend(AttentionBackendEnum.CUSTOM, ...)`，
+   运行时 `kv_cache_dtype="int8_static", attention_config={"backend": "CUSTOM"}`。继承 Triton backend 的元数据：
+   - (a) cache dtype 是 int8（由 patch 决定）；
+   - (b)(e) `do_kv_cache_update`：写 cache 前用静态 scale 量化（K 先减 smooth-K 均值），prefill/decode 同一入口；
+   - (c) 多 token 请求（prefill、chunked prefill、投机解码验证）读 int8 → 反量化（实现 A）；
+   - (d) decode 走 int8 算术（实现 B），q 动态量化，K/V 静态 scale；
+   - 静态 scale 在 **metadata builder 的 `__init__`** 里交给每层：它在模型加载之后、CUDA graph capture 之前、
+     每个 KV cache group 只构造一次，并且拿得到 `layer_names` 和 `static_forward_context`
+     （impl 的构造函数拿不到层名，forward 里懒加载又可能撞上 graph capture）。TP 下按 rank 切 kv head。
+
+校准（`scripts/calibrate.py` + `kvq/scales.py`）：在 FA2 上开采集，统计每 (kv_head, channel) 的 |x| 最大值、
+有符号 max/min 和 sum（smooth-K 需要均值 μ 和 max|k-μ| = max(kmax-μ, μ-kmin)），一次生成
+per_channel/per_head × max/99.9%/99.99% × 是否 smooth 共 6 种 scale 文件。校准集不碰评测集
+（数学用 GSM8K **train**，另备一份 wikitext 文本做跨域对照）。
+
+冒烟测试（`results/06-smoke/`，GSM8K train 64 题校准，test 50 题评测）：
+- `GPU KV cache size`：bf16 968,272 token → int8_static **1,936,544 token**（正好 2 倍，同样的显存）。
+- 真 int8 存储（CUSTOM backend）92%；"bf16 cache + 读时按同一静态 scale 量化"（课程 3.3 的二分工具，
+  `KVQ_ATTN=static:B_channel_smooth`）92%，**50 题输出逐字相同**。说明写时量化/int8 存取/读出的框架改动和
+  纯数学实现严格等价；以后静态量化掉点，就可以用这个工具二分是 scale 的问题还是框架的问题。
+
+遇到的问题：
+1. 我们模块的 logger 用 `init_logger(__name__)` 时 INFO 不打印：vLLM 只给 `vllm.*` 命名空间配了 handler，改名 `vllm.kvq`。
+2. `AttentionBackendEnum[backend.get_name()]` 会在 Attention 构造时被调用，自定义 backend 的 `get_name()` 必须返回
+   注册时用的枚举名 `"CUSTOM"`，不能沿用父类的 `"TRITON_ATTN"`。
