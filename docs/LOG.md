@@ -92,3 +92,51 @@
    仍然 OOM 告警；改成分组 einsum 后告警消失，整网替换从 119 s 降到 50 s。
 3. `index_put` 要求 dtype 一致：attend 输出 fp32、out 是 bf16，要先 `.to(q.dtype)`。
 4. 课程的参考实现没把 `softmax_scale` 传进去（固定 1/√d），这里显式传入；dump 里也存了 scale。
+
+## Step 4 两类 int8 实现与误差拆分（阶段四）
+
+`kvq/int8_ref.py`，都挂在阶段三的 `run_paged()` 上，只换 `attend()`：
+- **实现 A**：K/V 量化 → 立刻反量化（先 fp32 再 bf16）→ bf16 金标准。误差只来自 K/V 的 int8 舍入，
+  也是"读出来就反量化"的 kernel 和 chunked prefill 的真实计算路径。
+- **实现 B**：真 int8 算术。
+  - QK：scale 能不能提到点积外，只看它是否依赖被缩并的 head_dim。per_head / per_token_head 的 K scale 不依赖 →
+    `scores = (q_i8·k_i8)·s_q·s_k`；per_channel 依赖 → 先把 `s_k[h,:]` 乘进 q（GQA 下按 q head → kv head 取行），再量化 q。
+  - PV：缩并 token 维，per_channel/per_head 的 V scale 不依赖 token → 乘在输出上。
+  - P：对 `exp(s - rowmax)` 按（行, 64 个 key 的 tile）动态量化，模拟 flash kernel 每个 tile 做一次 int8 PV mma。
+  - 整数点积在 float64 里算（int8×int8×128 项 < 2^53，精确），避免 TF32 干扰。
+- 单测 `tests/test_int8_ref.py`（28 个）：舍入误差 ≤ scale/2；q、P 不量化时 B 必须和 fp64 下"反量化后再算"
+  完全一致（rel < 1e-6），专门检查 scale 折叠/提取的代数，per_head / per_channel / per_token_head / per_tensor 都过。
+
+真实 decode dump（7B/1.5B × 第 0/14/27 层，上下文 1536）上 attention 输出相对误差，参考为 FA2 捕获输出
+（`results/04-int8-ref/int8_error_table.md`，动态 scale = 每个请求自己的 K/V）：
+
+| 配置 | 平均 | 最差层 |
+|---|---|---|
+| fp32 金标准（参照） | 0.10% | 0.12% |
+| A per_head | 12.27% | 28.46% |
+| A per_token_head（vLLM 原生做法） | 11.10% | 26.98% |
+| A per_channel | 2.47% | 4.42% |
+| **A per_channel + smooth-K** | **1.06%** | 1.78% |
+| A per_token_head + smooth-K | 1.17% | 1.52% |
+| B per_channel | 8.29% | 13.53% |
+| B per_channel + smooth-K（q 每 token-head 一个 scale） | 2.21% | 3.36% |
+| **B per_channel + smooth-K + q 每 32 通道一个 scale** | **1.71%** | 2.46% |
+| B per_channel，q per-tensor | 36.98% | 72.73% |
+| B per_channel + smooth-K，P 固定 scale 1/127 | 6.40% | 9.34% |
+
+误差拆分（B per_channel + smooth-K = 2.21%）：KV 量化 1.06%（= 实现 A）；P 的 tile 量化约 +0.2%
+（不量化 P 是 2.03%）；q 量化约 +0.9%（q 不量化是 1.32%）。B 相对 A 的增量 ≈ 1.2%，远在课程说的 5–10% 以内。
+
+遇到的问题：
+1. **实现 B 不加 smooth-K 会掉到 8.3%**，比实现 A 差 3 倍多，而且不是 P 的问题（不量化 P 还是 8.2%）。
+   原因：per_channel 的 `s_k` 在离群通道上大 40–74 倍，折进 q 之后 q' 的通道间动态范围被撑大，
+   一个 scale 量化 q' 时正常通道被压没了；而离群通道贡献的主要是对 softmax 不可见的常数项。
+   smooth-K 先去掉常数偏移，离群通道的 `s_k` 变小，q' 范围恢复正常 → 2.2%。所以在 Qwen2.5 上，
+   **per_channel 的真 int8 QK 必须配 smooth-K**。
+2. per_token_head 的问题同源：离群通道的常数偏移吃掉了每个 token 的 scale。加 smooth-K 后从 11.1% 到 1.17%。
+   这说明 vLLM 原生 int8_per_token_head 的主要问题在 Qwen2.5 的 K 偏移，不在粒度本身。
+3. **P 不能用固定 scale 1/127**：`exp(s-m)` 虽然在 [0,1]，但注意力分散或有 attention sink 时，大部分 token 的 p
+   远小于 1/254，一律舍成 0，分子丢掉大量质量（1.5B 第 27 层 1.9% → 9.4%）。按 tile 取最大值做 scale 才稳。
+4. q 用 per-tensor（课程正文的写法）不可用：动态 scale 被整个 batch 里最大的 q 决定，平均 37%。
+5. 为了让 scale 计算不碰到 padding 位置的脏数据（gather 出来超出 seq_len 的行是别的请求的页），
+   动态 absmax/均值都必须先按 `valid` mask。
