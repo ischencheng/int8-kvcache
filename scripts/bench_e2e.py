@@ -28,6 +28,7 @@ def main():
     ap.add_argument("--llm", default="{}")
     ap.add_argument("--ctx", default="1024,4096,16384")
     ap.add_argument("--batch", default="1,16,64,128")
+    ap.add_argument("--points", default=None, help='"ctx:b1,b2;ctx2:b3" overrides --ctx/--batch')
     ap.add_argument("--out-len", type=int, default=128)
     ap.add_argument("--throughput", type=int, default=0, help="N requests for the capacity-bound run")
     ap.add_argument("--tp-ctx", type=int, default=6144)
@@ -69,8 +70,13 @@ def main():
                              "max_concurrent_by_kv": capacity // (args.tp_ctx + args.tp_out)}
         print(json.dumps(res["throughput"]))
     else:
-        for ctx in [int(x) for x in args.ctx.split(",")]:
-            for b in [int(x) for x in args.batch.split(",")]:
+        if args.points:
+            grid = [(int(c), [int(b) for b in bs.split(",")]) for c, bs in
+                    (part.split(":") for part in args.points.split(";"))]
+        else:
+            grid = [(int(c), [int(b) for b in args.batch.split(",")]) for c in args.ctx.split(",")]
+        for ctx, batches in grid:
+            for b in batches:
                 ps = prompts(b, ctx)
                 t_pre, _ = timed(ps, 1)
                 t_all, _ = timed(ps, args.out_len)

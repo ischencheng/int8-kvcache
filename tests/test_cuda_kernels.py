@@ -1,0 +1,89 @@
+"""Stage 7 (CUDA): the CUDA kernels against the PyTorch references and the Triton kernels."""
+import pytest
+import torch
+from conftest import DUMPS, random_paged_case, record
+from test_triton_kernels import CASES, _segm, make_static, to_int8
+
+from kvq import cuda_kernels as ck
+from kvq import quant
+from kvq.int8_ref import Cfg, paged_static_attention
+from kvq.ref_attn import compare
+from kvq.triton_kernels.int8_attention import paged_attention as triton_attention
+
+SCALE = 128 ** -0.5
+CFG32 = Cfg(smooth_k=True, p_tile=32)            # the CUDA kernel quantizes P per 32-token chunk
+
+
+@pytest.mark.parametrize("per_channel", [True, False])
+def test_quant_cache_matches_torch(per_channel):
+    g = torch.Generator(device="cuda").manual_seed(0)
+    T, H, D, nb, bs = 200, 4, 128, 64, 16
+    key = torch.randn(T + 8, H, D, generator=g, device="cuda").to(torch.bfloat16) * 5
+    value = torch.randn(T + 8, H, D, generator=g, device="cuda").to(torch.bfloat16)
+    slots = torch.randperm(nb * bs, generator=g, device="cuda")[:T].long()
+    slots[::17] = -1
+    kv = torch.zeros(nb, H, bs, 2 * D, dtype=torch.int8, device="cuda")
+    kc, vc = kv.transpose(1, 2).split(D, dim=-1)
+    st = make_static(key[:T, None], value[:T, None], per_channel)
+    ck.quant_reshape_and_cache(key, value, kc, vc, slots, st)
+    ok = slots >= 0
+    ref_k, ref_v = torch.zeros_like(kc), torch.zeros_like(vc)
+    ref_k[slots[ok] // bs, slots[ok] % bs] = quant.quantize(key[:T][ok].float() - st["k_mu"], st["k_scale"])
+    ref_v[slots[ok] // bs, slots[ok] % bs] = quant.quantize(value[:T][ok], st["v_scale"])
+    assert torch.equal(kc, ref_k) and torch.equal(vc, ref_v)
+
+
+@pytest.mark.parametrize("group", [128, 32])
+def test_quant_q_matches_torch(group):
+    g = torch.Generator(device="cuda").manual_seed(1)
+    q = torch.randn(37, 28, 128, generator=g, device="cuda").to(torch.bfloat16)
+    ks = torch.rand(4, 128, generator=g, device="cuda") + 0.01
+    qi, qs = ck.quant_q(q, ks, group)
+    qf = (q.float().reshape(37, 4, 7, 128) * ks[None, :, None, :]).reshape(37, 28, 128 // group, group)
+    s = quant.scale_from_absmax(qf.abs().amax(-1, keepdim=True))
+    assert torch.equal(qi.reshape(37, 28, -1, group), quant.quantize(qf, s))
+    assert torch.allclose(qs, s[..., 0])
+
+
+@pytest.mark.parametrize("heads", [(28, 4), (12, 2), (32, 8), (16, 1)])
+@pytest.mark.parametrize("variant", ["single", "segments", "per_head"])
+def test_decode_matches_ref(heads, variant):
+    q, k, v, cu, sl, bt = random_paged_case(*heads, *CASES["decode"], scale=3.0)
+    st = make_static(k, v, per_channel=variant != "per_head")
+    kq, vq = to_int8(k, v, st)
+    cfg = Cfg(smooth_k=True, p_tile=32, k_gran="per_head", v_gran="per_head") if variant == "per_head" else CFG32
+    ref = paged_static_attention(cfg, st, cache_is_int8=True)(q, kq, vq, cu, sl, bt, SCALE)
+    out = ck.decode_attention(q, kq, vq, torch.empty_like(q), cu, sl, bt, SCALE, st,
+                              segm=_segm(q.shape[0], heads[0]) if variant == "segments" else None)
+    err = compare(ref, out)
+    record("cuda_decode", heads=heads, variant=variant, **err)
+    assert err["rel_l2"] < 5e-3
+
+
+def test_cuda_matches_triton_and_skips_non_decode_rows():
+    q, k, v, cu, sl, bt = random_paged_case(28, 4, *CASES["decode"], scale=3.0)
+    st = make_static(k, v)
+    kq, vq = to_int8(k, v, st)
+    a = ck.decode_attention(q, kq, vq, torch.empty_like(q), cu, sl, bt, SCALE, st)
+    b = triton_attention(q, kq, vq, torch.empty_like(q), cu, sl, bt, 1, SCALE, st)
+    err = compare(b, a)
+    record("cuda_vs_triton", **err)
+    assert err["rel_l2"] < 2e-2   # P is quantized per 32 tokens here, per 64 in the Triton kernel
+
+
+@pytest.fixture(params=DUMPS, ids=[n for n, _ in DUMPS])
+def dump(request):
+    return request.param
+
+
+def test_cuda_decode_on_real_dumps(dump):
+    name, d = dump
+    st = make_static(d["k_cache"], d["v_cache"], block_table=d["block_table"], seq_lens=d["seq_lens"])
+    kq, vq = to_int8(d["k_cache"], d["v_cache"], st)
+    args = (d["cu_seqlens_q"], d["seq_lens"], d["block_table"])
+    sc = d["softmax_scale"].item()
+    ref = paged_static_attention(CFG32, st, cache_is_int8=True)(d["q"], kq, vq, *args, sc)
+    out = ck.decode_attention(d["q"], kq, vq, torch.empty_like(d["q"]), *args, sc, st)
+    res = {"vs_ref": compare(ref, out)["rel_l2"], "vs_fa2": compare(d["output"], out)["rel_l2"]}
+    record("cuda_decode_dump", case=name, **res)
+    assert res["vs_ref"] < 5e-3

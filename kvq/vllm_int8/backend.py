@@ -3,7 +3,8 @@
 Run with  kv_cache_dtype="int8_static", attention_config={"backend": "CUSTOM"}  and
   KVQ_SCALES  calibrated scales (safetensors, see kvq/scales.py)
   KVQ_CFG     numerics of the decode path, a name from kvq.int8_ref.CONFIGS (default B_channel_smooth)
-  KVQ_KERNEL  "torch" (stage-6 PyTorch path) or "triton" (stage-7 kernels)
+  KVQ_KERNEL  "torch" (stage-6 PyTorch path), "triton" (stage-7 Triton kernels) or "cuda"
+              (CUDA quant+cache and decode attention; multi-token batches use the Triton dequant kernel)
 
 What changes compared with the bf16 Triton backend it extends (the stage-6 list):
   (a) the cache is allocated as int8 (patch: CacheDType "int8_static" -> torch.int8), so the
@@ -29,6 +30,8 @@ from vllm.v1.attention.backends.triton_attn import (
 
 from kvq import quant, scales
 from kvq.int8_ref import CONFIGS, paged_static_attention
+from kvq.triton_kernels.int8_attention import int8_paged_attention
+from kvq.triton_kernels.quant_cache import quant_reshape_and_cache
 
 logger = init_logger("vllm.kvq")  # under "vllm" so vLLM's log handler prints it
 _SCALES_CACHE = {}
@@ -93,6 +96,9 @@ class Int8StaticImpl(TritonAttentionImpl):
         self.kernel = os.environ.get("KVQ_KERNEL", "torch")
         self.static = None
 
+    def fused_output_quant_supported(self, quant_key):
+        return False  # our kernels write bf16 output only
+
     def set_static(self, static):
         assert static["k_scale"].shape[0] == self.num_kv_heads, (static["k_scale"].shape, self.num_kv_heads)
         assert ("k_mu" in static) == self.cfg.smooth_k, "smooth-K config and scales file disagree"
@@ -111,9 +117,11 @@ class Int8StaticImpl(TritonAttentionImpl):
             if self.kernel == "torch":
                 return super().do_kv_cache_update(layer, key, value, kv_cache, slot_mapping)
         key_cache, value_cache = self._caches(kv_cache)
-        if self.kernel == "triton":
-            from kvq.triton_kernels.quant_cache import quant_reshape_and_cache
+        if self.kernel == "cuda" and self.int8:
+            from kvq import cuda_kernels
 
+            return cuda_kernels.quant_reshape_and_cache(key, value, key_cache, value_cache, slot_mapping, self.static)
+        if self.kernel in ("triton", "cuda"):
             return quant_reshape_and_cache(key, value, key_cache, value_cache, slot_mapping,
                                            self.static if self.int8 else None)
         # Stage-6 PyTorch path: quantize, then scatter with the slot mapping.
@@ -135,9 +143,17 @@ class Int8StaticImpl(TritonAttentionImpl):
         md = attn_metadata
         n = md.num_actual_tokens
         key_cache, value_cache = self._caches(kv_cache)
-        if self.kernel == "triton":
-            from kvq.triton_kernels.int8_attention import int8_paged_attention
+        if self.kernel == "cuda" and self.int8 and md.max_query_len == 1 and self.cfg.impl == "B":
+            from kvq import cuda_kernels
 
+            num_reqs = md.query_start_loc.shape[0] - 1
+            segm = None
+            if num_reqs <= md.seq_threshold_3D:
+                segm = (md.softmax_segm_output, md.softmax_segm_max, md.softmax_segm_expsum)
+            cuda_kernels.decode_attention(query[:n], key_cache, value_cache, output[:n], md.query_start_loc,
+                                          md.seq_lens, md.block_table, self.scale, self.static, segm)
+            return output
+        if self.kernel in ("triton", "cuda"):
             int8_paged_attention(query[:n], key_cache, value_cache, output[:n], md, self.scale,
                                  self.static if self.int8 else None, self.cfg)
             return output

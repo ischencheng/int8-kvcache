@@ -1,0 +1,19 @@
+{
+ "label": "B_channel_smooth",
+ "task": "gsm8k",
+ "model": "Qwen/Qwen2.5-7B-Instruct",
+ "n_prompts": 1319,
+ "n_samples": 1319,
+ "accuracy": 0.9143290371493555,
+ "wall_s": 679.3492851257324,
+ "gen_tokens": 385818,
+ "env": [
+  "KVQ_ATTN=B_channel_smooth"
+ ],
+ "llm": {
+  "max_model_len": 4096,
+  "gpu_memory_utilization": 0.85,
+  "seed": 0,
+  "enforce_eager": true
+ }
+}

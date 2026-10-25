@@ -36,6 +36,7 @@ image = (
         "cd $(python3 -c 'import vllm, os; print(os.path.dirname(os.path.dirname(vllm.__file__)))')"
         " && if [ -s /tmp/kvq.patch ]; then patch -p1 --forward < /tmp/kvq.patch; fi"
     )
+    .apt_install("cuda-nsight-compute-13-0")  # ncu for the kernel analysis (run with --clock-control none)
     .env({"HF_HOME": "/cache/hf", "OUT": "/tmp/out", "PYTHONUNBUFFERED": "1",
           "VLLM_ALLOW_INSECURE_SERIALIZATION": "1", "TOKENIZERS_PARALLELISM": "false"})
     .add_local_dir(REPO, "/root/repo", ignore=["results", ".git", "**/__pycache__", "*.pyc"])

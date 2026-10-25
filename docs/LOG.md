@@ -209,3 +209,40 @@ per_channel/per_head × max/99.9%/99.99% × 是否 smooth 共 6 种 scale 文件
 3. Triton 的 `/` 是近似除法，量化写 cache 用 `tl.div_rn` 才能和 PyTorch 逐位对上；取整用 `libdevice.rint`（不是 `.to(int)` 的截断）。
 4. int8 的 `tl.dot` 要求 K 维 ≥ 32：QK 的 K 维是 head_dim（128 没问题），PV 的 K 维是 tile 长度（取 64）；
    group32 只能用在 head_dim 128（每组 32），head_dim 64 的模型（Qwen2.5-0.5B）只能用整行 q scale。
+
+## Step 7b CUDA 版 kernel（阶段七，CUDA 实现）
+
+Triton 版之外，三个 kernel 都用 CUDA 重写了一遍（`kvq/cuda/int8_kv.cu`，`kvq/cuda_kernels.py` 用
+`torch.utils.cpp_extension.load` 在容器里 JIT 编译），backend 里 `KVQ_KERNEL=cuda` 切换。
+
+1. `quant_cache_kernel`：一个 block 一个 token，每个线程 8 个通道：16 B 读 bf16、8 B 写 int8；
+   `__fdiv_rn` + `__float2int_rn`（四舍六入五成双）保证和 PyTorch 逐位一致。
+2. `quant_q_kernel`：一个 warp 一个 (token, q head)，每 lane 4 个通道，warp shuffle 求 amax；支持整行 / 32 通道一组。
+3. `int8_decode_attn_kernel`（decode，每请求 1 个 query token）：
+   - grid = (请求, kv head, split)，block = 4 warp；m16 的 16 行 = 这个 kv head 的 G 个 q head（G ≤ 16，多余行置零）。
+   - 序言：128 线程 8 个一组处理一行，折叠 s_k、求行 amax、量化 q，写 smem；每个 warp 读出 4 个 k-step 的 A fragment 常驻寄存器。
+   - 主循环：warp w 处理第 w, w+4, ... 个 32-token chunk（4 个 warp 各自独立做 online softmax，最后在 smem 合并，
+     循环里只需要 `__syncwarp`）。加载时 8 个 lane 读一行（16 B × 8），一条指令 4 个 token、完全合并访存。
+   - QK：`mma.sync.aligned.m16n8k32.row.col.s32.s8.s8.s32`，4 个 n-tile（8 token）× 4 个 k-step（32 通道）= 16 条 mma；
+     K 在 smem 里行距 144 B（128+16 padding），B fragment 的 32 位读取无 bank 冲突。
+   - **P 不经过任何寄存器搬移就当 PV 的 A 操作数**：QK 累加器里线程 (g,t) 拿到的是 token 8j+2t+e，
+     而 PV 的 A fragment 需要 k-slot 4t..4t+3、16+4t..16+4t+3。PV 是对 token 求和，只要 P 和 V 用同一个 token 置换就等价，
+     所以让 P 按原寄存器顺序填 slot，把 V 转置进 smem 时按同一置换放列（`slot_of_token`），B fragment 就是一条 32 位读取。
+   - P 按（行, 32-token chunk）量化：四个线程（同一个 quad 持有同一行）`__shfl_xor` 求行最大值；分母用量化后的 P 求和。
+   - PV：16 个 n-tile（每个 8 个通道）× 1 个 k-step（32 个置换后的 token）= 16 条 mma，int32 结果乘 chunk 的 P scale 累加到 fp32。
+   - 合并：每个 warp 的 (m, l) 写 smem，按 `exp2(m_w - M)` 加权，acc 用 smem 原子加（复用 K/V 缓冲区），
+     收尾时乘 s_v 写 bf16；小批量 decode 时 grid.z 切 16 段，`split_reduce_kernel` 合并（复用 vLLM 的 segment 缓冲区）。
+   - smem 约 40 KB / block（不用申请超过 48 KB 的动态 smem）。
+
+测试（`tests/test_cuda_kernels.py`，23 个，L4 上一次编译通过，`results/07b-cuda-test/`）：
+- 融合写 cache、q 量化与 PyTorch 逐位相等；
+- decode attention 对 PyTorch 实现 B（P 每 32 token 量化的配置）rel ≈ 0–8e-5（GQA 28/4、12/2、32/8、16/1，切分与不切分），
+  per_head scale 约 1e-3；与 Triton 版差 2e-3（Triton 每 64 token 量化一次 P）；
+- 真实 dump 上对 FA2 输出 1.0%–3.2%，和 Triton 版一致。
+
+遇到的问题：
+1. `ATen/cuda/CUDAContext.h` 会 include cuSPARSE/cuBLAS 的头文件，vLLM 镜像里只有 nvcc 和 runtime 头文件 → 编译失败；
+   取 stream 只需要 `c10/cuda/CUDAStream.h`。
+2. vLLM 镜像预设了 `TORCH_CUDA_ARCH_LIST`（7 个架构），JIT 编译会全编一遍；改成只编当前 GPU 的架构。
+3. 这个 CUDA kernel 只做 decode：prefill / chunked prefill 是计算密集，int8 访存优势不明显，课程方案里也是反量化后走 bf16，
+   所以多 token 批次仍走 Triton 的反量化 kernel。group32 的 q scale 只在 Triton 版里实现了。

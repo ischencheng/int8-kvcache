@@ -10,6 +10,7 @@ batch <= 128 / kv_heads). Implementations:
   ours_int8_deq     our kernel, int8 cache, dequantize each tile (implementation A)
   ours_int8         our kernel, int8 cache, INT8 tensor-core QK/PV (implementation B)
   ours_int8_g32     ... with one q scale per 32 channels
+  cuda_int8         our CUDA kernel (mma.sync m16n8k32 s8), implementation B
   fa3_fp8           (H100 only) FlashAttention-3 with an FP8 cache
 Effective bandwidth = KV bytes the kernel must read / time.
 """
@@ -27,6 +28,7 @@ from vllm.v1.attention.ops.triton_reshape_and_cache_flash import (
 from vllm.v1.attention.ops.triton_unified_attention import unified_attention
 from vllm.v1.kv_cache_interface import KVQuantMode
 
+from kvq import cuda_kernels as ck
 from kvq import quant
 from kvq.triton_kernels.int8_attention import paged_attention
 from kvq.triton_kernels.quant_cache import quant_reshape_and_cache
@@ -98,6 +100,7 @@ def decode_row(batch, ctx, fp8):
         "ours_int8_deq": lambda: paged_attention(q, kq, vq, out, cu, sl, bt, 1, SCALE, st, int8_math=False, segm=sg),
         "ours_int8": lambda: paged_attention(q, kq, vq, out, cu, sl, bt, 1, SCALE, st, segm=sg),
         "ours_int8_g32": lambda: paged_attention(q, kq, vq, out, cu, sl, bt, 1, SCALE, st, q_groups=4, segm=sg),
+        "cuda_int8": lambda: ck.decode_attention(q, kq, vq, out, cu, sl, bt, SCALE, st, segm=sg),
     }
     if fp8:
         kf8, vf8 = k.to(torch.float8_e4m3fn), v.to(torch.float8_e4m3fn)
@@ -150,6 +153,7 @@ def write_path_rows():
             "ours_bf16_write": bench(lambda: quant_reshape_and_cache(key, val, kc, vc, slots, None)),
             "ours_int8_fused": bench(lambda: quant_reshape_and_cache(key, val, kci, vci, slots, st)),
             "torch_int8_two_pass": bench(torch_two_pass),
+            "cuda_int8_fused": bench(lambda: ck.quant_reshape_and_cache(key, val, kci, vci, slots, st)),
         })
         print(json.dumps(rows[-1]))
     return rows
@@ -168,6 +172,7 @@ def q_quant_rows():
         rows.append({
             "batch": batch, "ctx": ctx,
             "quant_q_kernel": bench(lambda: quant_q(q, st["k_scale"])),
+            "cuda_quant_q": bench(lambda: ck.quant_q(q, st["k_scale"])),
             "attn_fused_q": bench(lambda: paged_attention(q, kq, vq, out, cu, sl, bt, 1, SCALE, st, segm=sg)),
             "attn_prequant_q": bench(lambda: paged_attention(q, kq, vq, out, cu, sl, bt, 1, SCALE, st, segm=sg,
                                                              q_prequant=quant_q(q, st["k_scale"]))),

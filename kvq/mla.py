@@ -27,7 +27,7 @@ from kvq import quant
 STATE = {"order": {}, "stats": {}, "samples": {}, "dumps": {}}
 L_RANK = 512
 MAX_SAMPLES = int(os.environ.get("KVQ_CAPTURE_MAX_TOKENS", "8192"))
-DUMP_AT = int(os.environ.get("KVQ_DUMP_AT_SEQLEN", "1024"))
+DUMP_AT = int(os.environ.get("KVQ_DUMP_AT_SEQLEN", "600"))
 DUMP_LAYERS = {int(x) for x in os.environ.get("KVQ_DUMP_LAYERS", "0,13,26").split(",") if x}
 
 
@@ -103,7 +103,7 @@ def install():
             i = _layer(self)
             dec = attn_metadata.decode
             if (i in DUMP_LAYERS and i not in STATE["dumps"] and isinstance(q, tuple)
-                    and int(dec.seq_lens.min()) >= DUMP_AT and q[0].shape[0] == dec.seq_lens.shape[0]):
+                    and int(dec.seq_lens.max()) >= DUMP_AT and q[0].shape[0] == dec.seq_lens.shape[0]):
                 bs = kv_cache.shape[1]
                 pages = (dec.seq_lens + bs - 1) // bs
                 used = torch.cat([dec.block_table[b, : pages[b]] for b in range(pages.shape[0])])
