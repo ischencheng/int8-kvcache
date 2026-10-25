@@ -309,3 +309,37 @@ Triton 版之外，三个 kernel 都用 CUDA 重写了一遍（`kvq/cuda/int8_kv
 
 v3 在 A100 上的有效带宽 1.45 TB/s（峰值约 2.0 TB/s），比 FA2 bf16 快 1.9–2.0 倍，比 Triton int8 快 0–24%。
 23 个 CUDA 测试在每一版都重新跑过。
+
+## Step 6b 完整静态量化：校准、max vs 分位数、跨数据集（阶段六 + 扩展 3.5(a)）
+
+校准（`scripts/calibrate.py`）：数学集 GSM8K **train** 512 题（模型作答，19.4 万 token，含 prefill 和 decode 的 KV），
+文本集 wikitext-2 train 256 段（只 prefill，36.0 万 token）。主方案的 scale 文件放在 `scales/`（每个约 170 KB）。
+评测：`int8_static` + CUSTOM backend + Triton kernel，GSM8K test 全量（`results/06-static/`，`docs/tables/stage6_static.md`）：
+
+| 配置 | GSM8K | 翻转 |
+|---|---|---|
+| bf16 FA2 | 92.19% | – |
+| **per_channel max + smooth-K，decode int8 算术（主方案）** | **91.89%** | +10 / −14 |
+| 同上，decode 也反量化（实现 A） | 92.12% | +14 / −15 |
+| 同上，q 每 32 通道一个 scale | 91.66% | +9 / −16 |
+| per_channel max，不加 smooth-K | 89.46% | +14 / −50 |
+| per_channel **99.9% 分位** + smooth-K | **78.24%** | +27 / −211 |
+| per_channel **99.99% 分位** + smooth-K | **78.70%** | +28 / −206 |
+| per_head max + smooth-K | 92.27% | +18 / −17 |
+| wikitext 校准 → GSM8K 评测（跨域） | 91.58% | +9 / −17 |
+| PyTorch 路径 vs Triton 路径（同一 scale，250 题） | 93.2% vs 92.8% | 2 / 3 题不同 |
+
+结论：
+- **静态 per_channel + smooth-K 基本无损**（−0.3 个点，翻转数和 bf16 自身的数值噪声同量级）。
+- **scale 必须取最大值**：99.9% / 99.99% 分位截断都掉到 78% 左右（ΔNLL +0.10–0.13）。被截掉的是 attention sink 之类的少数
+  极端 token，它们的 K 偏离恰恰是 attention 要用的信号。课程建议用分位数，实测在 Qwen2.5 的 KV 上不成立（和阶段二的往返误差结论一致）。
+- **校准集可以跨域**：文本校准用在数学题上 91.58%，ΔNLL ≈ 0；校准只需要覆盖 K/V 的数值范围，不需要和任务同分布。
+- smooth-K 让 per_head 也能用了（静态 per_head + smooth 92.27%；阶段五动态 per_head 不加 smooth 是 89.2–91.4%）。
+- 不加 smooth-K 的静态版掉 2.7 个点，和阶段五的结论一致（decode 的 int8 QK 需要 smooth-K）。
+
+遇到的问题：
+1. **ΔNLL 在静态 backend 下只测到了 prefill 路径**：teacher-forcing 全是 prefill（多 token 请求），而 backend 对多 token 请求走
+   反量化（实现 A），所以"不加 smooth-K"这一项准确率掉 2.7 点、ΔNLL 却是 +0.0000。要测 decode 的 int8 算术，
+   得让所有行都走 MODE 2（`KVQ_INT8_MAX_Q` 设大），见下一步的补测。
+2. 个别配置 ΔNLL 略小于 0（−0.0003 / −0.0006）：bf16 自己的 greedy 输出不一定是任意扰动模型下概率最大的序列，
+   量化噪声让某些 token 的分布变尖时 NLL 会小幅下降；这个量级应视为"没有退化"，不解读成"变好"。
