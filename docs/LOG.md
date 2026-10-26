@@ -408,7 +408,7 @@ v3 在 A100 上的有效带宽 1.45 TB/s（峰值约 2.0 TB/s），比 FA2 bf16 
 
 ## Step 8c 最终版 ncu（A100，batch 64 × ctx 4096，不切分）
 
-`results/11-ncu-wquant/ncu/`（第一次重跑时 ncu 报 "driver resource unavailable"，宿主机上 DCGM 占着性能计数器，换个容器重跑就好了）：
+`results/08-ncu-final/`（第一次重跑时 ncu 报 "driver resource unavailable"，宿主机上 DCGM 占着性能计数器，换个容器重跑就好了）：
 
 | kernel | 耗时 µs | DRAM 吞吐 | SM 吞吐 | 寄存器/线程 | 实际占用率 | 每条指令等待周期 |
 |---|---|---|---|---|---|---|
