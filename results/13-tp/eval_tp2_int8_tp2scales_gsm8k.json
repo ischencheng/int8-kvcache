@@ -1,0 +1,26 @@
+{
+ "label": "tp2_int8_tp2scales",
+ "task": "gsm8k",
+ "model": "Qwen/Qwen2.5-7B-Instruct",
+ "n_prompts": 1319,
+ "n_samples": 1319,
+ "accuracy": 0.9272175890826384,
+ "wall_s": 48.404130697250366,
+ "gen_tokens": 385487,
+ "env": [
+  "KVQ_CFG=B_channel_smooth",
+  "KVQ_KERNEL=triton",
+  "KVQ_SCALES=/cache/scales/qwen2.5-7b/math_tp2_per_channel_max_smooth.safetensors"
+ ],
+ "llm": {
+  "max_model_len": 4096,
+  "gpu_memory_utilization": 0.85,
+  "seed": 0,
+  "disable_log_stats": false,
+  "tensor_parallel_size": 2,
+  "kv_cache_dtype": "int8_static",
+  "attention_config": {
+   "backend": "CUSTOM"
+  }
+ }
+}

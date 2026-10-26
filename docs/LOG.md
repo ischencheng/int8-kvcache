@@ -485,3 +485,21 @@ Qwen2.5-7B 是 152064、0.5B 是 151936，所以 draft_model 实验用 Qwen2.5-1
 2. 离线 `LLM` 默认 `disable_log_stats=True`，`get_metrics()` 报 "Stat logging disabled"，拿不到接受率；第一轮白跑，打开后重跑。
 3. 用随机 token 做 prompt 的 TPOT 基准不能衡量投机解码：随机前缀让模型续写乱码，draft 几乎猜不中；大 batch 下
    （GSM8K 500 题一起跑）投机解码本来就比不开慢（16.5k → 7–10k tok/s，计算已饱和）。加速比要在 batch 1、真实 prompt 下测，见下一步。
+
+## Step 9a 扩展 3.5(a)：分布式（TP）下的校准和 scale 加载
+
+2×L40S（这个实验看正确性，不看性能；sm_89 同样有 int8 Tensor Core），Qwen2.5-7B TP=2，4 个 kv head → 每个 rank 2 个
+（`results/13-tp/`，GSM8K 1319 题）：
+
+| 配置 | GSM8K | KV 容量（token） |
+|---|---|---|
+| TP=2 bf16 | 91.51% | 1,111,088 |
+| TP=2 int8，用单卡校准的 scale、按 rank 切 head | 92.42% | 2,198,784 |
+| TP=2 int8，TP=2 下分布式校准的 scale | 92.72% | 2,203,152 |
+
+- **加载**：scale 文件存全局的 `[num_kv_heads, D]`，builder 里按 `get_tensor_model_parallel_rank()` 切出本 rank 的行
+  （`kvq/scales.py:shard`）；kv head 数少于 TP 数时 vLLM 会复制 head，取 `rank * H // tp` 那一行。
+- **分布式校准**：每个 rank 只看到自己的 kv head，`collective_rpc` 把各 rank 的统计量收回来按 rank 顺序在 head 维拼接
+  （`scales.merge_tp`），复制的 head 只留一份；DP 副本之间对 max/min 取最大最小、sum 和 token 数相加即可（本实验没开 DP）。
+- 两份 scale 逐通道最多差 64%（k_scale）/ 48%（v_scale），但准确率一样。差异来自校准数据本身不同：TP 改变累加顺序，
+  模型 greedy 生成的校准 token 也跟着变，而 max 对极端 token 敏感。不是拼接顺序错误（那样离群 head 会差 10–20 倍）。

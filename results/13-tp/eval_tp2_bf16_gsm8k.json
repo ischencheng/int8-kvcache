@@ -1,0 +1,18 @@
+{
+ "label": "tp2_bf16",
+ "task": "gsm8k",
+ "model": "Qwen/Qwen2.5-7B-Instruct",
+ "n_prompts": 1319,
+ "n_samples": 1319,
+ "accuracy": 0.9150871872630781,
+ "wall_s": 54.187692165374756,
+ "gen_tokens": 385929,
+ "env": [],
+ "llm": {
+  "max_model_len": 4096,
+  "gpu_memory_utilization": 0.85,
+  "seed": 0,
+  "disable_log_stats": false,
+  "tensor_parallel_size": 2
+ }
+}
