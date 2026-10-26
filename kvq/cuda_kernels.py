@@ -32,7 +32,10 @@ def ext():
         # The vLLM image presets 7 architectures for its own builds; compile only for this GPU.
         os.environ["TORCH_CUDA_ARCH_LIST"] = f"{major}.{minor}"
         src = os.path.join(os.path.dirname(__file__), "cuda", "int8_kv.cu")
-        _EXT = load(name="kvq_int8_kv", sources=[src], extra_cuda_cflags=["-O3", "-lineinfo"], verbose=False)
+        name = "kvq_int8_kv"
+        if os.environ.get("KVQ_CUDA_SRC"):  # an earlier version of the kernels with the same interface (A/B runs)
+            src, name = os.environ["KVQ_CUDA_SRC"], "kvq_int8_kv_alt"
+        _EXT = load(name=name, sources=[src], extra_cuda_cflags=["-O3", "-lineinfo"], verbose=False)
     return _EXT
 
 

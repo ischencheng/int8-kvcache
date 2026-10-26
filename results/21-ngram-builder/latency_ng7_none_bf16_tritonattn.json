@@ -1,0 +1,9 @@
+{
+ "label": "ng7_none_bf16_tritonattn",
+ "model": "Qwen/Qwen2.5-7B-Instruct",
+ "n": 24,
+ "tpot_ms": 9.837578056219888,
+ "step_ms": 9.839559776842806,
+ "tokens_per_step": 1.0,
+ "spec": {}
+}

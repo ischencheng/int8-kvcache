@@ -1,0 +1,13 @@
+{
+ "label": "ng7_bf16_tritonattn",
+ "model": "Qwen/Qwen2.5-7B-Instruct",
+ "n": 24,
+ "tpot_ms": 8.17903869614177,
+ "step_ms": 11.416797546782984,
+ "tokens_per_step": 1.4157033805888768,
+ "spec": {
+  "spec_decode_num_drafts": 4587,
+  "spec_decode_num_draft_tokens": 18348,
+  "spec_decode_num_accepted_tokens": 1906
+ }
+}

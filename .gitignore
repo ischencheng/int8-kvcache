@@ -6,3 +6,4 @@ results/**/*.safetensors
 results/**/*.pkl
 results/**/*.jsonl
 !results/**/test_metrics.jsonl
+scripts/_prev_kernel/
