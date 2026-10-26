@@ -3,7 +3,7 @@
 Static per-channel INT8 KV cache for decode attention on a GPU without FP8 (A100), built
 the way the course describes: analyse the KV distribution, write a PyTorch golden
 reference, verify INT8 numerics in PyTorch (dynamic quantization), move to static scales
-inside vLLM, then write the Triton kernels (fused quantize + cache write, q quantization,
+inside vLLM, then write the kernels in Triton and CUDA (fused quantize + cache write, q quantization,
 INT8 tensor-core paged attention) and measure accuracy and speed end to end, plus every
 extension item (calibration under TP, CUDA graphs, speculative decoding, PD
 disaggregation, W8A8/W4A16, MLA).
