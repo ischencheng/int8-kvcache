@@ -11,6 +11,18 @@ disaggregation, W8A8/W4A16, MLA).
 Results, the reasoning behind each step and the problems hit along the way are in
 [docs/WALKTHROUGH.md](docs/WALKTHROUGH.md); the step-by-step log is [docs/LOG.md](docs/LOG.md).
 
+## Results (Qwen2.5-7B-Instruct, vLLM 0.32.0, A100-80GB)
+
+| | bf16 (FA2) | static INT8 KV (ours) |
+|---|---|---|
+| GSM8K (1319, greedy) | 92.19% | 92.19% (CUDA kernel, CUDA graphs) |
+| teacher-forced NLL delta (GSM8K / AIME answers) | 0 | +0.0004 / +0.0019 |
+| KV capacity | 1.03M tokens | 2.07M tokens |
+| decode attention, 128 x 32k | 5584 us | 2709 us (CUDA) |
+| capacity-bound throughput (512 x 6k+1k) | 1115 tok/s | 1431 tok/s |
+
+On H100 the CUDA INT8 decode kernel runs at 0.86-1.05x the speed of FA3 with an FP8 cache.
+
 ## Layout
 
 | path | what |
@@ -25,7 +37,9 @@ Results, the reasoning behind each step and the problems hit along the way are i
 | `kvq/override.py` | stage 5: swap vLLM's attention math for the PyTorch versions (dynamic / static bisect) |
 | `kvq/scales.py` | static scales: from calibration stats, file format, TP sharding |
 | `kvq/vllm_int8/backend.py` | stage 6: the INT8 attention backend (`AttentionBackendEnum.CUSTOM`) |
-| `kvq/triton_kernels/` | stage 7: `quant_cache.py`, `quant_q.py`, `int8_attention.py` |
+| `kvq/triton_kernels/` | stage 7 (Triton): `quant_cache.py`, `quant_q.py`, `int8_attention.py` |
+| `kvq/cuda/int8_kv.cu`, `kvq/cuda_kernels.py` | stage 7 (CUDA): fused quant+cache, q quant, INT8 `mma.sync` decode attention |
+| `scales/` | calibrated static scales for Qwen2.5-7B (math and text calibration) |
 | `kvq/mla.py` | MLA (DeepSeek-V2-Lite) latent-cache analysis, fake-quant hook and references |
 | `scripts/` | capture, analysis, calibration, evaluation, benchmarks, extension runs |
 | `tests/` | golden-reference, INT8-reference, kernel and CUDA-graph tests |
