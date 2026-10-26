@@ -31,6 +31,8 @@ def main():
     ap.add_argument("--points", default=None, help='"ctx:b1,b2;ctx2:b3" overrides --ctx/--batch')
     ap.add_argument("--out-len", type=int, default=128)
     ap.add_argument("--throughput", type=int, default=0, help="N requests for the capacity-bound run")
+    ap.add_argument("--pure", action="store_true",
+                    help="pure-decode TPOT = (T(2L) - T(L)) / L: the extra L steps run after every prefill finished")
     ap.add_argument("--tp-ctx", type=int, default=6144)
     ap.add_argument("--tp-out", type=int, default=1024)
     args = ap.parse_args()
@@ -78,6 +80,15 @@ def main():
         for ctx, batches in grid:
             for b in batches:
                 ps = prompts(b, ctx)
+                if args.pure:
+                    t1, _ = timed(ps, args.out_len)
+                    t2, _ = timed(ps, 2 * args.out_len)
+                    row = {"ctx": ctx, "batch": b, "t_L_s": t1, "t_2L_s": t2,
+                           "tpot_pure_ms": 1e3 * (t2 - t1) / args.out_len,
+                           "kv_limited": b * (ctx + 2 * args.out_len) > capacity}
+                    res["tpot"].append(row)
+                    print(json.dumps(row))
+                    continue
                 t_pre, _ = timed(ps, 1)
                 t_all, outs = timed(ps, args.out_len)
                 # Per-request TPOT from engine timestamps (what serving benchmarks report); the
@@ -90,7 +101,8 @@ def main():
                        "kv_limited": b * (ctx + args.out_len) > capacity}
                 res["tpot"].append(row)
                 print(json.dumps(row))
-    with open(f"{os.environ['OUT']}/e2e_{args.label}{'_tput' if args.throughput else ''}.json", "w") as f:
+    suffix = "_tput" if args.throughput else ("_pure" if args.pure else "")
+    with open(f"{os.environ['OUT']}/e2e_{args.label}{suffix}.json", "w") as f:
         json.dump(res, f, indent=1)
 
 

@@ -645,3 +645,18 @@ D 实例（kv_consumer）找到后直接注入自己的分页 cache、跳过 pro
 3. 单发请求代理是通的，但并发 64 时客户端收到 `Connection reset by peer`，bench 成功数为 0。换成两个离线 engine 的做法。
 4. ExampleConnector 把一个请求的 KV 按"计算它的那一步"写文件，chunked prefill 把长 prompt 切成几步时只留下最后一段
    （D 端 `value tensor [64,4,256] cannot be broadcast to [80,4,256]`）。P/D 两边都关掉 chunked prefill、单步 token 预算设 16384 后正常。
+
+### 8d 补测 1：每请求 TPOT（engine 的首/末 token 时间戳，`results/09-e2e-tpot-req/`）
+
+| ctx × batch | FA2 bf16 | 我们 Triton bf16 | 我们 Triton int8 | 我们 CUDA int8 | vLLM int8 原生 |
+|---|---|---|---|---|---|
+| 1k × 1 | 10.40 | 9.92 | 9.97 | 10.04 | 10.22 |
+| 1k × 64 | 27.56 | 28.04 | 29.31 | 26.30 | 34.12 |
+| 4k × 64 | 84.72 | 82.31 | 83.67 | 82.89 | 145.63 |
+| 4k × 128 | 165.95 | 157.65 | 159.64 | 157.02 | 273.81 |
+| 16k × 16 | 90.08 | 99.79 | 107.27 | 106.60 | 295.90 |
+
+这个口径下 int8 看不出收益，16k × 16 甚至比 FA2 慢。原因：所有请求同时到达，chunked prefill 下一个请求从首 token 到末 token
+的大部分步里都夹着别人的 8192 token prefill chunk，每步的时间主要是 prefill；而我们的 prefill（反量化 kernel）比 FA2 慢。
+也就是说，**"请求同时涌入"的场景下 TPOT 由 prefill 速度决定**，int8 decode kernel 的收益要在 prefill 结束之后才体现。
+差值法和这个口径都没把 decode 单独拎出来，所以再用两个输出长度做差测纯 decode（下一节）。
