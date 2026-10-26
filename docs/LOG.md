@@ -572,9 +572,9 @@ Qwen2.5-7B，A100，vLLM 默认的 CUDA graph 模式（FULL_AND_PIECEWISE）打�
 | 配置 | GSM8K | 翻转 | ΔNLL gsm8k / aime24 |
 |---|---|---|---|
 | bf16 FA2 | 92.19% | – | 0 / 0 |
-| 我们 int8_static + Triton，CUDA graph | 92.12% | +13 / −14 | （见 Step 6c）|
-| 我们 int8_static + **CUDA kernel**，CUDA graph | **92.19%** | +11 / −11 | |
-| vLLM 原生 int8_per_token_head | 91.36% | +14 / −25 | +0.0017 / +0.0026 |
+| 我们 int8_static + Triton，CUDA graph | 92.12% | +12 / −13 | （见 Step 6c）|
+| 我们 int8_static + **CUDA kernel**，CUDA graph | **92.19%** | +12 / −12 | |
+| vLLM 原生 int8_per_token_head | 91.36% | +11 / −22 | +0.0017 / +0.0026 |
 
 **KV 容量**（同样 0.9 显存利用率）：bf16 1,034,368 token → int8_static 2,068,896–2,071,520 token（2.0×）；
 vLLM int8_per_token_head 2,006,208（scale 内联在页里，略少）。
