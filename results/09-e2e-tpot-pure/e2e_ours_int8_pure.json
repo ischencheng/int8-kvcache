@@ -1,0 +1,63 @@
+{
+ "label": "ours_int8",
+ "env": [
+  "KVQ_SCALES=/cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors",
+  "KVQ_KERNEL=triton",
+  "KVQ_CFG=B_channel_smooth"
+ ],
+ "llm": {
+  "max_model_len": 32768,
+  "gpu_memory_utilization": 0.9,
+  "seed": 0,
+  "enable_prefix_caching": false,
+  "max_num_seqs": 256,
+  "disable_log_stats": false,
+  "kv_cache_dtype": "int8_static",
+  "attention_config": {
+   "backend": "CUSTOM"
+  }
+ },
+ "kv_capacity_tokens": 2068896,
+ "tpot": [
+  {
+   "ctx": 1024,
+   "batch": 128,
+   "t_L_s": 11.233548286999962,
+   "t_2L_s": 13.221360771999912,
+   "tpot_pure_ms": 15.529785039062105,
+   "kv_limited": false
+  },
+  {
+   "ctx": 4096,
+   "batch": 64,
+   "t_L_s": 21.967977424999958,
+   "t_2L_s": 24.70538611799998,
+   "tpot_pure_ms": 21.38600541406266,
+   "kv_limited": false
+  },
+  {
+   "ctx": 4096,
+   "batch": 128,
+   "t_L_s": 43.29045828899996,
+   "t_2L_s": 46.9217865359999,
+   "tpot_pure_ms": 28.369751929687048,
+   "kv_limited": false
+  },
+  {
+   "ctx": 16384,
+   "batch": 16,
+   "t_L_s": 30.6747358450001,
+   "t_2L_s": 32.835744616000056,
+   "tpot_pure_ms": 16.882881023437157,
+   "kv_limited": false
+  },
+  {
+   "ctx": 16384,
+   "batch": 32,
+   "t_L_s": 60.17044206999981,
+   "t_2L_s": 63.21633104500006,
+   "tpot_pure_ms": 23.796007617189474,
+   "kv_limited": false
+  }
+ ]
+}
