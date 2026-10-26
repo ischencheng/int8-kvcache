@@ -1,0 +1,688 @@
++ S=/cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors
++ PTS='1024:128;4096:128'
++ INT8='"kv_cache_dtype":"int8_static","attention_config":{"backend":"CUSTOM"}'
++ python3 scripts/bench_e2e.py --pure --repeat 3 --label fa2_bf16 --points '1024:128;4096:128'
+(MainProcess pid=7) INFO 10-26 02:30:23 [api_utils.py:286] non-default args: {'max_model_len': 32768, 'enable_prefix_caching': False, 'gpu_memory_utilization': 0.9, 'max_num_seqs': 256, 'model': 'Qwen/Qwen2.5-7B-Instruct'}
+(MainProcess pid=7) INFO 10-26 02:30:40 [model.py:733] Resolved architecture: Qwen2ForCausalLM
+(MainProcess pid=7) INFO 10-26 02:30:40 [model.py:2152] Using max model len 32768
+(MainProcess pid=7) INFO 10-26 02:30:40 [scheduler.py:307] Chunked prefill is enabled with max_num_batched_tokens=8192.
+(MainProcess pid=7) INFO 10-26 02:30:40 [kernel.py:467] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'], gelu_and_mul_sparse=['triton', 'native'])
+
+Fetching 10 files:   0%|          | 0/10 [00:00<?, ?it/s]
+Fetching 10 files: 100%|██████████| 10/10 [00:00<00:00, 613.92it/s]
+(EngineCore pid=60) INFO 10-26 02:30:43 [core.py:133] Initializing a V1 LLM engine (v0.32.0) with config: model='Qwen/Qwen2.5-7B-Instruct', speculative_config=None, tokenizer='Qwen/Qwen2.5-7B-Instruct', skip_tokenizer_init=False, tokenizer_mode=auto, revision=main, tokenizer_revision=main, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=32768, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=None, quantization_config=None, enforce_eager=False, aux_output_config=AuxOutputConfig(enable_return_routed_experts=False, max_bytes=None), kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, per_request_spec_decode_metrics='none', kv_cache_metrics=False, kv_cache_metrics_sample=0.01, custom_histogram_buckets=None, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False, jit_monitor_mode='warn', jit_monitor_verbose=False), seed=0, served_model_name=Qwen/Qwen2.5-7B-Instruct, enable_prefix_caching=False, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.VLLM_COMPILE: 3>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['none'], 'ir_enable_torch_wrap': True, 'splitting_ops': ['vllm::unified_attention_with_output', 'vllm::unified_mla_attention_with_output', 'vllm::mamba_mixer2', 'vllm::mamba_mixer', 'vllm::short_conv', 'vllm::qwen4_exp_ple_short_conv', 'vllm::qwen4_exp_qsa_with_output', 'vllm::qwen4_exp_qsa_prepare_with_output', 'vllm::linear_attention', 'vllm::qwen_gdn_attention_core', 'vllm::qwen_gdn_attention_core_fused_norm_packed', 'vllm::gdn_attention_core_xpu', 'vllm::olmo_hybrid_gdn_full_forward', 'vllm::sparse_attn_indexer', 'vllm::rocm_aiter_sparse_attn_indexer', 'vllm::deepseek_v4_attention', 'vllm::hpc_rope_norm_forward', 'vllm::unified_kv_cache_update', 'vllm::unified_mla_kv_cache_update'], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'cudagraph_decoder_replay': True, 'decoder_replay_cudagraph_capture_sizes': [], 'decoder_replay_trim_threshold': 768, 'compile_sizes': [], 'compile_ranges_endpoints': [8192], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.FULL_AND_PIECEWISE: (2, 1)>, 'cudagraph_num_of_warmups': 1, 'cudagraph_capture_sizes': [1, 2, 4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232, 240, 248, 256, 272, 288, 304, 320, 336, 352, 368, 384, 400, 416, 432, 448, 464, 480, 496, 512], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': False, 'fuse_act_quant': False, 'fuse_attn_quant': False, 'fuse_allreduce_rms': False, 'enable_qk_norm_rope_fusion': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False, 'fuse_qk_norm_rope_kvcache': False}, 'max_cudagraph_capture_size': 512, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': False, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'], gelu_and_mul_sparse=['triton', 'native']), enable_flashinfer_autotune=True, enable_rocm_segmented_attn_autotune=False, enable_cutedsl_warmup=True, enable_jit_warmup=True, moe_backend='auto', sparse_indexer_topk_backend='auto', linear_backend='auto', linear_backend_per_quant=None)
+(EngineCore pid=60) INFO 10-26 02:30:46 [parallel_state.py:1906] world_size=1 rank=0 local_rank=0 distributed_init_method=file:///tmp/vllm_dist_d03dfc7d932349f399425f056ff5b516 backend=nccl
+(EngineCore pid=60) INFO 10-26 02:30:46 [parallel_state.py:2350] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, ETP rank 0, EP rank N/A, EPLB rank N/A
+(EngineCore pid=60) INFO 10-26 02:30:46 [gpu_worker.py:518] Using V2 Model Runner
+(EngineCore pid=60) INFO 10-26 02:30:47 [model_runner.py:392] Loading model from scratch...
+(EngineCore pid=60) INFO 10-26 02:30:49 [cuda.py:506] Using FLASH_ATTN attention backend out of potential backends: ['FLASH_ATTN', 'FLASHINFER', 'TRITON_ATTN', 'FLEX_ATTENTION'].
+(EngineCore pid=60) INFO 10-26 02:30:49 [flash_attn.py:1117] Using FlashAttention version 2
+(EngineCore pid=60) INFO 10-26 02:30:50 [base_loader.py:82] Initializing model took 3.146533 seconds
+(EngineCore pid=60) INFO 10-26 02:30:51 [weight_utils.py:1108] Filesystem type for checkpoints: 9P. Checkpoint size: 14.19 GiB. Available RAM: 772.22 GiB.
+(EngineCore pid=60) INFO 10-26 02:30:51 [weight_utils.py:1131] Auto-prefetch is disabled because the filesystem (9P) is not a recognized network FS (NFS/Lustre). If you want to force prefetching, start vLLM with --safetensors-load-strategy=prefetch.
+
+Loading safetensors checkpoint shards:   0% Completed | 0/4 [00:00<?, ?it/s]
+
+Loading safetensors checkpoint shards:  25% Completed | 1/4 [00:02<00:08,  2.67s/it]
+
+Loading safetensors checkpoint shards:  50% Completed | 2/4 [00:04<00:04,  2.43s/it]
+
+Loading safetensors checkpoint shards:  75% Completed | 3/4 [00:07<00:02,  2.56s/it]
+
+Loading safetensors checkpoint shards: 100% Completed | 4/4 [00:09<00:00,  2.38s/it]
+
+Loading safetensors checkpoint shards: 100% Completed | 4/4 [00:09<00:00,  2.44s/it]
+
+(EngineCore pid=60) INFO 10-26 02:31:01 [default_loader.py:501] Loading weights took 9.88 seconds
+(EngineCore pid=60) INFO 10-26 02:31:02 [model_runner.py:424] Model loading took 14.29 GiB memory and 15.264457 seconds
+(EngineCore pid=60) INFO 10-26 02:31:02 [topk_topp_sampler.py:124] Using FlashInfer for top-p & top-k sampling.
+(EngineCore pid=60) WARNING 10-26 02:31:02 [torch_utils.py:284] OMP_NUM_THREADS=8 is set; leaving Torch threads at 8 for serving. Multi-threaded torch CPU ops during serving can degrade performance through spin-wait contention and cgroup CPU-quota throttling.
+(EngineCore pid=60) INFO 10-26 02:31:02 [utils.py:347] Using LBNHC KV cache layout.
+(EngineCore pid=60) INFO 10-26 02:31:04 [monitor.py:40] [backbone] Starting torch.compile
+(EngineCore pid=60) INFO 10-26 02:31:13 [backends.py:1104] [backbone] Using cache directory: /root/.cache/vllm/torch_compile_cache/4f99d8e3ee/rank_0_0/backbone for vLLM's torch.compile
+(EngineCore pid=60) INFO 10-26 02:31:13 [backends.py:1166] [backbone] Dynamo bytecode transform time: 9.15 s
+(EngineCore pid=60) INFO 10-26 02:31:23 [backends.py:398] [backbone] Compiling a graph for compile range (1, 8192) takes 8.61 s
+(EngineCore pid=60) INFO 10-26 02:31:28 [backends.py:927] collected artifacts: 29 entries, 3 artifacts, 4848999 bytes total
+(EngineCore pid=60) INFO 10-26 02:31:28 [decorators.py:743] [backbone] saved AOT compiled function to /root/.cache/vllm/torch_compile_cache/torch_aot_compile/a0898a79dc4fd843d901e392aa94e4a9ccb705cc650d8a2fcfd09775af15eea4/rank_0_0/model
+(EngineCore pid=60) INFO 10-26 02:31:28 [monitor.py:62] [backbone] torch.compile took 23.67 s in total
+(EngineCore pid=60) INFO 10-26 02:31:28 [monitor.py:91] [backbone] Initial profiling/warmup run took 0.20 s
+
+Capturing CUDA graphs (PIECEWISE):   0%|          | 0/51 [00:00<?, ?it/s]
+Capturing CUDA graphs (PIECEWISE):   2%|▏         | 1/51 [00:00<00:05,  8.34it/s]
+Capturing CUDA graphs (PIECEWISE):   6%|▌         | 3/51 [00:00<00:04, 10.50it/s]
+Capturing CUDA graphs (PIECEWISE):  10%|▉         | 5/51 [00:00<00:04, 11.08it/s]
+Capturing CUDA graphs (PIECEWISE):  14%|█▎        | 7/51 [00:00<00:03, 11.55it/s]
+Capturing CUDA graphs (PIECEWISE):  18%|█▊        | 9/51 [00:00<00:03, 11.90it/s]
+Capturing CUDA graphs (PIECEWISE):  22%|██▏       | 11/51 [00:00<00:03, 12.40it/s]
+Capturing CUDA graphs (PIECEWISE):  25%|██▌       | 13/51 [00:01<00:02, 12.69it/s]
+Capturing CUDA graphs (PIECEWISE):  29%|██▉       | 15/51 [00:01<00:02, 12.60it/s]
+Capturing CUDA graphs (PIECEWISE):  33%|███▎      | 17/51 [00:01<00:02, 12.64it/s]
+Capturing CUDA graphs (PIECEWISE):  37%|███▋      | 19/51 [00:01<00:02, 13.52it/s]
+Capturing CUDA graphs (PIECEWISE):  41%|████      | 21/51 [00:01<00:02, 14.15it/s]
+Capturing CUDA graphs (PIECEWISE):  45%|████▌     | 23/51 [00:01<00:01, 14.59it/s]
+Capturing CUDA graphs (PIECEWISE):  49%|████▉     | 25/51 [00:01<00:01, 14.43it/s]
+Capturing CUDA graphs (PIECEWISE):  53%|█████▎    | 27/51 [00:02<00:01, 14.91it/s]
+Capturing CUDA graphs (PIECEWISE):  57%|█████▋    | 29/51 [00:02<00:01, 15.27it/s]
+Capturing CUDA graphs (PIECEWISE):  61%|██████    | 31/51 [00:02<00:01, 15.33it/s]
+Capturing CUDA graphs (PIECEWISE):  65%|██████▍   | 33/51 [00:02<00:01, 15.60it/s]
+Capturing CUDA graphs (PIECEWISE):  69%|██████▊   | 35/51 [00:02<00:01, 15.56it/s]
+Capturing CUDA graphs (PIECEWISE):  73%|███████▎  | 37/51 [00:02<00:00, 15.74it/s]
+Capturing CUDA graphs (PIECEWISE):  76%|███████▋  | 39/51 [00:02<00:00, 15.97it/s]
+Capturing CUDA graphs (PIECEWISE):  80%|████████  | 41/51 [00:02<00:00, 16.12it/s]
+Capturing CUDA graphs (PIECEWISE):  84%|████████▍ | 43/51 [00:03<00:00, 16.32it/s]
+Capturing CUDA graphs (PIECEWISE):  88%|████████▊ | 45/51 [00:03<00:00, 16.37it/s]
+Capturing CUDA graphs (PIECEWISE):  92%|█████████▏| 47/51 [00:03<00:00, 16.39it/s]
+Capturing CUDA graphs (PIECEWISE):  96%|█████████▌| 49/51 [00:03<00:00, 13.41it/s]
+Capturing CUDA graphs (PIECEWISE): 100%|██████████| 51/51 [00:03<00:00, 14.34it/s]
+Capturing CUDA graphs (PIECEWISE): 100%|██████████| 51/51 [00:03<00:00, 14.12it/s]
+
+Capturing CUDA graphs (FULL):   0%|          | 0/2 [00:00<?, ?it/s]
+Capturing CUDA graphs (FULL): 100%|██████████| 2/2 [00:00<00:00, 24.10it/s]
+(EngineCore pid=60) INFO 10-26 02:31:36 [model_runner.py:1127] Graph capturing finished in 5 secs, took 0.33 GiB
+(EngineCore pid=60) INFO 10-26 02:31:37 [gpu_worker.py:759] Available KV cache memory: 55.24 GiB
+(EngineCore pid=60) INFO 10-26 02:31:37 [gpu_worker.py:774] CUDA graph memory profiling is enabled (default since v0.21.0). The current --gpu-memory-utilization=0.9000 is equivalent to --gpu-memory-utilization=0.8949 without CUDA graph memory profiling. To maintain the same effective KV cache size as before, increase --gpu-memory-utilization to 0.9051. To disable, set VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=0.
+(EngineCore pid=60) INFO 10-26 02:31:37 [kv_cache_utils.py:2327] GPU KV cache size: 1,034,368 tokens, Maximum concurrency for 32,768 tokens per request: 31.57x
+(EngineCore pid=60) INFO 10-26 02:31:37 [kernel_warmup.py:176] JIT kernel warmup starting.
+(EngineCore pid=60) INFO 10-26 02:31:37 [kernel_warmup.py:189] JIT kernel warmup finished in 0.00s.
+
+Capturing CUDA graphs (PIECEWISE):   0%|          | 0/51 [00:00<?, ?it/s]
+Capturing CUDA graphs (PIECEWISE):   4%|▍         | 2/51 [00:00<00:04, 11.72it/s]
+Capturing CUDA graphs (PIECEWISE):   8%|▊         | 4/51 [00:00<00:03, 12.31it/s]
+Capturing CUDA graphs (PIECEWISE):  12%|█▏        | 6/51 [00:00<00:03, 12.47it/s]
+Capturing CUDA graphs (PIECEWISE):  16%|█▌        | 8/51 [00:00<00:03, 12.52it/s]
+Capturing CUDA graphs (PIECEWISE):  20%|█▉        | 10/51 [00:00<00:03, 12.63it/s]
+Capturing CUDA graphs (PIECEWISE):  24%|██▎       | 12/51 [00:00<00:03, 12.99it/s]
+Capturing CUDA graphs (PIECEWISE):  27%|██▋       | 14/51 [00:01<00:02, 13.02it/s]
+Capturing CUDA graphs (PIECEWISE):  31%|███▏      | 16/51 [00:01<00:02, 13.29it/s]
+Capturing CUDA graphs (PIECEWISE):  35%|███▌      | 18/51 [00:01<00:02, 14.23it/s]
+Capturing CUDA graphs (PIECEWISE):  39%|███▉      | 20/51 [00:01<00:02, 14.86it/s]
+Capturing CUDA graphs (PIECEWISE):  43%|████▎     | 22/51 [00:01<00:01, 14.85it/s]
+Capturing CUDA graphs (PIECEWISE):  47%|████▋     | 24/51 [00:01<00:01, 15.31it/s]
+Capturing CUDA graphs (PIECEWISE):  51%|█████     | 26/51 [00:01<00:01, 15.45it/s]
+Capturing CUDA graphs (PIECEWISE):  55%|█████▍    | 28/51 [00:01<00:01, 15.63it/s]
+Capturing CUDA graphs (PIECEWISE):  59%|█████▉    | 30/51 [00:02<00:01, 15.48it/s]
+Capturing CUDA graphs (PIECEWISE):  63%|██████▎   | 32/51 [00:02<00:01, 15.49it/s]
+Capturing CUDA graphs (PIECEWISE):  67%|██████▋   | 34/51 [00:02<00:01, 15.61it/s]
+Capturing CUDA graphs (PIECEWISE):  71%|███████   | 36/51 [00:02<00:00, 15.51it/s]
+Capturing CUDA graphs (PIECEWISE):  75%|███████▍  | 38/51 [00:02<00:00, 15.45it/s]
+Capturing CUDA graphs (PIECEWISE):  78%|███████▊  | 40/51 [00:02<00:00, 15.27it/s]
+Capturing CUDA graphs (PIECEWISE):  82%|████████▏ | 42/51 [00:02<00:00, 15.36it/s]
+Capturing CUDA graphs (PIECEWISE):  86%|████████▋ | 44/51 [00:03<00:00, 15.12it/s]
+Capturing CUDA graphs (PIECEWISE):  90%|█████████ | 46/51 [00:03<00:00, 15.39it/s]
+Capturing CUDA graphs (PIECEWISE):  94%|█████████▍| 48/51 [00:03<00:00, 15.63it/s]
+Capturing CUDA graphs (PIECEWISE):  98%|█████████▊| 50/51 [00:03<00:00, 15.83it/s]
+Capturing CUDA graphs (PIECEWISE): 100%|██████████| 51/51 [00:03<00:00, 14.71it/s]
+
+Capturing CUDA graphs (FULL):   0%|          | 0/35 [00:00<?, ?it/s]
+Capturing CUDA graphs (FULL):   9%|▊         | 3/35 [00:00<00:01, 21.36it/s]
+Capturing CUDA graphs (FULL):  17%|█▋        | 6/35 [00:00<00:01, 20.42it/s]
+Capturing CUDA graphs (FULL):  26%|██▌       | 9/35 [00:00<00:01, 20.56it/s]
+Capturing CUDA graphs (FULL):  34%|███▍      | 12/35 [00:00<00:01, 20.34it/s]
+Capturing CUDA graphs (FULL):  43%|████▎     | 15/35 [00:00<00:00, 20.61it/s]
+Capturing CUDA graphs (FULL):  51%|█████▏    | 18/35 [00:00<00:00, 20.69it/s]
+Capturing CUDA graphs (FULL):  60%|██████    | 21/35 [00:01<00:00, 20.62it/s]
+Capturing CUDA graphs (FULL):  69%|██████▊   | 24/35 [00:01<00:00, 20.86it/s]
+Capturing CUDA graphs (FULL):  77%|███████▋  | 27/35 [00:01<00:00, 20.83it/s]
+Capturing CUDA graphs (FULL):  86%|████████▌ | 30/35 [00:01<00:00, 19.97it/s]
+Capturing CUDA graphs (FULL):  94%|█████████▍| 33/35 [00:01<00:00, 20.59it/s]
+Capturing CUDA graphs (FULL): 100%|██████████| 35/35 [00:01<00:00, 20.66it/s]
+(EngineCore pid=60) INFO 10-26 02:31:46 [model_runner.py:1127] Graph capturing finished in 6 secs, took 0.24 GiB
+(EngineCore pid=60) INFO 10-26 02:31:46 [gpu_worker.py:971] CUDA graph pool memory: 0.24 GiB (actual), 0.4 GiB (estimated), difference: 0.16 GiB (68.9%).
+(EngineCore pid=60) INFO 10-26 02:31:46 [gpu_worker.py:1034] Free memory on device (78.86/79.27 GiB) on startup. Desired GPU memory utilization is (0.9, 71.35 GiB). Actual usage is 14.58 GiB for consumed memory (weights + non-torch), 1.52 GiB for peak activation, and 0.24 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=58902269440` (54.86 GiB) to fit into requested memory, or `--kv-cache-memory=66968636928` (62.37 GiB) to fully utilize gpu memory. Current kv cache memory in use is 55.24 GiB.
+(EngineCore pid=60) INFO 10-26 02:31:48 [jit_monitor.py:84] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(EngineCore pid=60) INFO 10-26 02:31:48 [core.py:395] init engine (profile, create kv cache, warmup model) took 46.07 s (compilation: 23.67 s)
+(EngineCore pid=60) WARNING 10-26 02:31:48 [serial_utils.py:78] Allowing insecure serialization using pickle due to VLLM_ALLOW_INSECURE_SERIALIZATION=1
+(EngineCore pid=60) INFO 10-26 02:31:48 [kernel.py:467] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'], gelu_and_mul_sparse=['triton', 'native'])
+(MainProcess pid=7) WARNING 10-26 02:31:48 [serial_utils.py:78] Allowing insecure serialization using pickle due to VLLM_ALLOW_INSECURE_SERIALIZATION=1
+(MainProcess pid=7) INFO 10-26 02:31:49 [hf.py:648] Detected the chat template content format to be 'string'. You can set `--chat-template-content-format` to override this.
+(MainProcess pid=7) INFO 10-26 02:31:59 [loggers.py:335] Engine 000: Avg prompt throughput: 14582.3 tokens/s, Avg generation throughput: 31.5 tokens/s, Running: 34 reqs, Waiting: 94 reqs, GPU KV cache usage: 3.4%
+(MainProcess pid=7) INFO 10-26 02:32:09 [loggers.py:335] Engine 000: Avg prompt throughput: 11228.0 tokens/s, Avg generation throughput: 1614.1 tokens/s, Running: 17 reqs, Waiting: 111 reqs, GPU KV cache usage: 1.7%
+(MainProcess pid=7) INFO 10-26 02:32:19 [loggers.py:335] Engine 000: Avg prompt throughput: 12270.1 tokens/s, Avg generation throughput: 1283.7 tokens/s, Running: 128 reqs, Waiting: 0 reqs, GPU KV cache usage: 14.0%
+(MainProcess pid=7) INFO 10-26 02:32:30 [loggers.py:335] Engine 000: Avg prompt throughput: 10174.9 tokens/s, Avg generation throughput: 1971.2 tokens/s, Running: 113 reqs, Waiting: 15 reqs, GPU KV cache usage: 11.3%
+(MainProcess pid=7) INFO 10-26 02:32:40 [loggers.py:335] Engine 000: Avg prompt throughput: 11198.1 tokens/s, Avg generation throughput: 1580.2 tokens/s, Running: 97 reqs, Waiting: 31 reqs, GPU KV cache usage: 9.7%
+(MainProcess pid=7) INFO 10-26 02:32:50 [loggers.py:335] Engine 000: Avg prompt throughput: 7257.6 tokens/s, Avg generation throughput: 3138.4 tokens/s, Running: 42 reqs, Waiting: 86 reqs, GPU KV cache usage: 4.2%
+(MainProcess pid=7) INFO 10-26 02:33:01 [loggers.py:335] Engine 000: Avg prompt throughput: 11052.3 tokens/s, Avg generation throughput: 1587.2 tokens/s, Running: 25 reqs, Waiting: 103 reqs, GPU KV cache usage: 2.5%
+(MainProcess pid=7) INFO 10-26 02:33:11 [loggers.py:335] Engine 000: Avg prompt throughput: 11447.2 tokens/s, Avg generation throughput: 1524.3 tokens/s, Running: 128 reqs, Waiting: 0 reqs, GPU KV cache usage: 14.2%
+{"ctx": 1024, "batch": 128, "t_L_s": [11.226730521000007, 11.349914658000017, 11.420234404000013], "t_2L_s": [13.940745625000005, 14.047703405999982, 14.139437180000016], "tpot_pure_ms": 21.203242999999983, "samples_ms": [21.203242999999983, 21.07647459374973, 21.243771687500022], "kv_limited": false}
+(MainProcess pid=7) INFO 10-26 02:33:21 [loggers.py:335] Engine 000: Avg prompt throughput: 9702.9 tokens/s, Avg generation throughput: 1660.0 tokens/s, Running: 5 reqs, Waiting: 100 reqs, GPU KV cache usage: 2.0%
+(MainProcess pid=7) INFO 10-26 02:33:31 [loggers.py:335] Engine 000: Avg prompt throughput: 14406.5 tokens/s, Avg generation throughput: 7.0 tokens/s, Running: 5 reqs, Waiting: 64 reqs, GPU KV cache usage: 2.0%
+(MainProcess pid=7) INFO 10-26 02:33:42 [loggers.py:335] Engine 000: Avg prompt throughput: 14358.8 tokens/s, Avg generation throughput: 7.0 tokens/s, Running: 5 reqs, Waiting: 28 reqs, GPU KV cache usage: 2.0%
+(MainProcess pid=7) INFO 10-26 02:33:52 [loggers.py:335] Engine 000: Avg prompt throughput: 14226.7 tokens/s, Avg generation throughput: 7.0 tokens/s, Running: 7 reqs, Waiting: 121 reqs, GPU KV cache usage: 2.8%
+(MainProcess pid=7) INFO 10-26 02:34:02 [loggers.py:335] Engine 000: Avg prompt throughput: 13829.2 tokens/s, Avg generation throughput: 37.1 tokens/s, Running: 41 reqs, Waiting: 87 reqs, GPU KV cache usage: 16.3%
+(MainProcess pid=7) INFO 10-26 02:34:12 [loggers.py:335] Engine 000: Avg prompt throughput: 13072.5 tokens/s, Avg generation throughput: 87.8 tokens/s, Running: 73 reqs, Waiting: 55 reqs, GPU KV cache usage: 29.0%
+(MainProcess pid=7) INFO 10-26 02:34:22 [loggers.py:335] Engine 000: Avg prompt throughput: 12417.5 tokens/s, Avg generation throughput: 131.9 tokens/s, Running: 105 reqs, Waiting: 23 reqs, GPU KV cache usage: 41.7%
+(MainProcess pid=7) INFO 10-26 02:34:32 [loggers.py:335] Engine 000: Avg prompt throughput: 10618.5 tokens/s, Avg generation throughput: 520.5 tokens/s, Running: 128 reqs, Waiting: 0 reqs, GPU KV cache usage: 51.5%
+(MainProcess pid=7) INFO 10-26 02:34:43 [loggers.py:335] Engine 000: Avg prompt throughput: 9704.0 tokens/s, Avg generation throughput: 855.7 tokens/s, Running: 27 reqs, Waiting: 101 reqs, GPU KV cache usage: 10.7%
+(MainProcess pid=7) INFO 10-26 02:34:53 [loggers.py:335] Engine 000: Avg prompt throughput: 13299.2 tokens/s, Avg generation throughput: 68.2 tokens/s, Running: 61 reqs, Waiting: 67 reqs, GPU KV cache usage: 24.2%
+(MainProcess pid=7) INFO 10-26 02:35:03 [loggers.py:335] Engine 000: Avg prompt throughput: 12586.8 tokens/s, Avg generation throughput: 115.2 tokens/s, Running: 93 reqs, Waiting: 35 reqs, GPU KV cache usage: 36.9%
+(MainProcess pid=7) INFO 10-26 02:35:14 [loggers.py:335] Engine 000: Avg prompt throughput: 11997.4 tokens/s, Avg generation throughput: 155.2 tokens/s, Running: 123 reqs, Waiting: 5 reqs, GPU KV cache usage: 48.8%
+(MainProcess pid=7) INFO 10-26 02:35:24 [loggers.py:335] Engine 000: Avg prompt throughput: 3271.9 tokens/s, Avg generation throughput: 2552.9 tokens/s, Running: 118 reqs, Waiting: 0 reqs, GPU KV cache usage: 49.4%
+(MainProcess pid=7) INFO 10-26 02:35:34 [loggers.py:335] Engine 000: Avg prompt throughput: 11626.7 tokens/s, Avg generation throughput: 357.8 tokens/s, Running: 33 reqs, Waiting: 95 reqs, GPU KV cache usage: 13.1%
+(MainProcess pid=7) INFO 10-26 02:35:45 [loggers.py:335] Engine 000: Avg prompt throughput: 13120.7 tokens/s, Avg generation throughput: 76.9 tokens/s, Running: 67 reqs, Waiting: 61 reqs, GPU KV cache usage: 26.6%
+(MainProcess pid=7) INFO 10-26 02:35:55 [loggers.py:335] Engine 000: Avg prompt throughput: 12446.1 tokens/s, Avg generation throughput: 123.1 tokens/s, Running: 99 reqs, Waiting: 29 reqs, GPU KV cache usage: 39.3%
+(MainProcess pid=7) INFO 10-26 02:36:06 [loggers.py:335] Engine 000: Avg prompt throughput: 11869.7 tokens/s, Avg generation throughput: 162.3 tokens/s, Running: 128 reqs, Waiting: 0 reqs, GPU KV cache usage: 51.2%
+(MainProcess pid=7) INFO 10-26 02:36:16 [loggers.py:335] Engine 000: Avg prompt throughput: 8078.4 tokens/s, Avg generation throughput: 1226.9 tokens/s, Running: 21 reqs, Waiting: 107 reqs, GPU KV cache usage: 8.3%
+(MainProcess pid=7) INFO 10-26 02:36:26 [loggers.py:335] Engine 000: Avg prompt throughput: 13378.7 tokens/s, Avg generation throughput: 58.8 tokens/s, Running: 55 reqs, Waiting: 73 reqs, GPU KV cache usage: 21.8%
+(MainProcess pid=7) INFO 10-26 02:36:37 [loggers.py:335] Engine 000: Avg prompt throughput: 12673.5 tokens/s, Avg generation throughput: 106.7 tokens/s, Running: 87 reqs, Waiting: 41 reqs, GPU KV cache usage: 34.5%
+(MainProcess pid=7) INFO 10-26 02:36:47 [loggers.py:335] Engine 000: Avg prompt throughput: 12070.1 tokens/s, Avg generation throughput: 147.3 tokens/s, Running: 117 reqs, Waiting: 11 reqs, GPU KV cache usage: 46.4%
+(MainProcess pid=7) INFO 10-26 02:36:57 [loggers.py:335] Engine 000: Avg prompt throughput: 5725.4 tokens/s, Avg generation throughput: 1861.7 tokens/s, Running: 128 reqs, Waiting: 0 reqs, GPU KV cache usage: 52.9%
+(MainProcess pid=7) INFO 10-26 02:37:07 [loggers.py:335] Engine 000: Avg prompt throughput: 8785.6 tokens/s, Avg generation throughput: 1067.4 tokens/s, Running: 25 reqs, Waiting: 103 reqs, GPU KV cache usage: 9.9%
+(MainProcess pid=7) INFO 10-26 02:37:18 [loggers.py:335] Engine 000: Avg prompt throughput: 13360.0 tokens/s, Avg generation throughput: 65.2 tokens/s, Running: 59 reqs, Waiting: 69 reqs, GPU KV cache usage: 23.4%
+(MainProcess pid=7) INFO 10-26 02:37:28 [loggers.py:335] Engine 000: Avg prompt throughput: 12669.0 tokens/s, Avg generation throughput: 112.9 tokens/s, Running: 91 reqs, Waiting: 37 reqs, GPU KV cache usage: 36.1%
+(MainProcess pid=7) INFO 10-26 02:37:38 [loggers.py:335] Engine 000: Avg prompt throughput: 12071.2 tokens/s, Avg generation throughput: 153.2 tokens/s, Running: 121 reqs, Waiting: 7 reqs, GPU KV cache usage: 48.0%
+(MainProcess pid=7) INFO 10-26 02:37:48 [loggers.py:335] Engine 000: Avg prompt throughput: 7602.4 tokens/s, Avg generation throughput: 1257.1 tokens/s, Running: 12 reqs, Waiting: 116 reqs, GPU KV cache usage: 4.8%
+(MainProcess pid=7) INFO 10-26 02:37:58 [loggers.py:335] Engine 000: Avg prompt throughput: 13651.3 tokens/s, Avg generation throughput: 45.0 tokens/s, Running: 46 reqs, Waiting: 82 reqs, GPU KV cache usage: 18.3%
+(MainProcess pid=7) INFO 10-26 02:38:09 [loggers.py:335] Engine 000: Avg prompt throughput: 12924.6 tokens/s, Avg generation throughput: 94.7 tokens/s, Running: 78 reqs, Waiting: 50 reqs, GPU KV cache usage: 30.9%
+(MainProcess pid=7) INFO 10-26 02:38:19 [loggers.py:335] Engine 000: Avg prompt throughput: 12297.2 tokens/s, Avg generation throughput: 138.1 tokens/s, Running: 110 reqs, Waiting: 18 reqs, GPU KV cache usage: 43.6%
+(MainProcess pid=7) INFO 10-26 02:38:29 [loggers.py:335] Engine 000: Avg prompt throughput: 8581.4 tokens/s, Avg generation throughput: 1062.7 tokens/s, Running: 128 reqs, Waiting: 0 reqs, GPU KV cache usage: 52.1%
+{"ctx": 4096, "batch": 128, "t_L_s": [44.94749226799999, 45.22850840699999, 45.028850585999976], "t_2L_s": [49.87320432700005, 50.05221845900002, 49.84898052999995], "tpot_pure_ms": 37.68523478125019, "samples_ms": [38.482125460937986, 37.68523478125019, 37.65726518749979], "kv_limited": false}
+(MainProcess pid=7) INFO 10-26 02:38:35 [utils.py:628] [shutdown] Process manager: send sigterm to process EngineCore
+(EngineCore pid=60) INFO 10-26 02:38:35 [core.py:1454] [shutdown] EngineCore: trigger received signal=SIGTERM
+(EngineCore pid=60) INFO 10-26 02:38:35 [core.py:1635] [shutdown] EngineCore: start mode=abort timeout=0s
+(EngineCore pid=60) INFO 10-26 02:38:35 [core.py:1666] [shutdown] EngineCore: request processing complete; starting resource teardown
+(EngineCore pid=60) INFO 10-26 02:38:35 [core.py:1499] [shutdown] EngineCore: exiting busy loop
++ python3 scripts/bench_e2e.py --pure --repeat 3 --label ours_bf16 --points '1024:128;4096:128' --env KVQ_KERNEL=triton --llm '{"attention_config":{"backend":"CUSTOM"}}'
+(MainProcess pid=208) INFO 10-26 02:38:56 [api_utils.py:286] non-default args: {'max_model_len': 32768, 'enable_prefix_caching': False, 'gpu_memory_utilization': 0.9, 'max_num_seqs': 256, 'attention_config': AttentionConfig(backend=<AttentionBackendEnum.CUSTOM: None>, minimax_m3_msa_decode_backend='triton', backend_per_kind={}, flash_attn_version=None, flash_attn_max_num_splits_for_cuda_graph=32, tokenspeed_mla_min_split_kv=1, tq_max_kv_splits_for_cuda_graph=32, use_trtllm_attention=None, disable_flashinfer_q_quantization=False, mla_prefill_backend=None, use_prefill_query_quantization=False, indexer_kv_dtype='auto', indexer_sparse_logits=False, hisparse_config=None, use_non_causal=False, sparse_mla_force_mqa=False, sparse_mla_prefill_workspace_factor=None, flex_attn_block_m=None, flex_attn_block_n=None, flex_attn_q_block_size=None, flex_attn_kv_block_size=None), 'model': 'Qwen/Qwen2.5-7B-Instruct'}
+(MainProcess pid=208) INFO 10-26 02:38:57 [model.py:733] Resolved architecture: Qwen2ForCausalLM
+(MainProcess pid=208) INFO 10-26 02:38:57 [model.py:2152] Using max model len 32768
+(MainProcess pid=208) INFO 10-26 02:38:57 [scheduler.py:307] Chunked prefill is enabled with max_num_batched_tokens=8192.
+(MainProcess pid=208) INFO 10-26 02:38:57 [kernel.py:467] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'], gelu_and_mul_sparse=['triton', 'native'])
+
+Fetching 10 files:   0%|          | 0/10 [00:00<?, ?it/s]
+Fetching 10 files: 100%|██████████| 10/10 [00:00<00:00, 706.80it/s]
+(EngineCore pid=240) INFO 10-26 02:39:01 [core.py:133] Initializing a V1 LLM engine (v0.32.0) with config: model='Qwen/Qwen2.5-7B-Instruct', speculative_config=None, tokenizer='Qwen/Qwen2.5-7B-Instruct', skip_tokenizer_init=False, tokenizer_mode=auto, revision=main, tokenizer_revision=main, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=32768, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=None, quantization_config=None, enforce_eager=False, aux_output_config=AuxOutputConfig(enable_return_routed_experts=False, max_bytes=None), kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, per_request_spec_decode_metrics='none', kv_cache_metrics=False, kv_cache_metrics_sample=0.01, custom_histogram_buckets=None, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False, jit_monitor_mode='warn', jit_monitor_verbose=False), seed=0, served_model_name=Qwen/Qwen2.5-7B-Instruct, enable_prefix_caching=False, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.VLLM_COMPILE: 3>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['none'], 'ir_enable_torch_wrap': True, 'splitting_ops': ['vllm::unified_attention_with_output', 'vllm::unified_mla_attention_with_output', 'vllm::mamba_mixer2', 'vllm::mamba_mixer', 'vllm::short_conv', 'vllm::qwen4_exp_ple_short_conv', 'vllm::qwen4_exp_qsa_with_output', 'vllm::qwen4_exp_qsa_prepare_with_output', 'vllm::linear_attention', 'vllm::qwen_gdn_attention_core', 'vllm::qwen_gdn_attention_core_fused_norm_packed', 'vllm::gdn_attention_core_xpu', 'vllm::olmo_hybrid_gdn_full_forward', 'vllm::sparse_attn_indexer', 'vllm::rocm_aiter_sparse_attn_indexer', 'vllm::deepseek_v4_attention', 'vllm::hpc_rope_norm_forward', 'vllm::unified_kv_cache_update', 'vllm::unified_mla_kv_cache_update'], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'cudagraph_decoder_replay': True, 'decoder_replay_cudagraph_capture_sizes': [], 'decoder_replay_trim_threshold': 768, 'compile_sizes': [], 'compile_ranges_endpoints': [8192], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.FULL_AND_PIECEWISE: (2, 1)>, 'cudagraph_num_of_warmups': 1, 'cudagraph_capture_sizes': [1, 2, 4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232, 240, 248, 256, 272, 288, 304, 320, 336, 352, 368, 384, 400, 416, 432, 448, 464, 480, 496, 512], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': False, 'fuse_act_quant': False, 'fuse_attn_quant': False, 'fuse_allreduce_rms': False, 'enable_qk_norm_rope_fusion': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False, 'fuse_qk_norm_rope_kvcache': False}, 'max_cudagraph_capture_size': 512, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': False, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'], gelu_and_mul_sparse=['triton', 'native']), enable_flashinfer_autotune=True, enable_rocm_segmented_attn_autotune=False, enable_cutedsl_warmup=True, enable_jit_warmup=True, moe_backend='auto', sparse_indexer_topk_backend='auto', linear_backend='auto', linear_backend_per_quant=None)
+(EngineCore pid=240) INFO 10-26 02:39:04 [parallel_state.py:1906] world_size=1 rank=0 local_rank=0 distributed_init_method=file:///tmp/vllm_dist_4349a03de993418b91d3239351a0d44c backend=nccl
+(EngineCore pid=240) INFO 10-26 02:39:04 [parallel_state.py:2350] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, ETP rank 0, EP rank N/A, EPLB rank N/A
+(EngineCore pid=240) INFO 10-26 02:39:04 [gpu_worker.py:518] Using V2 Model Runner
+(EngineCore pid=240) INFO 10-26 02:39:05 [model_runner.py:392] Loading model from scratch...
+(EngineCore pid=240) INFO 10-26 02:39:05 [cuda.py:446] Using AttentionBackendEnum.CUSTOM backend.
+(EngineCore pid=240) INFO 10-26 02:39:07 [base_loader.py:82] Initializing model took 2.540502 seconds
+(EngineCore pid=240) INFO 10-26 02:39:08 [weight_utils.py:1108] Filesystem type for checkpoints: 9P. Checkpoint size: 14.19 GiB. Available RAM: 772.18 GiB.
+(EngineCore pid=240) INFO 10-26 02:39:08 [weight_utils.py:1131] Auto-prefetch is disabled because the filesystem (9P) is not a recognized network FS (NFS/Lustre). If you want to force prefetching, start vLLM with --safetensors-load-strategy=prefetch.
+
+Loading safetensors checkpoint shards:   0% Completed | 0/4 [00:00<?, ?it/s]
+
+Loading safetensors checkpoint shards:  25% Completed | 1/4 [00:02<00:06,  2.20s/it]
+
+Loading safetensors checkpoint shards:  50% Completed | 2/4 [00:04<00:04,  2.06s/it]
+
+Loading safetensors checkpoint shards:  75% Completed | 3/4 [00:05<00:01,  1.82s/it]
+
+Loading safetensors checkpoint shards: 100% Completed | 4/4 [00:06<00:00,  1.38s/it]
+
+Loading safetensors checkpoint shards: 100% Completed | 4/4 [00:06<00:00,  1.60s/it]
+
+(EngineCore pid=240) INFO 10-26 02:39:15 [default_loader.py:501] Loading weights took 6.54 seconds
+(EngineCore pid=240) INFO 10-26 02:39:17 [model_runner.py:424] Model loading took 14.29 GiB memory and 12.869442 seconds
+(EngineCore pid=240) INFO 10-26 02:39:17 [topk_topp_sampler.py:124] Using FlashInfer for top-p & top-k sampling.
+(EngineCore pid=240) WARNING 10-26 02:39:17 [torch_utils.py:284] OMP_NUM_THREADS=8 is set; leaving Torch threads at 8 for serving. Multi-threaded torch CPU ops during serving can degrade performance through spin-wait contention and cgroup CPU-quota throttling.
+(EngineCore pid=240) INFO 10-26 02:39:17 [utils.py:347] Using LBNHC KV cache layout.
+(EngineCore pid=240) INFO 10-26 02:39:20 [monitor.py:40] [backbone] Starting torch.compile
+(EngineCore pid=240) INFO 10-26 02:39:29 [backends.py:1104] [backbone] Using cache directory: /root/.cache/vllm/torch_compile_cache/96996f80ee/rank_0_0/backbone for vLLM's torch.compile
+(EngineCore pid=240) INFO 10-26 02:39:29 [backends.py:1166] [backbone] Dynamo bytecode transform time: 9.45 s
+(EngineCore pid=240) INFO 10-26 02:39:37 [backends.py:398] [backbone] Compiling a graph for compile range (1, 8192) takes 7.72 s
+(EngineCore pid=240) INFO 10-26 02:39:43 [backends.py:927] collected artifacts: 29 entries, 3 artifacts, 4751733 bytes total
+(EngineCore pid=240) INFO 10-26 02:39:43 [decorators.py:743] [backbone] saved AOT compiled function to /root/.cache/vllm/torch_compile_cache/torch_aot_compile/76b8e8bb631431a4b3471b823c40ef539c3f122289f78cd45591c95ef26510dc/rank_0_0/model
+(EngineCore pid=240) INFO 10-26 02:39:43 [monitor.py:62] [backbone] torch.compile took 23.01 s in total
+(EngineCore pid=240) INFO 10-26 02:39:43 [monitor.py:91] [backbone] Initial profiling/warmup run took 0.18 s
+
+Capturing CUDA graphs (PIECEWISE):   0%|          | 0/51 [00:00<?, ?it/s]
+Capturing CUDA graphs (PIECEWISE):   2%|▏         | 1/51 [00:00<00:31,  1.60it/s]
+Capturing CUDA graphs (PIECEWISE):   6%|▌         | 3/51 [00:00<00:09,  4.83it/s]
+Capturing CUDA graphs (PIECEWISE):  10%|▉         | 5/51 [00:00<00:06,  7.58it/s]
+Capturing CUDA graphs (PIECEWISE):  14%|█▎        | 7/51 [00:00<00:04,  9.79it/s]
+Capturing CUDA graphs (PIECEWISE):  18%|█▊        | 9/51 [00:01<00:03, 11.49it/s]
+Capturing CUDA graphs (PIECEWISE):  22%|██▏       | 11/51 [00:01<00:03, 13.11it/s]
+Capturing CUDA graphs (PIECEWISE):  25%|██▌       | 13/51 [00:01<00:02, 14.34it/s]
+Capturing CUDA graphs (PIECEWISE):  29%|██▉       | 15/51 [00:01<00:02, 15.28it/s]
+Capturing CUDA graphs (PIECEWISE):  33%|███▎      | 17/51 [00:01<00:02, 16.28it/s]
+Capturing CUDA graphs (PIECEWISE):  37%|███▋      | 19/51 [00:02<00:04,  7.65it/s]
+Capturing CUDA graphs (PIECEWISE):  43%|████▎     | 22/51 [00:02<00:02, 10.29it/s]
+Capturing CUDA graphs (PIECEWISE):  49%|████▉     | 25/51 [00:02<00:02, 12.30it/s]
+Capturing CUDA graphs (PIECEWISE):  55%|█████▍    | 28/51 [00:02<00:01, 14.26it/s]
+Capturing CUDA graphs (PIECEWISE):  61%|██████    | 31/51 [00:02<00:01, 15.76it/s]
+Capturing CUDA graphs (PIECEWISE):  67%|██████▋   | 34/51 [00:02<00:00, 17.50it/s]
+Capturing CUDA graphs (PIECEWISE):  73%|███████▎  | 37/51 [00:02<00:00, 18.74it/s]
+Capturing CUDA graphs (PIECEWISE):  78%|███████▊  | 40/51 [00:03<00:00, 18.58it/s]
+Capturing CUDA graphs (PIECEWISE):  82%|████████▏ | 42/51 [00:03<00:00, 18.63it/s]
+Capturing CUDA graphs (PIECEWISE):  88%|████████▊ | 45/51 [00:04<00:00,  8.54it/s]
+Capturing CUDA graphs (PIECEWISE):  92%|█████████▏| 47/51 [00:04<00:00,  6.25it/s]
+Capturing CUDA graphs (PIECEWISE):  96%|█████████▌| 49/51 [00:04<00:00,  7.49it/s]
+Capturing CUDA graphs (PIECEWISE): 100%|██████████| 51/51 [00:05<00:00,  5.61it/s]
+Capturing CUDA graphs (PIECEWISE): 100%|██████████| 51/51 [00:05<00:00,  9.60it/s]
+
+Capturing CUDA graphs (FULL):   0%|          | 0/2 [00:00<?, ?it/s]
+Capturing CUDA graphs (FULL): 100%|██████████| 2/2 [00:00<00:00, 28.23it/s]
+(EngineCore pid=240) INFO 10-26 02:39:52 [model_runner.py:1127] Graph capturing finished in 7 secs, took 0.33 GiB
+(EngineCore pid=240) INFO 10-26 02:39:53 [gpu_worker.py:759] Available KV cache memory: 55.25 GiB
+(EngineCore pid=240) INFO 10-26 02:39:53 [gpu_worker.py:774] CUDA graph memory profiling is enabled (default since v0.21.0). The current --gpu-memory-utilization=0.9000 is equivalent to --gpu-memory-utilization=0.8950 without CUDA graph memory profiling. To maintain the same effective KV cache size as before, increase --gpu-memory-utilization to 0.9050. To disable, set VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=0.
+(EngineCore pid=240) INFO 10-26 02:39:53 [kv_cache_utils.py:2327] GPU KV cache size: 1,034,448 tokens, Maximum concurrency for 32,768 tokens per request: 31.57x
+(EngineCore pid=240) INFO 10-26 02:39:53 [kernel_warmup.py:176] JIT kernel warmup starting.
+(EngineCore pid=240) INFO 10-26 02:39:53 [kernel_warmup.py:189] JIT kernel warmup finished in 0.00s.
+
+Capturing CUDA graphs (PIECEWISE):   0%|          | 0/51 [00:00<?, ?it/s]
+Capturing CUDA graphs (PIECEWISE):   4%|▍         | 2/51 [00:00<00:03, 15.80it/s]
+Capturing CUDA graphs (PIECEWISE):   8%|▊         | 4/51 [00:00<00:02, 16.52it/s]
+Capturing CUDA graphs (PIECEWISE):  12%|█▏        | 6/51 [00:00<00:02, 16.71it/s]
+Capturing CUDA graphs (PIECEWISE):  16%|█▌        | 8/51 [00:00<00:02, 16.72it/s]
+Capturing CUDA graphs (PIECEWISE):  20%|█▉        | 10/51 [00:00<00:02, 17.33it/s]
+Capturing CUDA graphs (PIECEWISE):  24%|██▎       | 12/51 [00:00<00:02, 17.59it/s]
+Capturing CUDA graphs (PIECEWISE):  27%|██▋       | 14/51 [00:00<00:02, 17.94it/s]
+Capturing CUDA graphs (PIECEWISE):  31%|███▏      | 16/51 [00:00<00:01, 18.28it/s]
+Capturing CUDA graphs (PIECEWISE):  37%|███▋      | 19/51 [00:01<00:01, 19.13it/s]
+Capturing CUDA graphs (PIECEWISE):  43%|████▎     | 22/51 [00:01<00:01, 19.74it/s]
+Capturing CUDA graphs (PIECEWISE):  49%|████▉     | 25/51 [00:01<00:01, 20.23it/s]
+Capturing CUDA graphs (PIECEWISE):  55%|█████▍    | 28/51 [00:01<00:01, 20.40it/s]
+Capturing CUDA graphs (PIECEWISE):  61%|██████    | 31/51 [00:01<00:00, 20.45it/s]
+Capturing CUDA graphs (PIECEWISE):  67%|██████▋   | 34/51 [00:01<00:00, 20.01it/s]
+Capturing CUDA graphs (PIECEWISE):  73%|███████▎  | 37/51 [00:01<00:00, 19.91it/s]
+Capturing CUDA graphs (PIECEWISE):  78%|███████▊  | 40/51 [00:02<00:00, 20.28it/s]
+Capturing CUDA graphs (PIECEWISE):  84%|████████▍ | 43/51 [00:02<00:00, 20.89it/s]
+Capturing CUDA graphs (PIECEWISE):  90%|█████████ | 46/51 [00:02<00:00, 20.93it/s]
+Capturing CUDA graphs (PIECEWISE):  96%|█████████▌| 49/51 [00:02<00:00, 20.75it/s]
+Capturing CUDA graphs (PIECEWISE): 100%|██████████| 51/51 [00:02<00:00, 19.60it/s]
+
+Capturing CUDA graphs (FULL):   0%|          | 0/35 [00:00<?, ?it/s]
+Capturing CUDA graphs (FULL):   9%|▊         | 3/35 [00:00<00:01, 22.62it/s]
+Capturing CUDA graphs (FULL):  17%|█▋        | 6/35 [00:00<00:01, 21.90it/s]
+Capturing CUDA graphs (FULL):  26%|██▌       | 9/35 [00:00<00:01, 21.23it/s]
+Capturing CUDA graphs (FULL):  34%|███▍      | 12/35 [00:00<00:01, 21.45it/s]
+Capturing CUDA graphs (FULL):  43%|████▎     | 15/35 [00:00<00:00, 21.37it/s]
+Capturing CUDA graphs (FULL):  51%|█████▏    | 18/35 [00:00<00:00, 21.39it/s]
+Capturing CUDA graphs (FULL):  60%|██████    | 21/35 [00:00<00:00, 21.58it/s]
+Capturing CUDA graphs (FULL):  69%|██████▊   | 24/35 [00:01<00:00, 21.84it/s]
+Capturing CUDA graphs (FULL):  77%|███████▋  | 27/35 [00:01<00:00, 22.21it/s]
+Capturing CUDA graphs (FULL):  86%|████████▌ | 30/35 [00:01<00:00, 21.95it/s]
+Capturing CUDA graphs (FULL):  94%|█████████▍| 33/35 [00:01<00:00, 21.77it/s]
+Capturing CUDA graphs (FULL): 100%|██████████| 35/35 [00:01<00:00, 21.76it/s]
+(EngineCore pid=240) INFO 10-26 02:40:02 [model_runner.py:1127] Graph capturing finished in 5 secs, took 0.22 GiB
+(EngineCore pid=240) INFO 10-26 02:40:02 [gpu_worker.py:971] CUDA graph pool memory: 0.22 GiB (actual), 0.4 GiB (estimated), difference: 0.18 GiB (83.8%).
+(EngineCore pid=240) INFO 10-26 02:40:02 [gpu_worker.py:1034] Free memory on device (78.86/79.27 GiB) on startup. Desired GPU memory utilization is (0.9, 71.35 GiB). Actual usage is 14.58 GiB for consumed memory (weights + non-torch), 1.52 GiB for peak activation, and 0.22 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=58929532416` (54.88 GiB) to fit into requested memory, or `--kv-cache-memory=66995899904` (62.39 GiB) to fully utilize gpu memory. Current kv cache memory in use is 55.25 GiB.
+(EngineCore pid=240) INFO 10-26 02:40:03 [jit_monitor.py:84] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(EngineCore pid=240) INFO 10-26 02:40:04 [core.py:395] init engine (profile, create kv cache, warmup model) took 46.76 s (compilation: 23.01 s)
+(EngineCore pid=240) WARNING 10-26 02:40:04 [serial_utils.py:78] Allowing insecure serialization using pickle due to VLLM_ALLOW_INSECURE_SERIALIZATION=1
+(EngineCore pid=240) INFO 10-26 02:40:04 [kernel.py:467] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'], gelu_and_mul_sparse=['triton', 'native'])
+(MainProcess pid=208) WARNING 10-26 02:40:04 [serial_utils.py:78] Allowing insecure serialization using pickle due to VLLM_ALLOW_INSECURE_SERIALIZATION=1
+(MainProcess pid=208) INFO 10-26 02:40:05 [hf.py:648] Detected the chat template content format to be 'string'. You can set `--chat-template-content-format` to override this.
+(EngineCore pid=240) WARNING 10-26 02:40:05 [jit_monitor.py:140] Triton kernel JIT compilation during inference: _attn_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+(MainProcess pid=208) INFO 10-26 02:40:16 [loggers.py:335] Engine 000: Avg prompt throughput: 11940.2 tokens/s, Avg generation throughput: 25.3 tokens/s, Running: 17 reqs, Waiting: 111 reqs, GPU KV cache usage: 1.7%
+(MainProcess pid=208) INFO 10-26 02:40:26 [loggers.py:335] Engine 000: Avg prompt throughput: 12282.6 tokens/s, Avg generation throughput: 1387.4 tokens/s, Running: 128 reqs, Waiting: 0 reqs, GPU KV cache usage: 14.1%
+(MainProcess pid=208) INFO 10-26 02:40:36 [loggers.py:335] Engine 000: Avg prompt throughput: 13098.4 tokens/s, Avg generation throughput: 882.6 tokens/s, Running: 128 reqs, Waiting: 0 reqs, GPU KV cache usage: 13.4%
+(MainProcess pid=208) INFO 10-26 02:40:46 [loggers.py:335] Engine 000: Avg prompt throughput: 8855.4 tokens/s, Avg generation throughput: 2649.4 tokens/s, Running: 97 reqs, Waiting: 31 reqs, GPU KV cache usage: 9.7%
+(MainProcess pid=208) INFO 10-26 02:40:56 [loggers.py:335] Engine 000: Avg prompt throughput: 11345.8 tokens/s, Avg generation throughput: 1604.2 tokens/s, Running: 81 reqs, Waiting: 47 reqs, GPU KV cache usage: 8.1%
+(MainProcess pid=208) INFO 10-26 02:41:07 [loggers.py:335] Engine 000: Avg prompt throughput: 7822.8 tokens/s, Avg generation throughput: 3099.3 tokens/s, Running: 33 reqs, Waiting: 95 reqs, GPU KV cache usage: 3.3%
+(MainProcess pid=208) INFO 10-26 02:41:17 [loggers.py:335] Engine 000: Avg prompt throughput: 11287.1 tokens/s, Avg generation throughput: 1608.5 tokens/s, Running: 17 reqs, Waiting: 111 reqs, GPU KV cache usage: 1.7%
+(MainProcess pid=208) INFO 10-26 02:41:27 [loggers.py:335] Engine 000: Avg prompt throughput: 12269.7 tokens/s, Avg generation throughput: 1283.7 tokens/s, Running: 128 reqs, Waiting: 0 reqs, GPU KV cache usage: 14.0%
+{"ctx": 1024, "batch": 128, "t_L_s": [11.09536604699997, 11.17381328800002, 11.25575628599995], "t_2L_s": [13.652989171999934, 13.743888492999986, 13.810014242999955], "tpot_pure_ms": 19.981430664062216, "samples_ms": [19.981430664062216, 20.078712539062238, 19.955140289062534], "kv_limited": false}
+(MainProcess pid=208) INFO 10-26 02:41:37 [loggers.py:335] Engine 000: Avg prompt throughput: 8753.2 tokens/s, Avg generation throughput: 1937.4 tokens/s, Running: 5 reqs, Waiting: 103 reqs, GPU KV cache usage: 2.0%
+(MainProcess pid=208) INFO 10-26 02:41:47 [loggers.py:335] Engine 000: Avg prompt throughput: 13660.6 tokens/s, Avg generation throughput: 6.7 tokens/s, Running: 5 reqs, Waiting: 69 reqs, GPU KV cache usage: 2.0%
+(MainProcess pid=208) INFO 10-26 02:41:58 [loggers.py:335] Engine 000: Avg prompt throughput: 13630.3 tokens/s, Avg generation throughput: 6.7 tokens/s, Running: 5 reqs, Waiting: 35 reqs, GPU KV cache usage: 2.0%
+(MainProcess pid=208) INFO 10-26 02:42:08 [loggers.py:335] Engine 000: Avg prompt throughput: 13621.1 tokens/s, Avg generation throughput: 6.7 tokens/s, Running: 5 reqs, Waiting: 1 reqs, GPU KV cache usage: 2.0%
+(MainProcess pid=208) INFO 10-26 02:42:18 [loggers.py:335] Engine 000: Avg prompt throughput: 13479.0 tokens/s, Avg generation throughput: 24.3 tokens/s, Running: 33 reqs, Waiting: 95 reqs, GPU KV cache usage: 13.1%
+(MainProcess pid=208) INFO 10-26 02:42:28 [loggers.py:335] Engine 000: Avg prompt throughput: 13397.2 tokens/s, Avg generation throughput: 78.5 tokens/s, Running: 67 reqs, Waiting: 61 reqs, GPU KV cache usage: 26.6%
+(MainProcess pid=208) INFO 10-26 02:42:39 [loggers.py:335] Engine 000: Avg prompt throughput: 13236.3 tokens/s, Avg generation throughput: 132.5 tokens/s, Running: 101 reqs, Waiting: 27 reqs, GPU KV cache usage: 40.1%
+(MainProcess pid=208) INFO 10-26 02:42:49 [loggers.py:335] Engine 000: Avg prompt throughput: 12249.8 tokens/s, Avg generation throughput: 425.7 tokens/s, Running: 128 reqs, Waiting: 0 reqs, GPU KV cache usage: 51.4%
+(MainProcess pid=208) INFO 10-26 02:43:00 [loggers.py:335] Engine 000: Avg prompt throughput: 9357.9 tokens/s, Avg generation throughput: 934.8 tokens/s, Running: 27 reqs, Waiting: 101 reqs, GPU KV cache usage: 10.7%
+(MainProcess pid=208) INFO 10-26 02:43:10 [loggers.py:335] Engine 000: Avg prompt throughput: 13382.5 tokens/s, Avg generation throughput: 68.6 tokens/s, Running: 61 reqs, Waiting: 67 reqs, GPU KV cache usage: 24.2%
+(MainProcess pid=208) INFO 10-26 02:43:20 [loggers.py:335] Engine 000: Avg prompt throughput: 13230.7 tokens/s, Avg generation throughput: 122.7 tokens/s, Running: 95 reqs, Waiting: 33 reqs, GPU KV cache usage: 37.7%
+(MainProcess pid=208) INFO 10-26 02:43:30 [loggers.py:335] Engine 000: Avg prompt throughput: 13090.4 tokens/s, Avg generation throughput: 174.2 tokens/s, Running: 127 reqs, Waiting: 1 reqs, GPU KV cache usage: 50.4%
+(MainProcess pid=208) INFO 10-26 02:43:41 [loggers.py:335] Engine 000: Avg prompt throughput: 2446.3 tokens/s, Avg generation throughput: 2873.1 tokens/s, Running: 5 reqs, Waiting: 123 reqs, GPU KV cache usage: 2.0%
+(MainProcess pid=208) INFO 10-26 02:43:51 [loggers.py:335] Engine 000: Avg prompt throughput: 13459.3 tokens/s, Avg generation throughput: 32.9 tokens/s, Running: 39 reqs, Waiting: 89 reqs, GPU KV cache usage: 15.5%
+(MainProcess pid=208) INFO 10-26 02:44:01 [loggers.py:335] Engine 000: Avg prompt throughput: 13311.2 tokens/s, Avg generation throughput: 87.7 tokens/s, Running: 73 reqs, Waiting: 55 reqs, GPU KV cache usage: 29.0%
+(MainProcess pid=208) INFO 10-26 02:44:12 [loggers.py:335] Engine 000: Avg prompt throughput: 13172.9 tokens/s, Avg generation throughput: 141.5 tokens/s, Running: 107 reqs, Waiting: 21 reqs, GPU KV cache usage: 42.4%
+(MainProcess pid=208) INFO 10-26 02:44:22 [loggers.py:335] Engine 000: Avg prompt throughput: 9800.2 tokens/s, Avg generation throughput: 1094.1 tokens/s, Running: 102 reqs, Waiting: 0 reqs, GPU KV cache usage: 41.5%
+(MainProcess pid=208) INFO 10-26 02:44:32 [loggers.py:335] Engine 000: Avg prompt throughput: 11694.9 tokens/s, Avg generation throughput: 275.3 tokens/s, Running: 33 reqs, Waiting: 95 reqs, GPU KV cache usage: 13.1%
+(MainProcess pid=208) INFO 10-26 02:44:43 [loggers.py:335] Engine 000: Avg prompt throughput: 13337.7 tokens/s, Avg generation throughput: 78.2 tokens/s, Running: 67 reqs, Waiting: 61 reqs, GPU KV cache usage: 26.6%
+(MainProcess pid=208) INFO 10-26 02:44:53 [loggers.py:335] Engine 000: Avg prompt throughput: 13183.9 tokens/s, Avg generation throughput: 132.0 tokens/s, Running: 101 reqs, Waiting: 27 reqs, GPU KV cache usage: 40.1%
+(MainProcess pid=208) INFO 10-26 02:45:03 [loggers.py:335] Engine 000: Avg prompt throughput: 12284.8 tokens/s, Avg generation throughput: 401.3 tokens/s, Running: 128 reqs, Waiting: 0 reqs, GPU KV cache usage: 51.4%
+(MainProcess pid=208) INFO 10-26 02:45:13 [loggers.py:335] Engine 000: Avg prompt throughput: 3265.9 tokens/s, Avg generation throughput: 2623.6 tokens/s, Running: 11 reqs, Waiting: 117 reqs, GPU KV cache usage: 4.4%
+(MainProcess pid=208) INFO 10-26 02:45:24 [loggers.py:335] Engine 000: Avg prompt throughput: 13414.5 tokens/s, Avg generation throughput: 42.6 tokens/s, Running: 45 reqs, Waiting: 83 reqs, GPU KV cache usage: 17.9%
+(MainProcess pid=208) INFO 10-26 02:45:34 [loggers.py:335] Engine 000: Avg prompt throughput: 13269.4 tokens/s, Avg generation throughput: 97.2 tokens/s, Running: 79 reqs, Waiting: 49 reqs, GPU KV cache usage: 31.3%
+(MainProcess pid=208) INFO 10-26 02:45:45 [loggers.py:335] Engine 000: Avg prompt throughput: 13136.6 tokens/s, Avg generation throughput: 150.7 tokens/s, Running: 113 reqs, Waiting: 15 reqs, GPU KV cache usage: 44.8%
+(MainProcess pid=208) INFO 10-26 02:45:55 [loggers.py:335] Engine 000: Avg prompt throughput: 8073.3 tokens/s, Avg generation throughput: 1311.3 tokens/s, Running: 5 reqs, Waiting: 123 reqs, GPU KV cache usage: 2.0%
+(MainProcess pid=208) INFO 10-26 02:46:05 [loggers.py:335] Engine 000: Avg prompt throughput: 13444.0 tokens/s, Avg generation throughput: 32.8 tokens/s, Running: 39 reqs, Waiting: 89 reqs, GPU KV cache usage: 15.5%
+(MainProcess pid=208) INFO 10-26 02:46:16 [loggers.py:335] Engine 000: Avg prompt throughput: 13298.2 tokens/s, Avg generation throughput: 87.7 tokens/s, Running: 73 reqs, Waiting: 55 reqs, GPU KV cache usage: 29.0%
+(MainProcess pid=208) INFO 10-26 02:46:27 [loggers.py:335] Engine 000: Avg prompt throughput: 13155.9 tokens/s, Avg generation throughput: 141.3 tokens/s, Running: 107 reqs, Waiting: 21 reqs, GPU KV cache usage: 42.4%
+(MainProcess pid=208) INFO 10-26 02:46:37 [loggers.py:335] Engine 000: Avg prompt throughput: 9809.8 tokens/s, Avg generation throughput: 1098.1 tokens/s, Running: 128 reqs, Waiting: 0 reqs, GPU KV cache usage: 52.1%
+{"ctx": 4096, "batch": 128, "t_L_s": [43.240825599000004, 43.409892756999966, 43.449035544000026], "t_2L_s": [47.66268740099997, 47.73427608700001, 47.75959073199999], "tpot_pure_ms": 33.78424476562536, "samples_ms": [34.54579532812474, 33.78424476562536, 33.67621240624974], "kv_limited": false}
+(MainProcess pid=208) INFO 10-26 02:46:42 [utils.py:628] [shutdown] Process manager: send sigterm to process EngineCore
+(EngineCore pid=240) INFO 10-26 02:46:42 [core.py:1454] [shutdown] EngineCore: trigger received signal=SIGTERM
+(EngineCore pid=240) INFO 10-26 02:46:42 [core.py:1635] [shutdown] EngineCore: start mode=abort timeout=0s
+(EngineCore pid=240) INFO 10-26 02:46:42 [core.py:1666] [shutdown] EngineCore: request processing complete; starting resource teardown
+(EngineCore pid=240) INFO 10-26 02:46:42 [core.py:1499] [shutdown] EngineCore: exiting busy loop
++ python3 scripts/bench_e2e.py --pure --repeat 3 --label ours_int8 --points '1024:128;4096:128' --env KVQ_SCALES=/cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors --env KVQ_KERNEL=triton --env KVQ_CFG=B_channel_smooth --llm '{"kv_cache_dtype":"int8_static","attention_config":{"backend":"CUSTOM"}}'
+(MainProcess pid=393) INFO 10-26 02:47:02 [api_utils.py:286] non-default args: {'kv_cache_dtype': 'int8_static', 'max_model_len': 32768, 'enable_prefix_caching': False, 'gpu_memory_utilization': 0.9, 'max_num_seqs': 256, 'attention_config': AttentionConfig(backend=<AttentionBackendEnum.CUSTOM: None>, minimax_m3_msa_decode_backend='triton', backend_per_kind={}, flash_attn_version=None, flash_attn_max_num_splits_for_cuda_graph=32, tokenspeed_mla_min_split_kv=1, tq_max_kv_splits_for_cuda_graph=32, use_trtllm_attention=None, disable_flashinfer_q_quantization=False, mla_prefill_backend=None, use_prefill_query_quantization=False, indexer_kv_dtype='auto', indexer_sparse_logits=False, hisparse_config=None, use_non_causal=False, sparse_mla_force_mqa=False, sparse_mla_prefill_workspace_factor=None, flex_attn_block_m=None, flex_attn_block_n=None, flex_attn_q_block_size=None, flex_attn_kv_block_size=None), 'model': 'Qwen/Qwen2.5-7B-Instruct'}
+(MainProcess pid=393) INFO 10-26 02:47:03 [model.py:733] Resolved architecture: Qwen2ForCausalLM
+(MainProcess pid=393) INFO 10-26 02:47:03 [model.py:2152] Using max model len 32768
+(MainProcess pid=393) INFO 10-26 02:47:03 [scheduler.py:307] Chunked prefill is enabled with max_num_batched_tokens=8192.
+(MainProcess pid=393) INFO 10-26 02:47:03 [kernel.py:467] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'], gelu_and_mul_sparse=['triton', 'native'])
+
+Fetching 10 files:   0%|          | 0/10 [00:00<?, ?it/s]
+Fetching 10 files: 100%|██████████| 10/10 [00:00<00:00, 712.21it/s]
+(EngineCore pid=427) INFO 10-26 02:47:06 [core.py:133] Initializing a V1 LLM engine (v0.32.0) with config: model='Qwen/Qwen2.5-7B-Instruct', speculative_config=None, tokenizer='Qwen/Qwen2.5-7B-Instruct', skip_tokenizer_init=False, tokenizer_mode=auto, revision=main, tokenizer_revision=main, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=32768, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=None, quantization_config=None, enforce_eager=False, aux_output_config=AuxOutputConfig(enable_return_routed_experts=False, max_bytes=None), kv_cache_dtype=int8_static, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, per_request_spec_decode_metrics='none', kv_cache_metrics=False, kv_cache_metrics_sample=0.01, custom_histogram_buckets=None, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False, jit_monitor_mode='warn', jit_monitor_verbose=False), seed=0, served_model_name=Qwen/Qwen2.5-7B-Instruct, enable_prefix_caching=False, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.VLLM_COMPILE: 3>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['none'], 'ir_enable_torch_wrap': True, 'splitting_ops': ['vllm::unified_attention_with_output', 'vllm::unified_mla_attention_with_output', 'vllm::mamba_mixer2', 'vllm::mamba_mixer', 'vllm::short_conv', 'vllm::qwen4_exp_ple_short_conv', 'vllm::qwen4_exp_qsa_with_output', 'vllm::qwen4_exp_qsa_prepare_with_output', 'vllm::linear_attention', 'vllm::qwen_gdn_attention_core', 'vllm::qwen_gdn_attention_core_fused_norm_packed', 'vllm::gdn_attention_core_xpu', 'vllm::olmo_hybrid_gdn_full_forward', 'vllm::sparse_attn_indexer', 'vllm::rocm_aiter_sparse_attn_indexer', 'vllm::deepseek_v4_attention', 'vllm::hpc_rope_norm_forward', 'vllm::unified_kv_cache_update', 'vllm::unified_mla_kv_cache_update'], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'cudagraph_decoder_replay': True, 'decoder_replay_cudagraph_capture_sizes': [], 'decoder_replay_trim_threshold': 768, 'compile_sizes': [], 'compile_ranges_endpoints': [8192], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.FULL_AND_PIECEWISE: (2, 1)>, 'cudagraph_num_of_warmups': 1, 'cudagraph_capture_sizes': [1, 2, 4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232, 240, 248, 256, 272, 288, 304, 320, 336, 352, 368, 384, 400, 416, 432, 448, 464, 480, 496, 512], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': False, 'fuse_act_quant': False, 'fuse_attn_quant': False, 'fuse_allreduce_rms': False, 'enable_qk_norm_rope_fusion': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False, 'fuse_qk_norm_rope_kvcache': False}, 'max_cudagraph_capture_size': 512, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': False, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'], gelu_and_mul_sparse=['triton', 'native']), enable_flashinfer_autotune=True, enable_rocm_segmented_attn_autotune=False, enable_cutedsl_warmup=True, enable_jit_warmup=True, moe_backend='auto', sparse_indexer_topk_backend='auto', linear_backend='auto', linear_backend_per_quant=None)
+(EngineCore pid=427) INFO 10-26 02:47:09 [parallel_state.py:1906] world_size=1 rank=0 local_rank=0 distributed_init_method=file:///tmp/vllm_dist_dc5f53e054704520903673ca6facba1f backend=nccl
+(EngineCore pid=427) INFO 10-26 02:47:09 [parallel_state.py:2350] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, ETP rank 0, EP rank N/A, EPLB rank N/A
+(EngineCore pid=427) INFO 10-26 02:47:09 [gpu_worker.py:518] Using V2 Model Runner
+(EngineCore pid=427) INFO 10-26 02:47:10 [model_runner.py:392] Loading model from scratch...
+(EngineCore pid=427) INFO 10-26 02:47:10 [cuda.py:446] Using AttentionBackendEnum.CUSTOM backend.
+(EngineCore pid=427) INFO 10-26 02:47:12 [base_loader.py:82] Initializing model took 2.434877 seconds
+(EngineCore pid=427) INFO 10-26 02:47:13 [weight_utils.py:1108] Filesystem type for checkpoints: 9P. Checkpoint size: 14.19 GiB. Available RAM: 772.22 GiB.
+(EngineCore pid=427) INFO 10-26 02:47:13 [weight_utils.py:1131] Auto-prefetch is disabled because the filesystem (9P) is not a recognized network FS (NFS/Lustre). If you want to force prefetching, start vLLM with --safetensors-load-strategy=prefetch.
+
+Loading safetensors checkpoint shards:   0% Completed | 0/4 [00:00<?, ?it/s]
+
+Loading safetensors checkpoint shards:  25% Completed | 1/4 [00:01<00:03,  1.10s/it]
+
+Loading safetensors checkpoint shards:  50% Completed | 2/4 [00:02<00:03,  1.50s/it]
+
+Loading safetensors checkpoint shards:  75% Completed | 3/4 [00:04<00:01,  1.60s/it]
+
+Loading safetensors checkpoint shards: 100% Completed | 4/4 [00:06<00:00,  1.76s/it]
+
+Loading safetensors checkpoint shards: 100% Completed | 4/4 [00:06<00:00,  1.65s/it]
+
+(EngineCore pid=427) INFO 10-26 02:47:20 [default_loader.py:501] Loading weights took 6.73 seconds
+(EngineCore pid=427) INFO 10-26 02:47:22 [model_runner.py:424] Model loading took 14.29 GiB memory and 12.609578 seconds
+(EngineCore pid=427) INFO 10-26 02:47:22 [topk_topp_sampler.py:124] Using FlashInfer for top-p & top-k sampling.
+(EngineCore pid=427) WARNING 10-26 02:47:22 [torch_utils.py:284] OMP_NUM_THREADS=8 is set; leaving Torch threads at 8 for serving. Multi-threaded torch CPU ops during serving can degrade performance through spin-wait contention and cgroup CPU-quota throttling.
+(EngineCore pid=427) INFO 10-26 02:47:22 [utils.py:347] Using LBNHC KV cache layout.
+(EngineCore pid=427) INFO 10-26 02:47:24 [monitor.py:40] [backbone] Starting torch.compile
+(EngineCore pid=427) INFO 10-26 02:47:34 [backends.py:1104] [backbone] Using cache directory: /root/.cache/vllm/torch_compile_cache/8735953a2b/rank_0_0/backbone for vLLM's torch.compile
+(EngineCore pid=427) INFO 10-26 02:47:34 [backends.py:1166] [backbone] Dynamo bytecode transform time: 9.24 s
+(EngineCore pid=427) INFO 10-26 02:47:42 [backends.py:398] [backbone] Compiling a graph for compile range (1, 8192) takes 7.68 s
+(EngineCore pid=427) INFO 10-26 02:47:47 [backends.py:927] collected artifacts: 29 entries, 3 artifacts, 4813159 bytes total
+(EngineCore pid=427) INFO 10-26 02:47:47 [decorators.py:743] [backbone] saved AOT compiled function to /root/.cache/vllm/torch_compile_cache/torch_aot_compile/582ef4ab7eed4b8a1defc1bbe43d7c5e6c6d0d499a2b0999daf03b59f4fe61f4/rank_0_0/model
+(EngineCore pid=427) INFO 10-26 02:47:47 [monitor.py:62] [backbone] torch.compile took 23.00 s in total
+(EngineCore pid=427) INFO 10-26 02:47:48 [monitor.py:91] [backbone] Initial profiling/warmup run took 0.17 s
+(EngineCore pid=427) INFO 10-26 02:47:50 [backend.py:86] kvq: static INT8 scales for 28 layers from /cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors (tp 0/1, cfg B_channel_smooth, kernel triton)
+
+Capturing CUDA graphs (PIECEWISE):   0%|          | 0/51 [00:00<?, ?it/s]
+Capturing CUDA graphs (PIECEWISE):   2%|▏         | 1/51 [00:00<00:43,  1.14it/s]
+Capturing CUDA graphs (PIECEWISE):   6%|▌         | 3/51 [00:00<00:12,  3.72it/s]
+Capturing CUDA graphs (PIECEWISE):  10%|▉         | 5/51 [00:01<00:07,  6.26it/s]
+Capturing CUDA graphs (PIECEWISE):  14%|█▎        | 7/51 [00:01<00:05,  8.56it/s]
+Capturing CUDA graphs (PIECEWISE):  18%|█▊        | 9/51 [00:01<00:03, 10.56it/s]
+Capturing CUDA graphs (PIECEWISE):  22%|██▏       | 11/51 [00:01<00:03, 12.43it/s]
+Capturing CUDA graphs (PIECEWISE):  25%|██▌       | 13/51 [00:01<00:02, 13.98it/s]
+Capturing CUDA graphs (PIECEWISE):  29%|██▉       | 15/51 [00:01<00:02, 15.22it/s]
+Capturing CUDA graphs (PIECEWISE):  33%|███▎      | 17/51 [00:02<00:05,  6.37it/s]
+Capturing CUDA graphs (PIECEWISE):  37%|███▋      | 19/51 [00:03<00:07,  4.55it/s]
+Capturing CUDA graphs (PIECEWISE):  43%|████▎     | 22/51 [00:03<00:04,  6.68it/s]
+Capturing CUDA graphs (PIECEWISE):  49%|████▉     | 25/51 [00:03<00:02,  8.77it/s]
+Capturing CUDA graphs (PIECEWISE):  55%|█████▍    | 28/51 [00:03<00:02, 11.08it/s]
+Capturing CUDA graphs (PIECEWISE):  61%|██████    | 31/51 [00:03<00:01, 13.15it/s]
+Capturing CUDA graphs (PIECEWISE):  67%|██████▋   | 34/51 [00:03<00:01, 15.13it/s]
+Capturing CUDA graphs (PIECEWISE):  73%|███████▎  | 37/51 [00:03<00:00, 16.90it/s]
+Capturing CUDA graphs (PIECEWISE):  78%|███████▊  | 40/51 [00:04<00:00, 18.09it/s]
+Capturing CUDA graphs (PIECEWISE):  84%|████████▍ | 43/51 [00:04<00:00, 19.19it/s]
+Capturing CUDA graphs (PIECEWISE):  90%|█████████ | 46/51 [00:05<00:00,  5.06it/s]
+Capturing CUDA graphs (PIECEWISE):  96%|█████████▌| 49/51 [00:05<00:00,  6.60it/s]
+Capturing CUDA graphs (PIECEWISE): 100%|██████████| 51/51 [00:06<00:00,  4.95it/s]
+Capturing CUDA graphs (PIECEWISE): 100%|██████████| 51/51 [00:06<00:00,  7.64it/s]
+
+Capturing CUDA graphs (FULL):   0%|          | 0/2 [00:00<?, ?it/s]
+Capturing CUDA graphs (FULL): 100%|██████████| 2/2 [00:00<00:00, 27.07it/s]
+(EngineCore pid=427) INFO 10-26 02:47:58 [model_runner.py:1127] Graph capturing finished in 8 secs, took 0.33 GiB
+(EngineCore pid=427) INFO 10-26 02:47:58 [gpu_worker.py:759] Available KV cache memory: 55.25 GiB
+(EngineCore pid=427) INFO 10-26 02:47:58 [gpu_worker.py:774] CUDA graph memory profiling is enabled (default since v0.21.0). The current --gpu-memory-utilization=0.9000 is equivalent to --gpu-memory-utilization=0.8950 without CUDA graph memory profiling. To maintain the same effective KV cache size as before, increase --gpu-memory-utilization to 0.9050. To disable, set VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=0.
+(EngineCore pid=427) INFO 10-26 02:47:58 [kv_cache_utils.py:2327] GPU KV cache size: 2,068,896 tokens, Maximum concurrency for 32,768 tokens per request: 63.14x
+(EngineCore pid=427) INFO 10-26 02:47:58 [backend.py:86] kvq: static INT8 scales for 28 layers from /cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors (tp 0/1, cfg B_channel_smooth, kernel triton)
+(EngineCore pid=427) INFO 10-26 02:47:59 [kernel_warmup.py:176] JIT kernel warmup starting.
+(EngineCore pid=427) INFO 10-26 02:47:59 [kernel_warmup.py:189] JIT kernel warmup finished in 0.00s.
+
+Capturing CUDA graphs (PIECEWISE):   0%|          | 0/51 [00:00<?, ?it/s]
+Capturing CUDA graphs (PIECEWISE):   4%|▍         | 2/51 [00:00<00:03, 14.71it/s]
+Capturing CUDA graphs (PIECEWISE):   8%|▊         | 4/51 [00:00<00:03, 15.53it/s]
+Capturing CUDA graphs (PIECEWISE):  12%|█▏        | 6/51 [00:00<00:02, 16.09it/s]
+Capturing CUDA graphs (PIECEWISE):  16%|█▌        | 8/51 [00:00<00:02, 16.40it/s]
+Capturing CUDA graphs (PIECEWISE):  20%|█▉        | 10/51 [00:00<00:02, 16.96it/s]
+Capturing CUDA graphs (PIECEWISE):  24%|██▎       | 12/51 [00:00<00:02, 17.47it/s]
+Capturing CUDA graphs (PIECEWISE):  27%|██▋       | 14/51 [00:00<00:02, 17.89it/s]
+Capturing CUDA graphs (PIECEWISE):  31%|███▏      | 16/51 [00:00<00:01, 18.22it/s]
+Capturing CUDA graphs (PIECEWISE):  37%|███▋      | 19/51 [00:01<00:01, 19.38it/s]
+Capturing CUDA graphs (PIECEWISE):  43%|████▎     | 22/51 [00:01<00:01, 20.15it/s]
+Capturing CUDA graphs (PIECEWISE):  49%|████▉     | 25/51 [00:01<00:01, 20.64it/s]
+Capturing CUDA graphs (PIECEWISE):  55%|█████▍    | 28/51 [00:01<00:01, 21.12it/s]
+Capturing CUDA graphs (PIECEWISE):  61%|██████    | 31/51 [00:01<00:00, 21.42it/s]
+Capturing CUDA graphs (PIECEWISE):  67%|██████▋   | 34/51 [00:01<00:00, 21.04it/s]
+Capturing CUDA graphs (PIECEWISE):  73%|███████▎  | 37/51 [00:01<00:00, 20.75it/s]
+Capturing CUDA graphs (PIECEWISE):  78%|███████▊  | 40/51 [00:02<00:00, 20.52it/s]
+Capturing CUDA graphs (PIECEWISE):  84%|████████▍ | 43/51 [00:02<00:00, 20.67it/s]
+Capturing CUDA graphs (PIECEWISE):  90%|█████████ | 46/51 [00:02<00:00, 20.50it/s]
+Capturing CUDA graphs (PIECEWISE):  96%|█████████▌| 49/51 [00:02<00:00, 20.31it/s]
+Capturing CUDA graphs (PIECEWISE): 100%|██████████| 51/51 [00:02<00:00, 19.59it/s]
+
+Capturing CUDA graphs (FULL):   0%|          | 0/35 [00:00<?, ?it/s]
+Capturing CUDA graphs (FULL):   9%|▊         | 3/35 [00:00<00:01, 21.19it/s]
+Capturing CUDA graphs (FULL):  17%|█▋        | 6/35 [00:00<00:01, 20.81it/s]
+Capturing CUDA graphs (FULL):  26%|██▌       | 9/35 [00:00<00:01, 20.63it/s]
+Capturing CUDA graphs (FULL):  34%|███▍      | 12/35 [00:00<00:01, 20.95it/s]
+Capturing CUDA graphs (FULL):  43%|████▎     | 15/35 [00:00<00:01, 18.78it/s]
+Capturing CUDA graphs (FULL):  51%|█████▏    | 18/35 [00:00<00:00, 19.65it/s]
+Capturing CUDA graphs (FULL):  60%|██████    | 21/35 [00:01<00:00, 20.41it/s]
+Capturing CUDA graphs (FULL):  69%|██████▊   | 24/35 [00:01<00:00, 21.09it/s]
+Capturing CUDA graphs (FULL):  77%|███████▋  | 27/35 [00:01<00:00, 21.51it/s]
+Capturing CUDA graphs (FULL):  86%|████████▌ | 30/35 [00:01<00:00, 21.36it/s]
+Capturing CUDA graphs (FULL):  94%|█████████▍| 33/35 [00:01<00:00, 21.35it/s]
+Capturing CUDA graphs (FULL): 100%|██████████| 35/35 [00:01<00:00, 20.88it/s]
+(EngineCore pid=427) INFO 10-26 02:48:07 [model_runner.py:1127] Graph capturing finished in 6 secs, took 0.22 GiB
+(EngineCore pid=427) INFO 10-26 02:48:07 [gpu_worker.py:971] CUDA graph pool memory: 0.22 GiB (actual), 0.4 GiB (estimated), difference: 0.18 GiB (83.8%).
+(EngineCore pid=427) INFO 10-26 02:48:07 [gpu_worker.py:1034] Free memory on device (78.86/79.27 GiB) on startup. Desired GPU memory utilization is (0.9, 71.35 GiB). Actual usage is 14.58 GiB for consumed memory (weights + non-torch), 1.52 GiB for peak activation, and 0.22 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=58929532416` (54.88 GiB) to fit into requested memory, or `--kv-cache-memory=66995899904` (62.39 GiB) to fully utilize gpu memory. Current kv cache memory in use is 55.25 GiB.
+(EngineCore pid=427) INFO 10-26 02:48:09 [jit_monitor.py:84] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(EngineCore pid=427) INFO 10-26 02:48:09 [core.py:395] init engine (profile, create kv cache, warmup model) took 46.93 s (compilation: 23.00 s)
+(EngineCore pid=427) WARNING 10-26 02:48:09 [serial_utils.py:78] Allowing insecure serialization using pickle due to VLLM_ALLOW_INSECURE_SERIALIZATION=1
+(EngineCore pid=427) INFO 10-26 02:48:09 [kernel.py:467] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'], gelu_and_mul_sparse=['triton', 'native'])
+(MainProcess pid=393) WARNING 10-26 02:48:09 [serial_utils.py:78] Allowing insecure serialization using pickle due to VLLM_ALLOW_INSECURE_SERIALIZATION=1
+(MainProcess pid=393) INFO 10-26 02:48:10 [hf.py:648] Detected the chat template content format to be 'string'. You can set `--chat-template-content-format` to override this.
+(EngineCore pid=427) WARNING 10-26 02:48:11 [jit_monitor.py:140] Triton kernel JIT compilation during inference: _attn_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+(MainProcess pid=393) INFO 10-26 02:48:22 [loggers.py:335] Engine 000: Avg prompt throughput: 11157.0 tokens/s, Avg generation throughput: 23.6 tokens/s, Running: 17 reqs, Waiting: 111 reqs, GPU KV cache usage: 0.8%
+(MainProcess pid=393) INFO 10-26 02:48:32 [loggers.py:335] Engine 000: Avg prompt throughput: 12276.0 tokens/s, Avg generation throughput: 1373.9 tokens/s, Running: 128 reqs, Waiting: 0 reqs, GPU KV cache usage: 7.0%
+(MainProcess pid=393) INFO 10-26 02:48:42 [loggers.py:335] Engine 000: Avg prompt throughput: 13101.2 tokens/s, Avg generation throughput: 831.6 tokens/s, Running: 128 reqs, Waiting: 0 reqs, GPU KV cache usage: 6.7%
+(MainProcess pid=393) INFO 10-26 02:48:52 [loggers.py:335] Engine 000: Avg prompt throughput: 8852.7 tokens/s, Avg generation throughput: 2711.5 tokens/s, Running: 97 reqs, Waiting: 31 reqs, GPU KV cache usage: 4.8%
+(MainProcess pid=393) INFO 10-26 02:49:02 [loggers.py:335] Engine 000: Avg prompt throughput: 11344.6 tokens/s, Avg generation throughput: 1604.0 tokens/s, Running: 81 reqs, Waiting: 47 reqs, GPU KV cache usage: 4.0%
+(MainProcess pid=393) INFO 10-26 02:49:13 [loggers.py:335] Engine 000: Avg prompt throughput: 7912.1 tokens/s, Avg generation throughput: 3134.7 tokens/s, Running: 33 reqs, Waiting: 95 reqs, GPU KV cache usage: 1.6%
+(MainProcess pid=393) INFO 10-26 02:49:23 [loggers.py:335] Engine 000: Avg prompt throughput: 11263.0 tokens/s, Avg generation throughput: 1605.1 tokens/s, Running: 17 reqs, Waiting: 111 reqs, GPU KV cache usage: 0.8%
+(MainProcess pid=393) INFO 10-26 02:49:33 [loggers.py:335] Engine 000: Avg prompt throughput: 12274.1 tokens/s, Avg generation throughput: 1258.6 tokens/s, Running: 128 reqs, Waiting: 0 reqs, GPU KV cache usage: 7.0%
+{"ctx": 1024, "batch": 128, "t_L_s": [11.111582935999877, 11.206400735999978, 11.28572506899991], "t_2L_s": [13.566385757000035, 13.655680777000043, 13.720450722999885], "tpot_pure_ms": 19.13500032031301, "samples_ms": [19.17814703906373, 19.13500032031301, 19.021294171874814], "kv_limited": false}
+(MainProcess pid=393) INFO 10-26 02:49:43 [loggers.py:335] Engine 000: Avg prompt throughput: 8622.9 tokens/s, Avg generation throughput: 1933.1 tokens/s, Running: 5 reqs, Waiting: 103 reqs, GPU KV cache usage: 1.0%
+(MainProcess pid=393) INFO 10-26 02:49:54 [loggers.py:335] Engine 000: Avg prompt throughput: 13160.5 tokens/s, Avg generation throughput: 6.4 tokens/s, Running: 5 reqs, Waiting: 69 reqs, GPU KV cache usage: 1.0%
+(MainProcess pid=393) INFO 10-26 02:50:04 [loggers.py:335] Engine 000: Avg prompt throughput: 13145.5 tokens/s, Avg generation throughput: 6.4 tokens/s, Running: 5 reqs, Waiting: 35 reqs, GPU KV cache usage: 1.0%
+(MainProcess pid=393) INFO 10-26 02:50:15 [loggers.py:335] Engine 000: Avg prompt throughput: 13137.1 tokens/s, Avg generation throughput: 6.4 tokens/s, Running: 5 reqs, Waiting: 1 reqs, GPU KV cache usage: 1.0%
+(MainProcess pid=393) INFO 10-26 02:50:25 [loggers.py:335] Engine 000: Avg prompt throughput: 12987.3 tokens/s, Avg generation throughput: 21.9 tokens/s, Running: 31 reqs, Waiting: 97 reqs, GPU KV cache usage: 6.1%
+(MainProcess pid=393) INFO 10-26 02:50:35 [loggers.py:335] Engine 000: Avg prompt throughput: 12913.1 tokens/s, Avg generation throughput: 70.9 tokens/s, Running: 63 reqs, Waiting: 65 reqs, GPU KV cache usage: 12.5%
+(MainProcess pid=393) INFO 10-26 02:50:46 [loggers.py:335] Engine 000: Avg prompt throughput: 12749.0 tokens/s, Avg generation throughput: 119.8 tokens/s, Running: 95 reqs, Waiting: 33 reqs, GPU KV cache usage: 18.8%
+(MainProcess pid=393) INFO 10-26 02:50:56 [loggers.py:335] Engine 000: Avg prompt throughput: 12582.5 tokens/s, Avg generation throughput: 167.4 tokens/s, Running: 127 reqs, Waiting: 1 reqs, GPU KV cache usage: 25.2%
+(MainProcess pid=393) INFO 10-26 02:51:06 [loggers.py:335] Engine 000: Avg prompt throughput: 8582.1 tokens/s, Avg generation throughput: 1197.0 tokens/s, Running: 21 reqs, Waiting: 107 reqs, GPU KV cache usage: 4.2%
+(MainProcess pid=393) INFO 10-26 02:51:17 [loggers.py:335] Engine 000: Avg prompt throughput: 12920.8 tokens/s, Avg generation throughput: 55.2 tokens/s, Running: 53 reqs, Waiting: 75 reqs, GPU KV cache usage: 10.5%
+(MainProcess pid=393) INFO 10-26 02:51:27 [loggers.py:335] Engine 000: Avg prompt throughput: 12770.0 tokens/s, Avg generation throughput: 104.4 tokens/s, Running: 85 reqs, Waiting: 43 reqs, GPU KV cache usage: 16.9%
+(MainProcess pid=393) INFO 10-26 02:51:37 [loggers.py:335] Engine 000: Avg prompt throughput: 12609.3 tokens/s, Avg generation throughput: 152.4 tokens/s, Running: 117 reqs, Waiting: 11 reqs, GPU KV cache usage: 23.2%
+(MainProcess pid=393) INFO 10-26 02:51:47 [loggers.py:335] Engine 000: Avg prompt throughput: 5731.4 tokens/s, Avg generation throughput: 2426.5 tokens/s, Running: 128 reqs, Waiting: 0 reqs, GPU KV cache usage: 26.7%
+(MainProcess pid=393) INFO 10-26 02:51:57 [loggers.py:335] Engine 000: Avg prompt throughput: 10493.3 tokens/s, Avg generation throughput: 528.7 tokens/s, Running: 29 reqs, Waiting: 99 reqs, GPU KV cache usage: 5.8%
+(MainProcess pid=393) INFO 10-26 02:52:08 [loggers.py:335] Engine 000: Avg prompt throughput: 12866.7 tokens/s, Avg generation throughput: 67.5 tokens/s, Running: 61 reqs, Waiting: 67 reqs, GPU KV cache usage: 12.1%
+(MainProcess pid=393) INFO 10-26 02:52:18 [loggers.py:335] Engine 000: Avg prompt throughput: 12709.5 tokens/s, Avg generation throughput: 116.4 tokens/s, Running: 93 reqs, Waiting: 35 reqs, GPU KV cache usage: 18.4%
+(MainProcess pid=393) INFO 10-26 02:52:28 [loggers.py:335] Engine 000: Avg prompt throughput: 12553.8 tokens/s, Avg generation throughput: 164.0 tokens/s, Running: 125 reqs, Waiting: 3 reqs, GPU KV cache usage: 24.8%
+(MainProcess pid=393) INFO 10-26 02:52:39 [loggers.py:335] Engine 000: Avg prompt throughput: 8539.9 tokens/s, Avg generation throughput: 1201.1 tokens/s, Running: 19 reqs, Waiting: 109 reqs, GPU KV cache usage: 3.8%
+(MainProcess pid=393) INFO 10-26 02:52:49 [loggers.py:335] Engine 000: Avg prompt throughput: 12892.5 tokens/s, Avg generation throughput: 51.9 tokens/s, Running: 51 reqs, Waiting: 77 reqs, GPU KV cache usage: 10.1%
+(MainProcess pid=393) INFO 10-26 02:52:59 [loggers.py:335] Engine 000: Avg prompt throughput: 12749.8 tokens/s, Avg generation throughput: 101.2 tokens/s, Running: 83 reqs, Waiting: 45 reqs, GPU KV cache usage: 16.5%
+(MainProcess pid=393) INFO 10-26 02:53:10 [loggers.py:335] Engine 000: Avg prompt throughput: 12579.5 tokens/s, Avg generation throughput: 149.0 tokens/s, Running: 115 reqs, Waiting: 13 reqs, GPU KV cache usage: 22.8%
+(MainProcess pid=393) INFO 10-26 02:53:20 [loggers.py:335] Engine 000: Avg prompt throughput: 6546.9 tokens/s, Avg generation throughput: 2142.6 tokens/s, Running: 128 reqs, Waiting: 0 reqs, GPU KV cache usage: 26.6%
+(MainProcess pid=393) INFO 10-26 02:53:30 [loggers.py:335] Engine 000: Avg prompt throughput: 9606.6 tokens/s, Avg generation throughput: 809.5 tokens/s, Running: 27 reqs, Waiting: 101 reqs, GPU KV cache usage: 5.4%
+(MainProcess pid=393) INFO 10-26 02:53:40 [loggers.py:335] Engine 000: Avg prompt throughput: 12896.8 tokens/s, Avg generation throughput: 64.5 tokens/s, Running: 59 reqs, Waiting: 69 reqs, GPU KV cache usage: 11.7%
+(MainProcess pid=393) INFO 10-26 02:53:50 [loggers.py:335] Engine 000: Avg prompt throughput: 12793.1 tokens/s, Avg generation throughput: 114.0 tokens/s, Running: 91 reqs, Waiting: 37 reqs, GPU KV cache usage: 18.1%
+(MainProcess pid=393) INFO 10-26 02:54:01 [loggers.py:335] Engine 000: Avg prompt throughput: 12630.3 tokens/s, Avg generation throughput: 161.9 tokens/s, Running: 123 reqs, Waiting: 5 reqs, GPU KV cache usage: 24.4%
+(MainProcess pid=393) INFO 10-26 02:54:11 [loggers.py:335] Engine 000: Avg prompt throughput: 8556.6 tokens/s, Avg generation throughput: 1213.5 tokens/s, Running: 17 reqs, Waiting: 111 reqs, GPU KV cache usage: 3.4%
+(MainProcess pid=393) INFO 10-26 02:54:21 [loggers.py:335] Engine 000: Avg prompt throughput: 12988.8 tokens/s, Avg generation throughput: 49.2 tokens/s, Running: 49 reqs, Waiting: 79 reqs, GPU KV cache usage: 9.7%
+(MainProcess pid=393) INFO 10-26 02:54:32 [loggers.py:335] Engine 000: Avg prompt throughput: 12832.4 tokens/s, Avg generation throughput: 98.7 tokens/s, Running: 81 reqs, Waiting: 47 reqs, GPU KV cache usage: 16.1%
+(MainProcess pid=393) INFO 10-26 02:54:42 [loggers.py:335] Engine 000: Avg prompt throughput: 12679.9 tokens/s, Avg generation throughput: 147.0 tokens/s, Running: 113 reqs, Waiting: 15 reqs, GPU KV cache usage: 22.4%
+(MainProcess pid=393) INFO 10-26 02:54:52 [loggers.py:335] Engine 000: Avg prompt throughput: 7359.4 tokens/s, Avg generation throughput: 1896.5 tokens/s, Running: 128 reqs, Waiting: 0 reqs, GPU KV cache usage: 26.5%
+{"ctx": 4096, "batch": 128, "t_L_s": [44.48774232799997, 44.65418652299991, 44.528238396000006], "t_2L_s": [48.40464814400002, 48.561211276999984, 48.27912107700013], "tpot_pure_ms": 30.523630890625597, "samples_ms": [30.600826687500415, 30.523630890625597, 29.303770945313445], "kv_limited": false}
+(MainProcess pid=393) INFO 10-26 02:54:55 [utils.py:628] [shutdown] Process manager: send sigterm to process EngineCore
+(EngineCore pid=427) INFO 10-26 02:54:55 [core.py:1454] [shutdown] EngineCore: trigger received signal=SIGTERM
+(EngineCore pid=427) INFO 10-26 02:54:55 [core.py:1635] [shutdown] EngineCore: start mode=abort timeout=0s
+(EngineCore pid=427) INFO 10-26 02:54:55 [core.py:1666] [shutdown] EngineCore: request processing complete; starting resource teardown
+(EngineCore pid=427) INFO 10-26 02:54:55 [core.py:1499] [shutdown] EngineCore: exiting busy loop
++ python3 scripts/bench_e2e.py --pure --repeat 3 --label ours_int8_cuda --points '1024:128;4096:128' --env KVQ_SCALES=/cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors --env KVQ_KERNEL=cuda --env KVQ_CFG=B_channel_smooth --llm '{"kv_cache_dtype":"int8_static","attention_config":{"backend":"CUSTOM"}}'
+(MainProcess pid=581) INFO 10-26 02:55:16 [api_utils.py:286] non-default args: {'kv_cache_dtype': 'int8_static', 'max_model_len': 32768, 'enable_prefix_caching': False, 'gpu_memory_utilization': 0.9, 'max_num_seqs': 256, 'attention_config': AttentionConfig(backend=<AttentionBackendEnum.CUSTOM: None>, minimax_m3_msa_decode_backend='triton', backend_per_kind={}, flash_attn_version=None, flash_attn_max_num_splits_for_cuda_graph=32, tokenspeed_mla_min_split_kv=1, tq_max_kv_splits_for_cuda_graph=32, use_trtllm_attention=None, disable_flashinfer_q_quantization=False, mla_prefill_backend=None, use_prefill_query_quantization=False, indexer_kv_dtype='auto', indexer_sparse_logits=False, hisparse_config=None, use_non_causal=False, sparse_mla_force_mqa=False, sparse_mla_prefill_workspace_factor=None, flex_attn_block_m=None, flex_attn_block_n=None, flex_attn_q_block_size=None, flex_attn_kv_block_size=None), 'model': 'Qwen/Qwen2.5-7B-Instruct'}
+(MainProcess pid=581) INFO 10-26 02:55:16 [model.py:733] Resolved architecture: Qwen2ForCausalLM
+(MainProcess pid=581) INFO 10-26 02:55:16 [model.py:2152] Using max model len 32768
+(MainProcess pid=581) INFO 10-26 02:55:16 [scheduler.py:307] Chunked prefill is enabled with max_num_batched_tokens=8192.
+(MainProcess pid=581) INFO 10-26 02:55:16 [kernel.py:467] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'], gelu_and_mul_sparse=['triton', 'native'])
+
+Fetching 10 files:   0%|          | 0/10 [00:00<?, ?it/s]
+Fetching 10 files: 100%|██████████| 10/10 [00:00<00:00, 692.18it/s]
+(EngineCore pid=614) INFO 10-26 02:55:20 [core.py:133] Initializing a V1 LLM engine (v0.32.0) with config: model='Qwen/Qwen2.5-7B-Instruct', speculative_config=None, tokenizer='Qwen/Qwen2.5-7B-Instruct', skip_tokenizer_init=False, tokenizer_mode=auto, revision=main, tokenizer_revision=main, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=32768, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=None, quantization_config=None, enforce_eager=False, aux_output_config=AuxOutputConfig(enable_return_routed_experts=False, max_bytes=None), kv_cache_dtype=int8_static, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, per_request_spec_decode_metrics='none', kv_cache_metrics=False, kv_cache_metrics_sample=0.01, custom_histogram_buckets=None, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False, jit_monitor_mode='warn', jit_monitor_verbose=False), seed=0, served_model_name=Qwen/Qwen2.5-7B-Instruct, enable_prefix_caching=False, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.VLLM_COMPILE: 3>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['none'], 'ir_enable_torch_wrap': True, 'splitting_ops': ['vllm::unified_attention_with_output', 'vllm::unified_mla_attention_with_output', 'vllm::mamba_mixer2', 'vllm::mamba_mixer', 'vllm::short_conv', 'vllm::qwen4_exp_ple_short_conv', 'vllm::qwen4_exp_qsa_with_output', 'vllm::qwen4_exp_qsa_prepare_with_output', 'vllm::linear_attention', 'vllm::qwen_gdn_attention_core', 'vllm::qwen_gdn_attention_core_fused_norm_packed', 'vllm::gdn_attention_core_xpu', 'vllm::olmo_hybrid_gdn_full_forward', 'vllm::sparse_attn_indexer', 'vllm::rocm_aiter_sparse_attn_indexer', 'vllm::deepseek_v4_attention', 'vllm::hpc_rope_norm_forward', 'vllm::unified_kv_cache_update', 'vllm::unified_mla_kv_cache_update'], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'cudagraph_decoder_replay': True, 'decoder_replay_cudagraph_capture_sizes': [], 'decoder_replay_trim_threshold': 768, 'compile_sizes': [], 'compile_ranges_endpoints': [8192], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.FULL_AND_PIECEWISE: (2, 1)>, 'cudagraph_num_of_warmups': 1, 'cudagraph_capture_sizes': [1, 2, 4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232, 240, 248, 256, 272, 288, 304, 320, 336, 352, 368, 384, 400, 416, 432, 448, 464, 480, 496, 512], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': False, 'fuse_act_quant': False, 'fuse_attn_quant': False, 'fuse_allreduce_rms': False, 'enable_qk_norm_rope_fusion': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False, 'fuse_qk_norm_rope_kvcache': False}, 'max_cudagraph_capture_size': 512, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': False, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'], gelu_and_mul_sparse=['triton', 'native']), enable_flashinfer_autotune=True, enable_rocm_segmented_attn_autotune=False, enable_cutedsl_warmup=True, enable_jit_warmup=True, moe_backend='auto', sparse_indexer_topk_backend='auto', linear_backend='auto', linear_backend_per_quant=None)
+(EngineCore pid=614) INFO 10-26 02:55:23 [parallel_state.py:1906] world_size=1 rank=0 local_rank=0 distributed_init_method=file:///tmp/vllm_dist_a8d846b115e84e2db3ea0bad6e6b5189 backend=nccl
+(EngineCore pid=614) INFO 10-26 02:55:23 [parallel_state.py:2350] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, ETP rank 0, EP rank N/A, EPLB rank N/A
+(EngineCore pid=614) INFO 10-26 02:55:23 [gpu_worker.py:518] Using V2 Model Runner
+(EngineCore pid=614) INFO 10-26 02:55:24 [model_runner.py:392] Loading model from scratch...
+(EngineCore pid=614) INFO 10-26 02:55:24 [cuda.py:446] Using AttentionBackendEnum.CUSTOM backend.
+(EngineCore pid=614) INFO 10-26 02:56:35 [base_loader.py:82] Initializing model took 70.741697 seconds
+(EngineCore pid=614) INFO 10-26 02:56:36 [weight_utils.py:1108] Filesystem type for checkpoints: 9P. Checkpoint size: 14.19 GiB. Available RAM: 773.12 GiB.
+(EngineCore pid=614) INFO 10-26 02:56:36 [weight_utils.py:1131] Auto-prefetch is disabled because the filesystem (9P) is not a recognized network FS (NFS/Lustre). If you want to force prefetching, start vLLM with --safetensors-load-strategy=prefetch.
+
+Loading safetensors checkpoint shards:   0% Completed | 0/4 [00:00<?, ?it/s]
+
+Loading safetensors checkpoint shards:  25% Completed | 1/4 [00:02<00:06,  2.03s/it]
+
+Loading safetensors checkpoint shards:  50% Completed | 2/4 [00:03<00:03,  1.60s/it]
+
+Loading safetensors checkpoint shards:  75% Completed | 3/4 [00:05<00:01,  1.86s/it]
+
+Loading safetensors checkpoint shards: 100% Completed | 4/4 [00:07<00:00,  1.75s/it]
+
+Loading safetensors checkpoint shards: 100% Completed | 4/4 [00:07<00:00,  1.77s/it]
+
+(EngineCore pid=614) INFO 10-26 02:56:43 [default_loader.py:501] Loading weights took 7.20 seconds
+(EngineCore pid=614) INFO 10-26 02:56:45 [model_runner.py:424] Model loading took 14.29 GiB memory and 81.567864 seconds
+(EngineCore pid=614) INFO 10-26 02:56:45 [topk_topp_sampler.py:124] Using FlashInfer for top-p & top-k sampling.
+(EngineCore pid=614) WARNING 10-26 02:56:45 [torch_utils.py:284] OMP_NUM_THREADS=8 is set; leaving Torch threads at 8 for serving. Multi-threaded torch CPU ops during serving can degrade performance through spin-wait contention and cgroup CPU-quota throttling.
+(EngineCore pid=614) INFO 10-26 02:56:45 [utils.py:347] Using LBNHC KV cache layout.
+(EngineCore pid=614) INFO 10-26 02:56:47 [caching.py:342] reconstructed serializable fn from standalone compile artifacts. num_artifacts=3 num_submods=29
+(EngineCore pid=614) INFO 10-26 02:56:47 [decorators.py:319] [backbone] Directly load AOT compilation from path /root/.cache/vllm/torch_compile_cache/torch_aot_compile/582ef4ab7eed4b8a1defc1bbe43d7c5e6c6d0d499a2b0999daf03b59f4fe61f4/rank_0_0/model
+(EngineCore pid=614) INFO 10-26 02:56:47 [monitor.py:62] [backbone] torch.compile took 0.33 s in total
+(EngineCore pid=614) INFO 10-26 02:56:48 [monitor.py:91] [backbone] Initial profiling/warmup run took 0.20 s
+(EngineCore pid=614) INFO 10-26 02:56:50 [backend.py:86] kvq: static INT8 scales for 28 layers from /cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors (tp 0/1, cfg B_channel_smooth, kernel cuda)
+
+Capturing CUDA graphs (PIECEWISE):   0%|          | 0/51 [00:00<?, ?it/s]
+Capturing CUDA graphs (PIECEWISE):   4%|▍         | 2/51 [00:00<00:03, 14.38it/s]
+Capturing CUDA graphs (PIECEWISE):   8%|▊         | 4/51 [00:00<00:02, 15.80it/s]
+Capturing CUDA graphs (PIECEWISE):  12%|█▏        | 6/51 [00:00<00:02, 16.29it/s]
+Capturing CUDA graphs (PIECEWISE):  16%|█▌        | 8/51 [00:00<00:02, 16.62it/s]
+Capturing CUDA graphs (PIECEWISE):  20%|█▉        | 10/51 [00:00<00:02, 17.29it/s]
+Capturing CUDA graphs (PIECEWISE):  24%|██▎       | 12/51 [00:00<00:02, 17.84it/s]
+Capturing CUDA graphs (PIECEWISE):  27%|██▋       | 14/51 [00:00<00:02, 18.22it/s]
+Capturing CUDA graphs (PIECEWISE):  31%|███▏      | 16/51 [00:00<00:01, 18.55it/s]
+Capturing CUDA graphs (PIECEWISE):  37%|███▋      | 19/51 [00:01<00:01, 20.18it/s]
+Capturing CUDA graphs (PIECEWISE):  43%|████▎     | 22/51 [00:01<00:01, 21.23it/s]
+Capturing CUDA graphs (PIECEWISE):  49%|████▉     | 25/51 [00:01<00:01, 21.11it/s]
+Capturing CUDA graphs (PIECEWISE):  55%|█████▍    | 28/51 [00:01<00:01, 21.97it/s]
+Capturing CUDA graphs (PIECEWISE):  61%|██████    | 31/51 [00:01<00:00, 22.34it/s]
+Capturing CUDA graphs (PIECEWISE):  67%|██████▋   | 34/51 [00:01<00:00, 23.17it/s]
+Capturing CUDA graphs (PIECEWISE):  73%|███████▎  | 37/51 [00:01<00:00, 23.83it/s]
+Capturing CUDA graphs (PIECEWISE):  78%|███████▊  | 40/51 [00:01<00:00, 24.40it/s]
+Capturing CUDA graphs (PIECEWISE):  84%|████████▍ | 43/51 [00:02<00:00, 25.28it/s]
+Capturing CUDA graphs (PIECEWISE):  90%|█████████ | 46/51 [00:02<00:00, 25.90it/s]
+Capturing CUDA graphs (PIECEWISE):  96%|█████████▌| 49/51 [00:02<00:00, 24.71it/s]
+Capturing CUDA graphs (PIECEWISE): 100%|██████████| 51/51 [00:02<00:00, 21.71it/s]
+
+Capturing CUDA graphs (FULL):   0%|          | 0/2 [00:00<?, ?it/s]
+Capturing CUDA graphs (FULL): 100%|██████████| 2/2 [00:00<00:00, 29.60it/s]
+(EngineCore pid=614) INFO 10-26 02:56:54 [model_runner.py:1127] Graph capturing finished in 4 secs, took 0.33 GiB
+(EngineCore pid=614) INFO 10-26 02:56:54 [gpu_worker.py:759] Available KV cache memory: 55.32 GiB
+(EngineCore pid=614) INFO 10-26 02:56:54 [gpu_worker.py:774] CUDA graph memory profiling is enabled (default since v0.21.0). The current --gpu-memory-utilization=0.9000 is equivalent to --gpu-memory-utilization=0.8950 without CUDA graph memory profiling. To maintain the same effective KV cache size as before, increase --gpu-memory-utilization to 0.9050. To disable, set VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=0.
+(EngineCore pid=614) INFO 10-26 02:56:54 [kv_cache_utils.py:2327] GPU KV cache size: 2,071,520 tokens, Maximum concurrency for 32,768 tokens per request: 63.22x
+(EngineCore pid=614) INFO 10-26 02:56:54 [backend.py:86] kvq: static INT8 scales for 28 layers from /cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors (tp 0/1, cfg B_channel_smooth, kernel cuda)
+(EngineCore pid=614) INFO 10-26 02:56:54 [kernel_warmup.py:176] JIT kernel warmup starting.
+(EngineCore pid=614) INFO 10-26 02:56:54 [kernel_warmup.py:189] JIT kernel warmup finished in 0.00s.
+
+Capturing CUDA graphs (PIECEWISE):   0%|          | 0/51 [00:00<?, ?it/s]
+Capturing CUDA graphs (PIECEWISE):   4%|▍         | 2/51 [00:00<00:03, 14.81it/s]
+Capturing CUDA graphs (PIECEWISE):   8%|▊         | 4/51 [00:00<00:02, 16.09it/s]
+Capturing CUDA graphs (PIECEWISE):  12%|█▏        | 6/51 [00:00<00:02, 16.78it/s]
+Capturing CUDA graphs (PIECEWISE):  16%|█▌        | 8/51 [00:00<00:02, 17.06it/s]
+Capturing CUDA graphs (PIECEWISE):  20%|█▉        | 10/51 [00:00<00:02, 17.91it/s]
+Capturing CUDA graphs (PIECEWISE):  25%|██▌       | 13/51 [00:00<00:02, 18.88it/s]
+Capturing CUDA graphs (PIECEWISE):  31%|███▏      | 16/51 [00:00<00:01, 19.42it/s]
+Capturing CUDA graphs (PIECEWISE):  37%|███▋      | 19/51 [00:01<00:01, 18.35it/s]
+Capturing CUDA graphs (PIECEWISE):  43%|████▎     | 22/51 [00:01<00:01, 19.94it/s]
+Capturing CUDA graphs (PIECEWISE):  49%|████▉     | 25/51 [00:01<00:01, 20.80it/s]
+Capturing CUDA graphs (PIECEWISE):  55%|█████▍    | 28/51 [00:01<00:01, 21.69it/s]
+Capturing CUDA graphs (PIECEWISE):  61%|██████    | 31/51 [00:01<00:00, 22.42it/s]
+Capturing CUDA graphs (PIECEWISE):  67%|██████▋   | 34/51 [00:01<00:00, 23.01it/s]
+Capturing CUDA graphs (PIECEWISE):  73%|███████▎  | 37/51 [00:01<00:00, 23.44it/s]
+Capturing CUDA graphs (PIECEWISE):  78%|███████▊  | 40/51 [00:01<00:00, 23.97it/s]
+Capturing CUDA graphs (PIECEWISE):  84%|████████▍ | 43/51 [00:02<00:00, 24.39it/s]
+Capturing CUDA graphs (PIECEWISE):  90%|█████████ | 46/51 [00:02<00:00, 24.95it/s]
+Capturing CUDA graphs (PIECEWISE):  96%|█████████▌| 49/51 [00:02<00:00, 25.21it/s]
+Capturing CUDA graphs (PIECEWISE): 100%|██████████| 51/51 [00:02<00:00, 21.71it/s]
+
+Capturing CUDA graphs (FULL):   0%|          | 0/35 [00:00<?, ?it/s]
+Capturing CUDA graphs (FULL):   9%|▊         | 3/35 [00:00<00:01, 25.77it/s]
+Capturing CUDA graphs (FULL):  17%|█▋        | 6/35 [00:00<00:01, 25.80it/s]
+Capturing CUDA graphs (FULL):  26%|██▌       | 9/35 [00:00<00:01, 25.20it/s]
+Capturing CUDA graphs (FULL):  34%|███▍      | 12/35 [00:00<00:00, 25.42it/s]
+Capturing CUDA graphs (FULL):  43%|████▎     | 15/35 [00:00<00:00, 25.37it/s]
+Capturing CUDA graphs (FULL):  51%|█████▏    | 18/35 [00:00<00:00, 25.72it/s]
+Capturing CUDA graphs (FULL):  60%|██████    | 21/35 [00:00<00:00, 26.13it/s]
+Capturing CUDA graphs (FULL):  69%|██████▊   | 24/35 [00:00<00:00, 26.54it/s]
+Capturing CUDA graphs (FULL):  77%|███████▋  | 27/35 [00:01<00:00, 27.19it/s]
+Capturing CUDA graphs (FULL):  86%|████████▌ | 30/35 [00:01<00:00, 27.40it/s]
+Capturing CUDA graphs (FULL):  94%|█████████▍| 33/35 [00:01<00:00, 27.44it/s]
+Capturing CUDA graphs (FULL): 100%|██████████| 35/35 [00:01<00:00, 26.58it/s]
+(EngineCore pid=614) INFO 10-26 02:56:59 [model_runner.py:1127] Graph capturing finished in 5 secs, took 0.22 GiB
+(EngineCore pid=614) INFO 10-26 02:56:59 [gpu_worker.py:971] CUDA graph pool memory: 0.22 GiB (actual), 0.4 GiB (estimated), difference: 0.18 GiB (83.8%).
+(EngineCore pid=614) INFO 10-26 02:56:59 [gpu_worker.py:1034] Free memory on device (78.86/79.27 GiB) on startup. Desired GPU memory utilization is (0.9, 71.35 GiB). Actual usage is 14.58 GiB for consumed memory (weights + non-torch), 1.45 GiB for peak activation, and 0.22 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=59004938752` (54.95 GiB) to fit into requested memory, or `--kv-cache-memory=67071306240` (62.47 GiB) to fully utilize gpu memory. Current kv cache memory in use is 55.32 GiB.
+(EngineCore pid=614) INFO 10-26 02:57:01 [jit_monitor.py:84] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(EngineCore pid=614) INFO 10-26 02:57:01 [core.py:395] init engine (profile, create kv cache, warmup model) took 16.39 s (compilation: 0.33 s)
+(EngineCore pid=614) WARNING 10-26 02:57:02 [serial_utils.py:78] Allowing insecure serialization using pickle due to VLLM_ALLOW_INSECURE_SERIALIZATION=1
+(EngineCore pid=614) INFO 10-26 02:57:02 [kernel.py:467] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'], gelu_and_mul_sparse=['triton', 'native'])
+(MainProcess pid=581) WARNING 10-26 02:57:02 [serial_utils.py:78] Allowing insecure serialization using pickle due to VLLM_ALLOW_INSECURE_SERIALIZATION=1
+(MainProcess pid=581) INFO 10-26 02:57:02 [hf.py:648] Detected the chat template content format to be 'string'. You can set `--chat-template-content-format` to override this.
+(EngineCore pid=614) WARNING 10-26 02:57:02 [jit_monitor.py:140] Triton kernel JIT compilation during inference: _attn_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+(MainProcess pid=581) INFO 10-26 02:57:12 [loggers.py:335] Engine 000: Avg prompt throughput: 14140.4 tokens/s, Avg generation throughput: 29.8 tokens/s, Running: 25 reqs, Waiting: 103 reqs, GPU KV cache usage: 1.2%
+(MainProcess pid=581) INFO 10-26 02:57:22 [loggers.py:335] Engine 000: Avg prompt throughput: 11775.4 tokens/s, Avg generation throughput: 1568.5 tokens/s, Running: 17 reqs, Waiting: 111 reqs, GPU KV cache usage: 0.8%
+(MainProcess pid=581) INFO 10-26 02:57:32 [loggers.py:335] Engine 000: Avg prompt throughput: 12273.7 tokens/s, Avg generation throughput: 1412.0 tokens/s, Running: 128 reqs, Waiting: 0 reqs, GPU KV cache usage: 7.1%
+(MainProcess pid=581) INFO 10-26 02:57:43 [loggers.py:335] Engine 000: Avg prompt throughput: 10944.0 tokens/s, Avg generation throughput: 1857.3 tokens/s, Running: 121 reqs, Waiting: 7 reqs, GPU KV cache usage: 6.0%
+(MainProcess pid=581) INFO 10-26 02:57:54 [loggers.py:335] Engine 000: Avg prompt throughput: 11646.0 tokens/s, Avg generation throughput: 1542.2 tokens/s, Running: 113 reqs, Waiting: 15 reqs, GPU KV cache usage: 5.6%
+(MainProcess pid=581) INFO 10-26 02:58:04 [loggers.py:335] Engine 000: Avg prompt throughput: 8111.1 tokens/s, Avg generation throughput: 3194.5 tokens/s, Running: 65 reqs, Waiting: 63 reqs, GPU KV cache usage: 3.2%
+(MainProcess pid=581) INFO 10-26 02:58:14 [loggers.py:335] Engine 000: Avg prompt throughput: 11393.0 tokens/s, Avg generation throughput: 1617.2 tokens/s, Running: 49 reqs, Waiting: 79 reqs, GPU KV cache usage: 2.4%
+(MainProcess pid=581) INFO 10-26 02:58:24 [loggers.py:335] Engine 000: Avg prompt throughput: 9001.3 tokens/s, Avg generation throughput: 2871.2 tokens/s, Running: 128 reqs, Waiting: 0 reqs, GPU KV cache usage: 7.8%
+{"ctx": 1024, "batch": 128, "t_L_s": [10.969754937000062, 11.093756154999937, 11.164981764999993], "t_2L_s": [13.316881802999887, 13.404861184000083, 13.51154309200001], "tpot_pure_ms": 18.332510367187638, "samples_ms": [18.33692864062364, 18.05550803906364, 18.332510367187638], "kv_limited": false}
+(MainProcess pid=581) INFO 10-26 02:58:34 [loggers.py:335] Engine 000: Avg prompt throughput: 11655.7 tokens/s, Avg generation throughput: 388.5 tokens/s, Running: 5 reqs, Waiting: 96 reqs, GPU KV cache usage: 1.0%
+(MainProcess pid=581) INFO 10-26 02:58:44 [loggers.py:335] Engine 000: Avg prompt throughput: 13157.2 tokens/s, Avg generation throughput: 6.4 tokens/s, Running: 5 reqs, Waiting: 62 reqs, GPU KV cache usage: 1.0%
+(MainProcess pid=581) INFO 10-26 02:58:55 [loggers.py:335] Engine 000: Avg prompt throughput: 13141.0 tokens/s, Avg generation throughput: 6.4 tokens/s, Running: 5 reqs, Waiting: 28 reqs, GPU KV cache usage: 1.0%
+(MainProcess pid=581) INFO 10-26 02:59:05 [loggers.py:335] Engine 000: Avg prompt throughput: 13473.0 tokens/s, Avg generation throughput: 6.6 tokens/s, Running: 4 reqs, Waiting: 124 reqs, GPU KV cache usage: 0.8%
+(MainProcess pid=581) INFO 10-26 02:59:15 [loggers.py:335] Engine 000: Avg prompt throughput: 12623.4 tokens/s, Avg generation throughput: 28.6 tokens/s, Running: 36 reqs, Waiting: 92 reqs, GPU KV cache usage: 7.1%
+(MainProcess pid=581) INFO 10-26 02:59:25 [loggers.py:335] Engine 000: Avg prompt throughput: 12873.6 tokens/s, Avg generation throughput: 78.6 tokens/s, Running: 68 reqs, Waiting: 60 reqs, GPU KV cache usage: 13.5%
+(MainProcess pid=581) INFO 10-26 02:59:36 [loggers.py:335] Engine 000: Avg prompt throughput: 12718.9 tokens/s, Avg generation throughput: 127.3 tokens/s, Running: 100 reqs, Waiting: 28 reqs, GPU KV cache usage: 19.8%
+(MainProcess pid=581) INFO 10-26 02:59:46 [loggers.py:335] Engine 000: Avg prompt throughput: 12517.8 tokens/s, Avg generation throughput: 179.7 tokens/s, Running: 128 reqs, Waiting: 0 reqs, GPU KV cache usage: 25.6%
+(MainProcess pid=581) INFO 10-26 02:59:56 [loggers.py:335] Engine 000: Avg prompt throughput: 8960.4 tokens/s, Avg generation throughput: 1222.3 tokens/s, Running: 25 reqs, Waiting: 103 reqs, GPU KV cache usage: 5.0%
+(MainProcess pid=581) INFO 10-26 03:00:06 [loggers.py:335] Engine 000: Avg prompt throughput: 12890.0 tokens/s, Avg generation throughput: 61.4 tokens/s, Running: 57 reqs, Waiting: 71 reqs, GPU KV cache usage: 11.3%
+(MainProcess pid=581) INFO 10-26 03:00:16 [loggers.py:335] Engine 000: Avg prompt throughput: 12742.2 tokens/s, Avg generation throughput: 110.4 tokens/s, Running: 89 reqs, Waiting: 39 reqs, GPU KV cache usage: 17.6%
+(MainProcess pid=581) INFO 10-26 03:00:27 [loggers.py:335] Engine 000: Avg prompt throughput: 12577.4 tokens/s, Avg generation throughput: 158.1 tokens/s, Running: 121 reqs, Waiting: 7 reqs, GPU KV cache usage: 24.0%
+(MainProcess pid=581) INFO 10-26 03:00:37 [loggers.py:335] Engine 000: Avg prompt throughput: 4744.8 tokens/s, Avg generation throughput: 2821.7 tokens/s, Running: 5 reqs, Waiting: 123 reqs, GPU KV cache usage: 1.0%
+(MainProcess pid=581) INFO 10-26 03:00:47 [loggers.py:335] Engine 000: Avg prompt throughput: 12957.3 tokens/s, Avg generation throughput: 30.1 tokens/s, Running: 37 reqs, Waiting: 91 reqs, GPU KV cache usage: 7.3%
+(MainProcess pid=581) INFO 10-26 03:00:57 [loggers.py:335] Engine 000: Avg prompt throughput: 12806.6 tokens/s, Avg generation throughput: 79.7 tokens/s, Running: 69 reqs, Waiting: 59 reqs, GPU KV cache usage: 13.7%
+(MainProcess pid=581) INFO 10-26 03:01:08 [loggers.py:335] Engine 000: Avg prompt throughput: 12645.3 tokens/s, Avg generation throughput: 128.1 tokens/s, Running: 101 reqs, Waiting: 27 reqs, GPU KV cache usage: 20.0%
+(MainProcess pid=581) INFO 10-26 03:01:18 [loggers.py:335] Engine 000: Avg prompt throughput: 12263.5 tokens/s, Avg generation throughput: 272.9 tokens/s, Running: 128 reqs, Waiting: 0 reqs, GPU KV cache usage: 25.6%
+(MainProcess pid=581) INFO 10-26 03:01:28 [loggers.py:335] Engine 000: Avg prompt throughput: 9339.5 tokens/s, Avg generation throughput: 1078.9 tokens/s, Running: 27 reqs, Waiting: 101 reqs, GPU KV cache usage: 5.4%
+(MainProcess pid=581) INFO 10-26 03:01:39 [loggers.py:335] Engine 000: Avg prompt throughput: 12836.3 tokens/s, Avg generation throughput: 64.2 tokens/s, Running: 59 reqs, Waiting: 69 reqs, GPU KV cache usage: 11.7%
+(MainProcess pid=581) INFO 10-26 03:01:49 [loggers.py:335] Engine 000: Avg prompt throughput: 12688.7 tokens/s, Avg generation throughput: 113.1 tokens/s, Running: 91 reqs, Waiting: 37 reqs, GPU KV cache usage: 18.0%
+(MainProcess pid=581) INFO 10-26 03:01:59 [loggers.py:335] Engine 000: Avg prompt throughput: 12536.3 tokens/s, Avg generation throughput: 160.7 tokens/s, Running: 123 reqs, Waiting: 5 reqs, GPU KV cache usage: 24.4%
+(MainProcess pid=581) INFO 10-26 03:02:10 [loggers.py:335] Engine 000: Avg prompt throughput: 4750.2 tokens/s, Avg generation throughput: 2813.6 tokens/s, Running: 7 reqs, Waiting: 121 reqs, GPU KV cache usage: 1.4%
+(MainProcess pid=581) INFO 10-26 03:02:20 [loggers.py:335] Engine 000: Avg prompt throughput: 12922.9 tokens/s, Avg generation throughput: 33.1 tokens/s, Running: 39 reqs, Waiting: 89 reqs, GPU KV cache usage: 7.7%
+(MainProcess pid=581) INFO 10-26 03:02:30 [loggers.py:335] Engine 000: Avg prompt throughput: 12778.4 tokens/s, Avg generation throughput: 82.7 tokens/s, Running: 71 reqs, Waiting: 57 reqs, GPU KV cache usage: 14.1%
+(MainProcess pid=581) INFO 10-26 03:02:40 [loggers.py:335] Engine 000: Avg prompt throughput: 12630.9 tokens/s, Avg generation throughput: 131.1 tokens/s, Running: 103 reqs, Waiting: 25 reqs, GPU KV cache usage: 20.4%
+(MainProcess pid=581) INFO 10-26 03:02:50 [loggers.py:335] Engine 000: Avg prompt throughput: 11442.5 tokens/s, Avg generation throughput: 582.1 tokens/s, Running: 128 reqs, Waiting: 0 reqs, GPU KV cache usage: 25.8%
+(MainProcess pid=581) INFO 10-26 03:03:01 [loggers.py:335] Engine 000: Avg prompt throughput: 10115.6 tokens/s, Avg generation throughput: 777.2 tokens/s, Running: 29 reqs, Waiting: 99 reqs, GPU KV cache usage: 5.7%
+(MainProcess pid=581) INFO 10-26 03:03:11 [loggers.py:335] Engine 000: Avg prompt throughput: 12887.0 tokens/s, Avg generation throughput: 67.6 tokens/s, Running: 61 reqs, Waiting: 67 reqs, GPU KV cache usage: 12.1%
+(MainProcess pid=581) INFO 10-26 03:03:21 [loggers.py:335] Engine 000: Avg prompt throughput: 12775.3 tokens/s, Avg generation throughput: 117.0 tokens/s, Running: 93 reqs, Waiting: 35 reqs, GPU KV cache usage: 18.4%
+(MainProcess pid=581) INFO 10-26 03:03:32 [loggers.py:335] Engine 000: Avg prompt throughput: 12610.3 tokens/s, Avg generation throughput: 164.7 tokens/s, Running: 125 reqs, Waiting: 3 reqs, GPU KV cache usage: 24.8%
+{"ctx": 4096, "batch": 128, "t_L_s": [44.12624580900001, 44.30619508999985, 44.36441951500001], "t_2L_s": [47.53019872300001, 47.66814599200006, 47.44151253899986], "tpot_pure_ms": 26.265241421876695, "samples_ms": [26.59338214062501, 26.265241421876695, 24.039789249998833], "kv_limited": false}
+(MainProcess pid=581) INFO 10-26 03:03:40 [utils.py:628] [shutdown] Process manager: send sigterm to process EngineCore
+(EngineCore pid=614) INFO 10-26 03:03:40 [core.py:1454] [shutdown] EngineCore: trigger received signal=SIGTERM
+(EngineCore pid=614) INFO 10-26 03:03:40 [core.py:1635] [shutdown] EngineCore: start mode=abort timeout=0s
+(EngineCore pid=614) INFO 10-26 03:03:40 [core.py:1666] [shutdown] EngineCore: request processing complete; starting resource teardown
+(EngineCore pid=614) INFO 10-26 03:03:40 [core.py:1499] [shutdown] EngineCore: exiting busy loop
+
+[modal_app] exit=0 wall=2022s
