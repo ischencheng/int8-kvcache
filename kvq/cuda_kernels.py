@@ -19,8 +19,6 @@ import torch
 # q_len at or below this: INT8 kernel; above: dequantize + FlashAttention. KVQ_SHORT_Q=1000000 puts
 # every row on the INT8 kernel (teacher-forced NLL of the decode numerics; slow for long prompts).
 SHORT_Q = int(os.environ.get("KVQ_SHORT_Q", 8))
-# m tiles one CTA of the INT8 kernel computes for a multi-token query (1, 2, 4; 0 = the kernel's choice)
-TILES_PER_CTA = int(os.environ.get("KVQ_TPC", 0))
 
 _EXT = None
 
@@ -48,13 +46,12 @@ def quant_q(q, k_scale, group=None):
 
 
 def decode_attention(q, k_cache, v_cache, out, cu_seqlens_q, seq_lens, block_table, softmax_scale, static,
-                     segm=None, max_query_len=1, tiles_per_cta=None):
+                     segm=None, max_query_len=1):
     """INT8 attention for the requests with at most SHORT_Q query tokens (others are skipped).
     max_query_len bounds the short queries' length (it sets the number of m tiles)."""
-    tpc = TILES_PER_CTA if tiles_per_cta is None else tiles_per_cta
     so, sm, ss = segm if segm is not None else (None, None, None)
     ext().int8_decode_attention(q, k_cache, v_cache, out, cu_seqlens_q, seq_lens, block_table, static["k_scale"],
-                                static["v_scale"], softmax_scale, so, sm, ss, max_query_len, SHORT_Q, tpc)
+                                static["v_scale"], softmax_scale, so, sm, ss, max_query_len, SHORT_Q)
     return out
 
 

@@ -57,7 +57,7 @@ def test_quant_q_matches_torch(group):
 
 @pytest.mark.parametrize("shape", [(28, 4, 128), (12, 2, 128), (32, 8, 128), (16, 1, 128), (14, 2, 64), (16, 4, 64)])
 @pytest.mark.parametrize("case", ["decode", "short"])
-@pytest.mark.parametrize("variant", ["single", "segments", "per_head", "tpc1", "tpc2", "tpc4"])
+@pytest.mark.parametrize("variant", ["single", "segments", "per_head"])
 def test_short_queries_match_ref(shape, case, variant):
     """Decode and short multi-token queries (causal inside the request, several m tiles when q_len * G > 16),
     head_dim 128 and 64 (q heads, kv heads, head_dim)."""
@@ -67,11 +67,9 @@ def test_short_queries_match_ref(shape, case, variant):
     st = make_static(k, v, per_channel=variant != "per_head")
     kq, vq = to_int8(k, v, st)
     ref = reference(st, variant != "per_head")(q, kq, vq, cu, sl, bt, d ** -0.5)
-    # tpcN: N m tiles per CTA sharing the K/V chunks (with split-KV, as small verification batches run)
-    tpc = int(variant[3:]) if variant.startswith("tpc") else None
-    segm = segm_buffers(q.shape[0], hq, D=d) if variant == "segments" or tpc else None
-    out = ck.decode_attention(q, kq, vq, torch.empty_like(q), cu, sl, bt, d ** -0.5, st, segm=segm,
-                              max_query_len=max(q_lens), tiles_per_cta=tpc)
+    out = ck.decode_attention(q, kq, vq, torch.empty_like(q), cu, sl, bt, d ** -0.5, st,
+                              segm=segm_buffers(q.shape[0], hq, D=d) if variant == "segments" else None,
+                              max_query_len=max(q_lens))
     err = compare(ref, out)
     record("cuda_short", heads=shape, case=case, variant=variant, **err)
     assert err["rel_l2"] < 5e-3

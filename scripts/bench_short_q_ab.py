@@ -1,6 +1,6 @@
 """A/B of the INT8 attention for decode (q_len 1) and verification batches (q_len 5) on one GPU:
-the previous kernel (commit 596c408, built from scripts/_prev_kernel/int8_kv.cu when present), the
-current one with 1 m tile per CTA and with the kernel's own choice, and FA2 on a bf16 cache."""
+the previous kernel (built from scripts/_prev_kernel/int8_kv.cu when present, e.g.
+`git show 596c408:kvq/cuda/int8_kv.cu`), the current one, and FA2 on a bf16 cache."""
 import json
 import os
 
@@ -39,7 +39,6 @@ for batch, ctx in [(1, 512), (1, 1024), (1, 4096), (8, 1024), (32, 1024), (32, 4
         if prev is not None:
             row["prev"] = bench(lambda: prev.int8_decode_attention(q, kq, vq, out, cu, sl, bt, st["k_scale"],
                                                                    st["v_scale"], SCALE, so, sm, ss, q_len, 8))
-        for name, tpc in (("tpc1", 1), ("tpc2", 2), ("tpc4", 4), ("auto", 0)):
-            row[name] = bench(lambda: ck.decode_attention(q, kq, vq, out, cu, sl, bt, SCALE, st, segm=segm,
-                                                          max_query_len=q_len, tiles_per_cta=tpc))
+        row["int8"] = bench(lambda: ck.decode_attention(q, kq, vq, out, cu, sl, bt, SCALE, st, segm=segm,
+                                                        max_query_len=q_len))
         print(json.dumps({k_: round(v_, 1) if isinstance(v_, float) else v_ for k_, v_ in row.items()}), flush=True)

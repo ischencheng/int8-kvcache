@@ -1,0 +1,9 @@
+{
+ "label": "ng7_none_int8",
+ "model": "Qwen/Qwen2.5-7B-Instruct",
+ "n": 24,
+ "tpot_ms": 9.979208081021527,
+ "step_ms": 9.980190648097555,
+ "tokens_per_step": 1.0,
+ "spec": {}
+}
