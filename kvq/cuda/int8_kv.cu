@@ -111,10 +111,15 @@ __global__ void quant_q_kernel(const __nv_bfloat16* __restrict__ q, int8_t* __re
 }
 
 // ------------------------------------------------------------------------------------------
-// INT8 attention for short queries. Grid (num_seqs, num_kv_heads, num_splits x m_tiles), 4 warps.
+// INT8 attention for short queries. Grid (num_seqs, num_kv_heads, num_splits x m_tile_groups), 4 warps.
 // The q_len x G (token, q head) pairs of this kv head are rows R = t * G + h, 16 per m tile; for decode
 // (q_len 1) the single tile holds the G q heads. Row R sees keys n < L - q_len + 1 + t (causal).
 // Requests with more than qmax query tokens are left to the dequantize + FlashAttention path.
+//
+// A CTA computes TPC m tiles (1, 2 or 4). Its warps form NCL = 4 / TPC chunk lanes of TPC warps: the
+// warps of a lane load each 32-token chunk into the lane's K/V ring together, once, and each computes
+// its own tile against it. TPC = 1 is the decode layout (every warp its own lane and rows); TPC > 1 is
+// for verification batches, whose tiles would otherwise be separate CTAs each reading the same K/V.
 //
 // Data movement (v2, after ncu showed exposed load latency and an instruction-heavy V transpose):
 //  * each warp streams its own 32-token chunks with cp.async into a 2-stage smem ring, so the next
@@ -135,16 +140,33 @@ struct Geom {
   static constexpr int CPT = D / 8;                 // channels per thread in prologue/epilogue (8 threads a row)
   static constexpr int LPR = D / 16;                // cp.async lanes per token row (16 B each)
   static constexpr int RPS = 32 / LPR;              // token rows per cp.async step of a warp
-  static constexpr size_t SMEM = 16 * QROW + (16 + 2 * NWARPS * 16) * 4 + NWARPS * 4 * STAGE_BYTES;
-  static_assert(NWARPS * 4 * STAGE_BYTES >= NWARPS * 16 * ACC_ROW * 4, "s_acc must fit in the K/V ring");
 };
 
-template <int ACC_ROW>
-__device__ __forceinline__ float row_sum(const float* s_acc, int row, int d) {
+// q rows + scales + per-warp (m, l) + the K/V rings, which the combine buffer s_acc reuses afterwards.
+template <int D, int TPC>
+constexpr size_t attn_smem() {
+  using Gm = Geom<D>;
+  constexpr size_t rings = NWARPS / TPC * 4 * Gm::STAGE_BYTES, acc = NWARPS * 16 * Gm::ACC_ROW * 4;
+  return 16 * TPC * Gm::QROW + (16 * TPC + 2 * NWARPS * 16) * 4 + (rings > acc ? rings : acc);
+}
+
+// Sum of row r of tile slot p over the warps that computed it (one per chunk lane).
+template <int ACC_ROW, int TPC>
+__device__ __forceinline__ float row_sum(const float* s_acc, int p, int r, int d) {
   float x = 0.f;
 #pragma unroll
-  for (int w = 0; w < NWARPS; ++w) x += s_acc[(w * 16 + row) * ACC_ROW + d];
+  for (int k = 0; k < NWARPS / TPC; ++k) x += s_acc[((k * TPC + p) * 16 + r) * ACC_ROW + d];
   return x;
+}
+
+// The TPC warps of chunk lane cl share its K/V ring: named barrier 1 + cl (0 is __syncthreads).
+template <int TPC>
+__device__ __forceinline__ void lane_sync(int cl) {
+  if constexpr (TPC == 1) {
+    __syncwarp();
+  } else {
+    asm volatile("bar.sync %0, %1;\n" ::"r"(1 + cl), "n"(TPC * 32) : "memory");
+  }
 }
 
 __device__ __forceinline__ void cp_async16(void* smem, const void* gmem, bool valid) {
@@ -165,7 +187,7 @@ __device__ __forceinline__ uint32_t pack4(int a, int b, int c, int d) {
   return (a & 0xff) | ((b & 0xff) << 8) | ((c & 0xff) << 16) | (static_cast<uint32_t>(d & 0xff) << 24);
 }
 
-template <int D, bool PC_K, bool PC_V>
+template <int D, int TPC, bool PC_K, bool PC_V>
 __global__ void __launch_bounds__(NWARPS * 32)
     int8_decode_attn_kernel(const __nv_bfloat16* __restrict__ q, const int8_t* __restrict__ kc,
                             const int8_t* __restrict__ vc, __nv_bfloat16* __restrict__ out,
@@ -179,25 +201,28 @@ __global__ void __launch_bounds__(NWARPS * 32)
   using Gm = Geom<D>;
   constexpr int KROW = Gm::KROW, QROW = Gm::QROW, STAGE_BYTES = Gm::STAGE_BYTES, ACC_ROW = Gm::ACC_ROW;
   constexpr int KSTEPS = Gm::KSTEPS, NTILES = Gm::NTILES, CPT = Gm::CPT, LPR = Gm::LPR, RPS = Gm::RPS;
+  constexpr int NCL = NWARPS / TPC;  // chunk lanes
   extern __shared__ __align__(16) char smem_raw[];
-  int8_t* s_q = reinterpret_cast<int8_t*>(smem_raw);                 // 16 x QROW
-  float* s_qscale = reinterpret_cast<float*>(smem_raw + 16 * QROW);  // 16
-  float* s_m = s_qscale + 16;                                        // NWARPS x 16
-  float* s_l = s_m + NWARPS * 16;                                    // NWARPS x 16
-  char* ring = smem_raw + 16 * QROW + (16 + 2 * NWARPS * 16) * 4;    // per warp: 2 stages x (K, V)
-  float* s_acc = reinterpret_cast<float*>(ring);                     // NWARPS x 16 x ACC_ROW, after the loop
+  int8_t* s_q = reinterpret_cast<int8_t*>(smem_raw);                             // 16 TPC x QROW
+  float* s_qscale = reinterpret_cast<float*>(smem_raw + 16 * TPC * QROW);        // 16 TPC
+  float* s_m = s_qscale + 16 * TPC;                                              // NWARPS x 16
+  float* s_l = s_m + NWARPS * 16;                                                // NWARPS x 16
+  char* ring = smem_raw + 16 * TPC * QROW + (16 * TPC + 2 * NWARPS * 16) * 4;    // per lane: 2 stages x (K, V)
+  float* s_acc = reinterpret_cast<float*>(ring);                                 // NWARPS x 16 x ACC_ROW, after
 
-  const int seq = blockIdx.x, kvh = blockIdx.y, split = blockIdx.z % num_splits, mt = blockIdx.z / num_splits;
+  const int seq = blockIdx.x, kvh = blockIdx.y, split = blockIdx.z % num_splits, mg = blockIdx.z / num_splits;
   const int warp = threadIdx.x >> 5, lane = threadIdx.x & 31, g = lane >> 2, t = lane & 3;
+  const int ts = warp % TPC, cl = warp / TPC;  // this warp's tile slot and chunk lane
+  const int mt = mg * TPC + ts;                // and m tile (one past the last row only helps loading)
   const int tok = cu_q[seq], qlen = cu_q[seq + 1] - tok;
-  // Padding requests have 0 tokens; long queries go to FlashAttention; tiles past the last row idle.
-  if (qlen == 0 || qlen > qmax || mt * 16 >= qlen * G) return;
+  // Padding requests have 0 tokens; long queries go to FlashAttention; tile groups past the last row idle.
+  if (qlen == 0 || qlen > qmax || mg * TPC * 16 >= qlen * G) return;
   const int L = seq_lens[seq];
   const int nchunks = (L + CHUNK - 1) / CHUNK;
   const int per_split = (nchunks + num_splits - 1) / num_splits;
   const int c_begin = split * per_split, c_end = min(nchunks, c_begin + per_split);
   const int* bt = block_table + static_cast<int64_t>(seq) * bt_stride;
-  int8_t* wring = reinterpret_cast<int8_t*>(ring) + warp * 4 * STAGE_BYTES;
+  int8_t* wring = reinterpret_cast<int8_t*>(ring) + cl * 4 * STAGE_BYTES;  // this lane's ring
 
   // A 32-token chunk spans at most two pages (block_size is a power of two >= 16): look the page ids
   // up once per chunk, one round ahead, instead of a divide/modulo per token.
@@ -208,7 +233,8 @@ __global__ void __launch_bounds__(NWARPS * 32)
       pa1 = (n0 + 16 < L) ? bt[(n0 + 16) >> lbs] : pa0;
     }
   };
-  // cp.async copies of chunk c into stage st (LPR lanes per token row, RPS rows per step, coalesced).
+  // cp.async copies of chunk c into stage st (LPR lanes per token row, RPS rows per step, coalesced);
+  // the TPC warps of the lane take every TPC-th step.
   auto issue = [&](int c, int st, int pa0, int pa1) {
     int8_t* sk = wring + (2 * st) * STAGE_BYTES;
     int8_t* sv = sk + STAGE_BYTES;
@@ -219,6 +245,7 @@ __global__ void __launch_bounds__(NWARPS * 32)
     const int8_t* vb1 = vc + static_cast<int64_t>(pa1) * v_sb + kvh * v_sh + col;
 #pragma unroll
     for (int i = 0; i < CHUNK / RPS; ++i) {
+      if (TPC > 1 && i % TPC != ts) continue;
       const int tau = lane / LPR + RPS * i;
       const int n = c * CHUNK + tau;
       const int off = n & (block_size - 1);
@@ -229,16 +256,17 @@ __global__ void __launch_bounds__(NWARPS * 32)
     }
     cp_async_commit();
   };
-  int c = c_begin + warp;
+  int c = c_begin + cl;
   int pc0 = 0, pc1 = 0, pn0 = 0, pn1 = 0;
   load_pages(c, pc0, pc1);
   if (c < c_end) issue(c, 0, pc0, pc1);  // the first chunk is already in flight during the q prologue
-  load_pages(c + NWARPS, pn0, pn1);
+  load_pages(c + NCL, pn0, pn1);
 
   // ---- prologue: fold s_k into q, quantize per row (8 threads per row, CPT channels each) ----
-  {
-    const int row = threadIdx.x >> 3, part = threadIdx.x & 7, d0 = part * CPT;
-    const int R = mt * 16 + row, rt = R / G, rh = R % G;
+#pragma unroll
+  for (int p = 0; p < TPC; ++p) {
+    const int row = p * 16 + (threadIdx.x >> 3), part = threadIdx.x & 7, d0 = part * CPT;
+    const int R = mg * TPC * 16 + row, rt = R / G, rh = R % G;
     float x[CPT], amax = 0.f;
 #pragma unroll
     for (int e = 0; e < CPT; ++e) {
@@ -264,15 +292,16 @@ __global__ void __launch_bounds__(NWARPS * 32)
     if (part == 0) s_qscale[row] = s * (PC_K ? 1.f : ks[kvh]) * sm_scale_log2;
   }
   __syncthreads();
-  uint32_t a[KSTEPS][4];  // q A fragments for the k-steps (32 channels each)
+  uint32_t a[KSTEPS][4];  // q A fragments of this warp's tile for the k-steps (32 channels each)
+  const int r0 = ts * 16 + g, r1 = r0 + 8;
 #pragma unroll
   for (int s = 0; s < KSTEPS; ++s) {
-    a[s][0] = *reinterpret_cast<const uint32_t*>(&s_q[g * QROW + 32 * s + 4 * t]);
-    a[s][1] = *reinterpret_cast<const uint32_t*>(&s_q[(g + 8) * QROW + 32 * s + 4 * t]);
-    a[s][2] = *reinterpret_cast<const uint32_t*>(&s_q[g * QROW + 32 * s + 16 + 4 * t]);
-    a[s][3] = *reinterpret_cast<const uint32_t*>(&s_q[(g + 8) * QROW + 32 * s + 16 + 4 * t]);
+    a[s][0] = *reinterpret_cast<const uint32_t*>(&s_q[r0 * QROW + 32 * s + 4 * t]);
+    a[s][1] = *reinterpret_cast<const uint32_t*>(&s_q[r1 * QROW + 32 * s + 4 * t]);
+    a[s][2] = *reinterpret_cast<const uint32_t*>(&s_q[r0 * QROW + 32 * s + 16 + 4 * t]);
+    a[s][3] = *reinterpret_cast<const uint32_t*>(&s_q[r1 * QROW + 32 * s + 16 + 4 * t]);
   }
-  const float rs0 = s_qscale[g], rs1 = s_qscale[g + 8];
+  const float rs0 = s_qscale[r0], rs1 = s_qscale[r1];
   // Causal key limit of this thread's two rows (rows past the last token keep L; they are not written).
   auto row_lim = [&](int r) {
     const int rt = (mt * 16 + r) / G;
@@ -288,15 +317,15 @@ __global__ void __launch_bounds__(NWARPS * 32)
 #pragma unroll
   for (int j = 0; j < NTILES; ++j) acc[j][0] = acc[j][1] = acc[j][2] = acc[j][3] = 0.f;
 
-  for (int st = 0; c < c_end; c += NWARPS, st ^= 1) {
-    if (c + NWARPS < c_end) {
-      issue(c + NWARPS, st ^ 1, pn0, pn1);
-      load_pages(c + 2 * NWARPS, pn0, pn1);
+  for (int st = 0; c < c_end; c += NCL, st ^= 1) {
+    if (c + NCL < c_end) {
+      issue(c + NCL, st ^ 1, pn0, pn1);
+      load_pages(c + 2 * NCL, pn0, pn1);
       cp_async_wait<1>();
     } else {
       cp_async_wait<0>();
     }
-    __syncwarp();
+    lane_sync<TPC>(cl);  // the lane's warps each waited for their part of the chunk
     const int8_t* sk = wring + (2 * st) * STAGE_BYTES;
     const int8_t* sv = sk + STAGE_BYTES;
 
@@ -393,7 +422,7 @@ __global__ void __launch_bounds__(NWARPS * 32)
     }
     m0 = mn0;
     m1 = mn1;
-    __syncwarp();  // this stage is refilled by the next iteration's issue
+    lane_sync<TPC>(cl);  // this stage is refilled by the next iteration's issue
   }
 
   // ---- combine the 4 warps: weights exp2(m_w - M) ----
@@ -406,7 +435,8 @@ __global__ void __launch_bounds__(NWARPS * 32)
   __syncthreads();  // also ends every use of the K/V ring, which s_acc reuses
   float M0 = -1e30f, M1 = -1e30f;
 #pragma unroll
-  for (int w = 0; w < NWARPS; ++w) {
+  for (int k = 0; k < NCL; ++k) {  // the warps with this warp's tile
+    const int w = k * TPC + ts;
     M0 = fmaxf(M0, s_m[w * 16 + g]);
     M1 = fmaxf(M1, s_m[w * 16 + g + 8]);
   }
@@ -424,65 +454,89 @@ __global__ void __launch_bounds__(NWARPS * 32)
     }
   __syncthreads();
 
-  // ---- epilogue: 8 threads per row, CPT channels each; s_v applied here ----
-  const int row = threadIdx.x >> 3, d0 = (threadIdx.x & 7) * CPT;
-  const int R = mt * 16 + row, rt = R / G;
-  if (rt >= qlen) return;
-  const int qt = tok + rt;  // this row's query token
-  float Mr = -1e30f, Lr = 0.f;
+  // ---- epilogue: 8 threads per row, CPT channels each, one tile slot after the other; s_v applied here ----
 #pragma unroll
-  for (int w = 0; w < NWARPS; ++w) Mr = fmaxf(Mr, s_m[w * 16 + row]);
+  for (int p = 0; p < TPC; ++p) {
+    const int row = threadIdx.x >> 3, d0 = (threadIdx.x & 7) * CPT;
+    const int R = (mg * TPC + p) * 16 + row, rt = R / G;
+    if (rt >= qlen) continue;
+    const int qt = tok + rt;  // this row's query token
+    float Mr = -1e30f, Lr = 0.f;
 #pragma unroll
-  for (int w = 0; w < NWARPS; ++w) Lr += s_l[w * 16 + row] * exp2f(s_m[w * 16 + row] - Mr);
-  const int head = kvh * G + R % G;
-  if (num_splits == 1) {
-    const float inv = 1.f / fmaxf(Lr, 1e-30f);
-    uint32_t o[CPT / 2];
+    for (int k = 0; k < NCL; ++k) Mr = fmaxf(Mr, s_m[(k * TPC + p) * 16 + row]);
 #pragma unroll
-    for (int e = 0; e < CPT / 2; ++e) {
-      const int d = d0 + 2 * e;
-      const float v0 = row_sum<ACC_ROW>(s_acc, row, d) * inv * (PC_V ? vs[kvh * D + d] : vs[kvh]);
-      const float v1 = row_sum<ACC_ROW>(s_acc, row, d + 1) * inv * (PC_V ? vs[kvh * D + d + 1] : vs[kvh]);
-      const __nv_bfloat162 h = __floats2bfloat162_rn(v0, v1);
-      o[e] = *reinterpret_cast<const uint32_t*>(&h);
+    for (int k = 0; k < NCL; ++k) {
+      const int w = k * TPC + p;
+      Lr += s_l[w * 16 + row] * exp2f(s_m[w * 16 + row] - Mr);
     }
+    const int head = kvh * G + R % G;
+    if (num_splits == 1) {
+      const float inv = 1.f / fmaxf(Lr, 1e-30f);
+      uint32_t o[CPT / 2];
 #pragma unroll
-    for (int u = 0; u < CPT / 8; ++u)  // 8 bf16 per 16-byte store
-      *reinterpret_cast<uint4*>(out + qt * o_st + head * o_sh + d0 + 8 * u) =
-          make_uint4(o[4 * u], o[4 * u + 1], o[4 * u + 2], o[4 * u + 3]);
-  } else {
-    const int64_t sidx = qt * seg_st + head * seg_sh + split;
-    if ((threadIdx.x & 7) == 0) {
-      segm_max[sidx] = Mr;
-      segm_sum[sidx] = Lr;
+      for (int e = 0; e < CPT / 2; ++e) {
+        const int d = d0 + 2 * e;
+        const float v0 = row_sum<ACC_ROW, TPC>(s_acc, p, row, d) * inv * (PC_V ? vs[kvh * D + d] : vs[kvh]);
+        const float v1 = row_sum<ACC_ROW, TPC>(s_acc, p, row, d + 1) * inv * (PC_V ? vs[kvh * D + d + 1] : vs[kvh]);
+        const __nv_bfloat162 h = __floats2bfloat162_rn(v0, v1);
+        o[e] = *reinterpret_cast<const uint32_t*>(&h);
+      }
+#pragma unroll
+      for (int u = 0; u < CPT / 8; ++u)  // 8 bf16 per 16-byte store
+        *reinterpret_cast<uint4*>(out + qt * o_st + head * o_sh + d0 + 8 * u) =
+            make_uint4(o[4 * u], o[4 * u + 1], o[4 * u + 2], o[4 * u + 3]);
+    } else {
+      const int64_t sidx = qt * seg_st + head * seg_sh + split;
+      if ((threadIdx.x & 7) == 0) {
+        segm_max[sidx] = Mr;
+        segm_sum[sidx] = Lr;
+      }
+#pragma unroll
+      for (int e = 0; e < CPT; ++e)
+        segm_out[sidx * D + d0 + e] =
+            row_sum<ACC_ROW, TPC>(s_acc, p, row, d0 + e) * (PC_V ? vs[kvh * D + d0 + e] : vs[kvh]);
     }
-#pragma unroll
-    for (int e = 0; e < CPT; ++e)
-      segm_out[sidx * D + d0 + e] = row_sum<ACC_ROW>(s_acc, row, d0 + e) * (PC_V ? vs[kvh * D + d0 + e] : vs[kvh]);
   }
 }
 
-// Merge split-KV partials: o = sum_s 2^(m_s - M) acc_s / sum_s 2^(m_s - M) l_s.
+// Merge split-KV partials: o = sum_s 2^(m_s - M) acc_s / sum_s 2^(m_s - M) l_s. One block per
+// (request, q head, query token). The first warp turns the S segment maxima into weights in smem, then
+// the D threads read the S partial outputs with independent (unrolled) loads. (v1 looped over the
+// tokens and segments in one block, one dependent global load after another: for a 5-token
+// verification batch the merge took as long as the attention itself.)
+constexpr int MAX_SEGMENTS = 64;
+
 template <int D>
 __global__ void split_reduce_kernel(__nv_bfloat16* __restrict__ out, const float* __restrict__ segm_out,
                                     const float* __restrict__ segm_max, const float* __restrict__ segm_sum,
                                     const int* __restrict__ cu_q, int64_t o_st, int64_t o_sh, int64_t seg_st,
                                     int64_t seg_sh, int S, int qmax) {
-  const int seq = blockIdx.x, h = blockIdx.y, d = threadIdx.x;
+  __shared__ float s_w[MAX_SEGMENTS];
+  __shared__ float s_inv;
+  const int seq = blockIdx.x, h = blockIdx.y, r = blockIdx.z, d = threadIdx.x;
   const int tok = cu_q[seq], qlen = cu_q[seq + 1] - tok;
-  if (qlen > qmax) return;
-  for (int qt = tok; qt < tok + qlen; ++qt) {
-    const int64_t base = qt * seg_st + h * seg_sh;
+  if (qlen > qmax || r >= qlen) return;
+  const int64_t base = (tok + r) * seg_st + h * seg_sh;
+  if (d < 32) {
     float M = -1e30f;
-    for (int s = 0; s < S; ++s) M = fmaxf(M, segm_max[base + s]);
-    float num = 0.f, den = 0.f;
-    for (int s = 0; s < S; ++s) {
+    for (int s = d; s < S; s += 32) M = fmaxf(M, segm_max[base + s]);
+#pragma unroll
+    for (int o = 16; o; o >>= 1) M = fmaxf(M, __shfl_xor_sync(0xffffffff, M, o));
+    float den = 0.f;
+    for (int s = d; s < S; s += 32) {
       const float w = exp2f(segm_max[base + s] - M);
-      num += w * segm_out[(base + s) * D + d];
+      s_w[s] = w;
       den += w * segm_sum[base + s];
     }
-    out[qt * o_st + h * o_sh + d] = __float2bfloat16(num / fmaxf(den, 1e-30f));
+#pragma unroll
+    for (int o = 16; o; o >>= 1) den += __shfl_xor_sync(0xffffffff, den, o);
+    if (d == 0) s_inv = 1.f / fmaxf(den, 1e-30f);
   }
+  __syncthreads();
+  float num = 0.f;
+#pragma unroll 8
+  for (int s = 0; s < S; ++s) num += s_w[s] * segm_out[(base + s) * D + d];
+  out[(tok + r) * o_st + h * o_sh + d] = __float2bfloat16(num * s_inv);
 }
 
 // ------------------------------------------------------------------------------------------
@@ -584,7 +638,7 @@ void int8_decode_attention(torch::Tensor q, torch::Tensor kc, torch::Tensor vc, 
                            torch::Tensor cu_q, torch::Tensor seq_lens, torch::Tensor block_table, torch::Tensor ks,
                            torch::Tensor vs, double softmax_scale, c10::optional<torch::Tensor> segm_out,
                            c10::optional<torch::Tensor> segm_max, c10::optional<torch::Tensor> segm_sum,
-                           int64_t max_query_len, int64_t qmax) {
+                           int64_t max_query_len, int64_t qmax, int64_t tiles_per_cta) {
   const int num_seqs = cu_q.size(0) - 1, Hq = q.size(1), Hkv = kc.size(2), G = Hq / Hkv;
   TORCH_CHECK(q.size(2) == kc.size(3) && kc.stride(3) == 1 && q.stride(2) == 1, "unsupported shape/layout");
   const int bs = kc.size(1);
@@ -594,11 +648,14 @@ void int8_decode_attention(torch::Tensor q, torch::Tensor kc, torch::Tensor vc, 
   if (num_seqs == 0) return;
   const bool split = segm_max.has_value();
   const int S = split ? segm_max->size(2) : 1;
+  TORCH_CHECK(S <= MAX_SEGMENTS, "at most ", MAX_SEGMENTS, " split-KV segments");
   const float sm_log2 = static_cast<float>(softmax_scale * 1.4426950408889634);
   auto stream = c10::cuda::getCurrentCUDAStream();
   // m tiles for the longest short query: max_query_len is fixed for a captured graph (uniform batch).
   const int mtiles = (G * static_cast<int>(std::min(max_query_len, qmax)) + 15) / 16;
-  dim3 grid(num_seqs, Hkv, S * mtiles);
+  const int tpc = tiles_per_cta > 0 ? static_cast<int>(tiles_per_cta) : (mtiles >= 3 ? 4 : mtiles);
+  TORCH_CHECK(tpc == 1 || tpc == 2 || tpc == 4, "tiles per CTA must be 1, 2 or 4");
+  dim3 grid(num_seqs, Hkv, S * ((mtiles + tpc - 1) / tpc));
   const int64_t seg_st = split ? segm_max->stride(0) : 0, seg_sh = split ? segm_max->stride(1) : 0;
   float* so = split ? segm_out->data_ptr<float>() : nullptr;
   float* sx = split ? segm_max->data_ptr<float>() : nullptr;
@@ -614,15 +671,21 @@ void int8_decode_attention(torch::Tensor q, torch::Tensor kc, torch::Tensor vc, 
         out.stride(0), out.stride(1), kc.stride(0), kc.stride(1), kc.stride(2), vc.stride(0), vc.stride(1),
         vc.stride(2), block_table.stride(0), bs, lbs, G, seg_st, seg_sh, S, static_cast<int>(qmax));
   };
+  auto launch_tpc = [&](auto dt, auto tt) {
+    constexpr int D = decltype(dt)::value, TPC = decltype(tt)::value;
+    constexpr size_t smem = attn_smem<D, TPC>();
+    if (pk && pv) launch(int8_decode_attn_kernel<D, TPC, true, true>, smem);
+    else if (pk) launch(int8_decode_attn_kernel<D, TPC, true, false>, smem);
+    else if (pv) launch(int8_decode_attn_kernel<D, TPC, false, true>, smem);
+    else launch(int8_decode_attn_kernel<D, TPC, false, false>, smem);
+  };
   with_head_dim(q.size(2), [&](auto dt) {
     constexpr int D = decltype(dt)::value;
-    constexpr size_t smem = Geom<D>::SMEM;
-    if (pk && pv) launch(int8_decode_attn_kernel<D, true, true>, smem);
-    else if (pk) launch(int8_decode_attn_kernel<D, true, false>, smem);
-    else if (pv) launch(int8_decode_attn_kernel<D, false, true>, smem);
-    else launch(int8_decode_attn_kernel<D, false, false>, smem);
+    if (tpc == 1) launch_tpc(dt, std::integral_constant<int, 1>{});
+    else if (tpc == 2) launch_tpc(dt, std::integral_constant<int, 2>{});
+    else launch_tpc(dt, std::integral_constant<int, 4>{});
     if (split) {
-      split_reduce_kernel<D><<<dim3(num_seqs, Hq), D, 0, stream>>>(
+      split_reduce_kernel<D><<<dim3(num_seqs, Hq, std::min(max_query_len, qmax)), D, 0, stream>>>(
           reinterpret_cast<__nv_bfloat16*>(out.data_ptr()), so, sx, ss, cu_q.data_ptr<int>(), out.stride(0),
           out.stride(1), seg_st, seg_sh, S, static_cast<int>(qmax));
     }

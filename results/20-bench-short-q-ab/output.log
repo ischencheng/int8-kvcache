@@ -1,0 +1,44 @@
+{"batch": 1, "ctx": 512, "q_len": 1, "split": true, "fa2": 28.3, "prev": 23.9, "tpc1": 20.1, "tpc2": 24.9, "tpc4": 31.9, "auto": 19.6}
+{"batch": 1, "ctx": 512, "q_len": 5, "split": true, "fa2": 23.3, "prev": 32.0, "tpc1": 24.1, "tpc2": 27.3, "tpc4": 34.6, "auto": 34.6}
+{"batch": 1, "ctx": 1024, "q_len": 1, "split": true, "fa2": 25.0, "prev": 20.3, "tpc1": 20.0, "tpc2": 25.1, "tpc4": 34.3, "auto": 20.1}
+{"batch": 1, "ctx": 1024, "q_len": 5, "split": true, "fa2": 34.9, "prev": 32.9, "tpc1": 25.1, "tpc2": 28.3, "tpc4": 37.0, "auto": 37.0}
+{"batch": 1, "ctx": 4096, "q_len": 1, "split": true, "fa2": 36.9, "prev": 24.8, "tpc1": 24.6, "tpc2": 32.3, "tpc4": 48.6, "auto": 24.7}
+{"batch": 1, "ctx": 4096, "q_len": 5, "split": true, "fa2": 110.1, "prev": 37.7, "tpc1": 29.6, "tpc2": 38.1, "tpc4": 50.6, "auto": 50.7}
+{"batch": 8, "ctx": 1024, "q_len": 1, "split": true, "fa2": 47.7, "prev": 39.9, "tpc1": 39.6, "tpc2": 47.5, "tpc4": 66.3, "auto": 39.6}
+{"batch": 8, "ctx": 1024, "q_len": 5, "split": false, "fa2": 74.4, "prev": 33.9, "tpc1": 34.0, "tpc2": 50.5, "tpc4": 97.6, "auto": 97.6}
+{"batch": 32, "ctx": 1024, "q_len": 1, "split": true, "fa2": 92.2, "prev": 104.4, "tpc1": 103.6, "tpc2": 121.1, "tpc4": 194.8, "auto": 103.5}
+{"batch": 32, "ctx": 1024, "q_len": 5, "split": false, "fa2": 194.5, "prev": 81.0, "tpc1": 81.5, "tpc2": 78.0, "tpc4": 116.0, "auto": 115.4}
+{"batch": 32, "ctx": 4096, "q_len": 1, "split": true, "fa2": 214.7, "prev": 153.5, "tpc1": 152.7, "tpc2": 191.4, "tpc4": 325.9, "auto": 152.7}
+{"batch": 32, "ctx": 4096, "q_len": 5, "split": false, "fa2": 718.1, "prev": 224.7, "tpc1": 224.3, "tpc2": 246.7, "tpc4": 382.7, "auto": 382.5}
+USDT:2026-10-26 15:21:51 86:86 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-26 15:21:51 86:86 SyncActivityProfilerHandler.cpp:59] profiler_stop
+USDT:2026-10-26 15:21:51 86:86 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-26 15:21:51 86:86 SyncActivityProfilerHandler.cpp:59] profiler_stop
+{"batch": 1, "ctx": 512, "q_len": 1, "int8": {"int8_decode_attn_kernel": 12.1, "split_reduce_kernel": 4.7}, "fa2": {"flash_fwd_splitkv_kernel": 9.7, "flash_fwd_splitkv_combine_kernel": 8.1, "Memcpy DtoD (Device -> Device)": 2.5}}
+USDT:2026-10-26 15:21:51 86:86 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-26 15:21:51 86:86 SyncActivityProfilerHandler.cpp:59] profiler_stop
+USDT:2026-10-26 15:21:51 86:86 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-26 15:21:51 86:86 SyncActivityProfilerHandler.cpp:59] profiler_stop
+{"batch": 1, "ctx": 512, "q_len": 5, "int8": {"int8_decode_attn_kernel": 29.0, "split_reduce_kernel": 5.2}, "fa2": {"flash_fwd_splitkv_kernel": 21.5}}
+USDT:2026-10-26 15:21:51 86:86 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-26 15:21:51 86:86 SyncActivityProfilerHandler.cpp:59] profiler_stop
+USDT:2026-10-26 15:21:51 86:86 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-26 15:21:51 86:86 SyncActivityProfilerHandler.cpp:59] profiler_stop
+{"batch": 1, "ctx": 1024, "q_len": 1, "int8": {"int8_decode_attn_kernel": 12.6, "split_reduce_kernel": 4.9}, "fa2": {"flash_fwd_splitkv_kernel": 9.8, "flash_fwd_splitkv_combine_kernel": 9.1, "Memcpy DtoD (Device -> Device)": 2.5}}
+USDT:2026-10-26 15:21:51 86:86 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-26 15:21:51 86:86 SyncActivityProfilerHandler.cpp:59] profiler_stop
+USDT:2026-10-26 15:21:51 86:86 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-26 15:21:51 86:86 SyncActivityProfilerHandler.cpp:59] profiler_stop
+{"batch": 1, "ctx": 1024, "q_len": 5, "int8": {"int8_decode_attn_kernel": 31.8, "split_reduce_kernel": 5.3}, "fa2": {"flash_fwd_splitkv_kernel": 36.5}}
+USDT:2026-10-26 15:21:51 86:86 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-26 15:21:51 86:86 SyncActivityProfilerHandler.cpp:59] profiler_stop
+USDT:2026-10-26 15:21:51 86:86 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-26 15:21:51 86:86 SyncActivityProfilerHandler.cpp:59] profiler_stop
+{"batch": 8, "ctx": 1024, "q_len": 1, "int8": {"int8_decode_attn_kernel": 36.5, "split_reduce_kernel": 5.4}, "fa2": {"elementwise_kernel": 9.1, "flash_fwd_splitkv_kernel": 20.6, "flash_fwd_splitkv_combine_kernel": 8.3}}
+USDT:2026-10-26 15:21:51 86:86 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-26 15:21:51 86:86 SyncActivityProfilerHandler.cpp:59] profiler_stop
+USDT:2026-10-26 15:21:51 86:86 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-26 15:21:51 86:86 SyncActivityProfilerHandler.cpp:59] profiler_stop
+{"batch": 8, "ctx": 1024, "q_len": 5, "int8": {"int8_decode_attn_kernel": 108.8}, "fa2": {"flash_fwd_splitkv_kernel": 81.2}}
+
+[modal_app] exit=0 wall=144s

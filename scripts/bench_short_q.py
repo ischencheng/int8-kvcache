@@ -23,23 +23,24 @@ def case(batch, ctx, q_len, seed=0):
     return q, k, v, cu, sl, bt
 
 
-for batch, ctx in [(1, 512), (1, 1024), (1, 4096), (8, 1024), (32, 1024)]:
-    row = {"batch": batch, "ctx": ctx}
-    for q_len in (1, 5):
-        q, k, v, cu, sl, bt = case(batch, ctx, q_len)
-        st = static_for(k, v)
-        kq = quant.quantize(k.float() - st["k_mu"], st["k_scale"])
-        vq = quant.quantize(v, st["v_scale"])
-        out = torch.empty_like(q)
-        n = q.shape[0]
-        # the backend's split-KV rule: few requests and the token rows fit vLLM's scratch
-        segm = None
-        if batch <= THRESH_3D and n <= THRESH_3D:
-            segm = (torch.empty(THRESH_3D, HQ, 16, D, device="cuda"), torch.empty(THRESH_3D, HQ, 16, device="cuda"),
-                    torch.empty(THRESH_3D, HQ, 16, device="cuda"))
-        row[f"fa2_q{q_len}"] = bench(lambda: flash_attn_varlen_func(
-            q=q, k=k, v=v, out=out, cu_seqlens_q=cu, max_seqlen_q=q_len, seqused_k=sl, max_seqlen_k=ctx,
-            softmax_scale=SCALE, causal=True, block_table=bt, fa_version=2))
-        row[f"int8_q{q_len}"] = bench(lambda: ck.decode_attention(q, kq, vq, out, cu, sl, bt, SCALE, st, segm=segm,
-                                                                  max_query_len=q_len))
-    print(json.dumps({k_: round(v_, 1) if isinstance(v_, float) else v_ for k_, v_ in row.items()}), flush=True)
+if __name__ == "__main__":
+    for batch, ctx in [(1, 512), (1, 1024), (1, 4096), (8, 1024), (32, 1024)]:
+        row = {"batch": batch, "ctx": ctx}
+        for q_len in (1, 5):
+            q, k, v, cu, sl, bt = case(batch, ctx, q_len)
+            st = static_for(k, v)
+            kq = quant.quantize(k.float() - st["k_mu"], st["k_scale"])
+            vq = quant.quantize(v, st["v_scale"])
+            out = torch.empty_like(q)
+            n = q.shape[0]
+            # the backend's split-KV rule: few requests and the token rows fit vLLM's scratch
+            segm = None
+            if batch <= THRESH_3D and n <= THRESH_3D:
+                segm = (torch.empty(THRESH_3D, HQ, 16, D, device="cuda"), torch.empty(THRESH_3D, HQ, 16, device="cuda"),
+                        torch.empty(THRESH_3D, HQ, 16, device="cuda"))
+            row[f"fa2_q{q_len}"] = bench(lambda: flash_attn_varlen_func(
+                q=q, k=k, v=v, out=out, cu_seqlens_q=cu, max_seqlen_q=q_len, seqused_k=sl, max_seqlen_k=ctx,
+                softmax_scale=SCALE, causal=True, block_table=bt, fa_version=2))
+            row[f"int8_q{q_len}"] = bench(lambda: ck.decode_attention(q, kq, vq, out, cu, sl, bt, SCALE, st, segm=segm,
+                                                                      max_query_len=q_len))
+        print(json.dumps({k_: round(v_, 1) if isinstance(v_, float) else v_ for k_, v_ in row.items()}), flush=True)

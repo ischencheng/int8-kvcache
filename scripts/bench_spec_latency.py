@@ -1,11 +1,25 @@
 """Batch-1 decode latency with real prompts (spec-decode speedup is a low-batch effect).
 
 Runs N GSM8K questions one at a time and reports the mean per-request TPOT from the engine's
-first/last token timestamps, plus spec-decode acceptance.
+first/last token timestamps, plus spec-decode acceptance and the time per engine step. TPOT depends on
+how many drafts get accepted, and that changes with the KV numerics (different outputs, different
+n-gram matches); the step time is what the kernels decide.
 """
 import argparse
 import json
 import os
+
+
+def spec_counters(llm):
+    c = {}
+    try:
+        for m in llm.get_metrics():
+            if m.name in ("vllm:spec_decode_num_drafts", "vllm:spec_decode_num_draft_tokens",
+                          "vllm:spec_decode_num_accepted_tokens"):
+                c[m.name.split(":")[1]] = m.value
+    except Exception:  # noqa: BLE001 - no spec decode / stats off
+        pass
+    return c
 
 
 def main():
@@ -28,13 +42,21 @@ def main():
     llm = LLM(args.model, **kwargs)
     sp = SamplingParams(temperature=0, max_tokens=512)
     llm.chat([data.math_messages("1+1=?")], sp, use_tqdm=False)  # warm up
-    tpots = []
+    c0 = spec_counters(llm)
+    tpots, decode_s, decode_tokens = [], 0.0, 0
     for r in data.gsm8k(args.n, seed=7):
         o = llm.chat([data.math_messages(r["question"])], sp, use_tqdm=False)[0]
         m = o.metrics
         if m is not None and m.num_generation_tokens > 1:
             tpots.append((m.last_token_ts - m.first_token_ts) / (m.num_generation_tokens - 1))
-    res = {"label": args.label, "model": args.model, "n": len(tpots), "tpot_ms": 1e3 * sum(tpots) / len(tpots)}
+            decode_s += m.last_token_ts - m.first_token_ts
+            decode_tokens += m.num_generation_tokens - 1
+    c1 = spec_counters(llm)
+    spec = {k: c1[k] - c0.get(k, 0) for k in c1}
+    # every engine step after the first token emits one token plus the drafts it accepts
+    steps = decode_tokens - spec.get("spec_decode_num_accepted_tokens", 0)
+    res = {"label": args.label, "model": args.model, "n": len(tpots), "tpot_ms": 1e3 * sum(tpots) / len(tpots),
+           "step_ms": 1e3 * decode_s / steps, "tokens_per_step": decode_tokens / steps, "spec": spec}
     print(json.dumps(res))
     with open(f"{os.environ['OUT']}/latency_{args.label}.json", "w") as f:
         json.dump(res, f, indent=1)

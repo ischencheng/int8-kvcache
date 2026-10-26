@@ -34,7 +34,7 @@ def _attn(q_len):
     return fn
 
 
-@pytest.mark.parametrize("q_len", [1, 4])   # decode, and a uniform spec-decode verification batch (k = 3)
+@pytest.mark.parametrize("q_len", [1, 4, 5])  # decode, and uniform spec-decode verification batches (k = 3, 4)
 def test_replay_matches_eager_with_new_inputs(q_len):
     q, k, v, cu, sl, bt = random_paged_case(28, 4, [q_len] * 8, SEQ_LENS, scale=3.0)
     st = make_static(k, v)
