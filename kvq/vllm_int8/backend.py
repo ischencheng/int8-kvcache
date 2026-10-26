@@ -111,8 +111,7 @@ class Int8StaticBuilder(TritonAttentionMetadataBuilder):
         if _kernel() == "cuda" and c.max_query_len > cuda_kernels.SHORT_Q:
             # Exact on long-query rows, which are the only ones the plan reads.
             seq_cpu = c.seq_lens_cpu_upper_bound if c.seq_lens_cpu_upper_bound is not None else c.seq_lens.cpu()
-            md.kvq_long = cuda_kernels.plan_long(c.query_start_loc_cpu, seq_cpu, c.block_table_tensor,
-                                                 self.block_size)
+            md.kvq_long = cuda_kernels.plan_long(c.query_start_loc_cpu, seq_cpu, self.block_size)
         return md
 
 

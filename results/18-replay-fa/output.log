@@ -1,0 +1,12 @@
+{'max_seqlen_q': 190, 'max_seqlen_k': 206, 'q_shape': (6442, 28, 128), 'q_stride': (4608, 128, 1), 'out_shape': (6442, 28, 128), 'out_stride': (3584, 128, 1), 'kt_shape': (496, 16, 4, 128)}
+requests 256, tokens 6442, long 68, short 188, empty 0
+long q_len [39, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 70, 71, 71, 71, 73] long seqused [86, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 86, 87, 87, 87, 89]
+block_table (256, 29) max id 495 temp pages 496
+seqused < q_len on long rows: 0
+as_is: exit 1 ["Search for `cudaErrorIllegalAddress' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information."]
+dumped_strides: exit 1 ["Search for `cudaErrorIllegalAddress' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information."]
+no_empty_rows: exit 0 ['no_empty_rows: ok']
+wider_table: exit 1 ["Search for `cudaErrorIllegalAddress' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information."]
+only_long_rows: exit 0 ['only_long_rows: ok']
+
+[modal_app] exit=0 wall=32s

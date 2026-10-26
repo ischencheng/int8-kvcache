@@ -74,6 +74,20 @@ CASES = {
 }
 
 
+def _serving_case(seed=0):
+    """Like a real chunked-prefill step: 68 prompt chunks among 188 decodes, interleaved (the batch whose
+    FlashAttention call wrote out of bounds while short requests had zero keys)."""
+    g = torch.Generator().manual_seed(seed)
+    q = [int(x) for x in torch.randint(39, 74, (68,), generator=g)] + [1] * 188
+    s = [n + int(torch.randint(0, 20, (1,), generator=g)) for n in q[:68]]
+    s += [int(x) for x in torch.randint(100, 400, (188,), generator=g)]
+    perm = torch.randperm(256, generator=g).tolist()
+    return [q[i] for i in perm], [s[i] for i in perm]
+
+
+CASES["serving"] = _serving_case()
+
+
 def valid_rows(cache, block_table, seq_lens):
     """Only the slots requests actually wrote: the tail of a last page holds stale data."""
     return torch.cat([gather_pages(cache, block_table[i:i + 1], int(n))[0] for i, n in enumerate(seq_lens.tolist())])

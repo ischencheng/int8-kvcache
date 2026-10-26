@@ -23,10 +23,11 @@ def short_rows(cu, limit=ck.SHORT_Q):
     return torch.repeat_interleave(q_lens <= limit, q_lens)
 
 
+@pytest.mark.parametrize("D", [128, 64])
 @pytest.mark.parametrize("per_channel", [True, False])
-def test_quant_cache_matches_torch(per_channel):
+def test_quant_cache_matches_torch(per_channel, D):
     g = torch.Generator(device="cuda").manual_seed(0)
-    T, H, D, nb, bs = 200, 4, 128, 64, 16
+    T, H, nb, bs = 200, 4, 64, 16
     key = torch.randn(T + 8, H, D, generator=g, device="cuda").to(torch.bfloat16) * 5   # +8 padded rows
     value = torch.randn(T + 8, H, D, generator=g, device="cuda").to(torch.bfloat16)
     slots = torch.randperm(nb * bs, generator=g, device="cuda")[:T].long()
@@ -54,21 +55,23 @@ def test_quant_q_matches_torch(group):
     assert torch.allclose(qs, s[..., 0])
 
 
-@pytest.mark.parametrize("heads", [(28, 4), (12, 2), (32, 8), (16, 1)])
+@pytest.mark.parametrize("shape", [(28, 4, 128), (12, 2, 128), (32, 8, 128), (16, 1, 128), (14, 2, 64), (16, 4, 64)])
 @pytest.mark.parametrize("case", ["decode", "short"])
 @pytest.mark.parametrize("variant", ["single", "segments", "per_head"])
-def test_short_queries_match_ref(heads, case, variant):
-    """Decode and short multi-token queries (causal inside the request, several m tiles when q_len * G > 16)."""
+def test_short_queries_match_ref(shape, case, variant):
+    """Decode and short multi-token queries (causal inside the request, several m tiles when q_len * G > 16),
+    head_dim 128 and 64 (q heads, kv heads, head_dim)."""
+    hq, hkv, d = shape
     q_lens, seq_lens = CASES[case]
-    q, k, v, cu, sl, bt = random_paged_case(*heads, q_lens, seq_lens, scale=3.0)
+    q, k, v, cu, sl, bt = random_paged_case(hq, hkv, q_lens, seq_lens, head_dim=d, scale=3.0)
     st = make_static(k, v, per_channel=variant != "per_head")
     kq, vq = to_int8(k, v, st)
-    ref = reference(st, variant != "per_head")(q, kq, vq, cu, sl, bt, SCALE)
-    out = ck.decode_attention(q, kq, vq, torch.empty_like(q), cu, sl, bt, SCALE, st,
-                              segm=segm_buffers(q.shape[0], heads[0]) if variant == "segments" else None,
+    ref = reference(st, variant != "per_head")(q, kq, vq, cu, sl, bt, d ** -0.5)
+    out = ck.decode_attention(q, kq, vq, torch.empty_like(q), cu, sl, bt, d ** -0.5, st,
+                              segm=segm_buffers(q.shape[0], hq, D=d) if variant == "segments" else None,
                               max_query_len=max(q_lens))
     err = compare(ref, out)
-    record("cuda_short", heads=heads, case=case, variant=variant, **err)
+    record("cuda_short", heads=shape, case=case, variant=variant, **err)
     assert err["rel_l2"] < 5e-3
 
 
@@ -85,32 +88,34 @@ def test_short_kernel_leaves_long_requests_alone():
 def test_plan_long_page_table():
     cu = torch.tensor([0, 1, 13, 14, 314], dtype=torch.int32)        # q_lens 1, 12, 1, 300
     sl = torch.tensor([50, 40, 9, 330], dtype=torch.int32)
-    bt = torch.arange(4 * 21, dtype=torch.int32, device="cuda").reshape(4, 21) + 1000
-    plan = ck.plan_long(cu, sl, bt, 16)
-    assert plan.seqused_k.tolist() == [0, 40, 0, 330] and plan.max_seqlen_k == 330 and plan.has_short
-    assert plan.src_pages.tolist() == bt[1, :3].tolist() + bt[3, :21].tolist()
+    plan = ck.plan_long(cu, sl, 16)
+    assert plan.seqused_k.tolist() == [1, 40, 1, 330] and plan.max_seqlen_k == 330 and plan.has_short
+    assert plan.src_req.tolist() == [1] * 3 + [3] * 21 and plan.src_j.tolist() == list(range(3)) + list(range(21))
     assert plan.block_table[1, :3].tolist() == [0, 1, 2] and plan.block_table[3, :21].tolist() == list(range(3, 24))
-    assert ck.plan_long(torch.tensor([0, 1, 9]), torch.tensor([5, 8]), bt, 16) is None   # q_len 8 is short
+    # FlashAttention reads the page table up to the end of a 256-token KV tile past the last key
+    assert plan.block_table.shape[1] * 16 >= 330 + 256 and not plan.block_table[3, 21:].any()
+    assert ck.plan_long(torch.tensor([0, 1, 9]), torch.tensor([5, 8]), 16) is None   # q_len 8 is short
 
 
-@pytest.mark.parametrize("heads", [(28, 4), (12, 2)])
-@pytest.mark.parametrize("case", ["mixed", "prefill"])
+@pytest.mark.parametrize("shape", [(28, 4, 128), (12, 2, 128), (14, 2, 64)])
+@pytest.mark.parametrize("case", ["mixed", "prefill", "serving"])
 @pytest.mark.parametrize("per_channel", [True, False])
-def test_mixed_batch_matches_ref(heads, case, per_channel):
+def test_mixed_batch_matches_ref(shape, case, per_channel):
     """Whole batch the way the backend runs it: long requests dequantize + FlashAttention, short ones INT8."""
+    hq, hkv, d = shape
     q_lens, seq_lens = CASES[case]
-    q, k, v, cu, sl, bt = random_paged_case(*heads, q_lens, seq_lens, scale=3.0)
+    q, k, v, cu, sl, bt = random_paged_case(hq, hkv, q_lens, seq_lens, head_dim=d, scale=3.0)
     st = make_static(k, v, per_channel=per_channel)
     kq, vq = to_int8(k, v, st)
-    ref = reference(st, per_channel)(q, kq, vq, cu, sl, bt, SCALE)
-    plan = ck.plan_long(cu.cpu(), sl.cpu(), bt, kq.shape[1])
-    assert plan is not None and plan.has_short == (case == "mixed")
-    out = ck.paged_attention(q, kq, vq, torch.empty_like(q), cu, sl, bt, max(q_lens), SCALE, st, plan)
+    ref = reference(st, per_channel)(q, kq, vq, cu, sl, bt, d ** -0.5)
+    plan = ck.plan_long(cu.cpu(), sl.cpu(), kq.shape[1])
+    assert plan is not None and plan.has_short == (case != "prefill")
+    out = ck.paged_attention(q, kq, vq, torch.empty_like(q), cu, sl, bt, max(q_lens), d ** -0.5, st, plan)
     short = short_rows(cu)
     res = {"all": compare(ref, out)["rel_l2"], "long": compare(ref[~short], out[~short])["rel_l2"]}
     if short.any():
         res["short"] = compare(ref[short], out[short])["rel_l2"]
-    record("cuda_mixed", heads=heads, case=case, per_channel=per_channel, **res)
+    record("cuda_mixed", heads=shape, case=case, per_channel=per_channel, **res)
     assert res["long"] < 1e-2 and res.get("short", 0) < 5e-3   # long rows: bf16 FlashAttention on bf16 K/V
 
 

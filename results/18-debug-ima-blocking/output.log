@@ -1,0 +1,152 @@
++ S=/cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors
++ INT8='"kv_cache_dtype":"int8_static","attention_config":{"backend":"CUSTOM"}'
++ python3 scripts/run_eval.py --label dbg_blocking --n 400 --env KVQ_SCALES=/cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors --env KVQ_KERNEL=cuda --env KVQ_CFG=B_channel_smooth --env KVQ_DEBUG=1 --env CUDA_LAUNCH_BLOCKING=1 --llm '{"kv_cache_dtype":"int8_static","attention_config":{"backend":"CUSTOM"},"enforce_eager":true}'
++ grep -v triton_bundler /tmp/out/dbg_blocking.log
++ grep -E -B 2 -A 40 'Traceback|illegal'
++ head -n 300
+(EngineCore pid=63) ERROR 10-26 05:50:07 [dump_input.py:81] Dumping scheduler stats: SchedulerStats(num_running_reqs=256, num_waiting_reqs=144, num_skipped_waiting_reqs=0, num_kv_fetch_reqs_by_stage={'waiting_to_start': 0, 'in_progress': 0, 'completed_waiting': 0}, step_counter=0, current_wave=0, kv_cache_usage=0.012860035538658665, iteration_details=None, prefix_cache_stats=PrefixCacheStats(reset=False, requests=67, queries=7287, hits=1072, preempted_requests=0, preempted_queries=0, preempted_hits=0, hits_by_source={}), connector_prefix_cache_stats=None, kv_cache_eviction_events=[], spec_decoding_stats=None, kv_connector_stats=None, ec_connector_stats=None, waiting_lora_adapters={}, running_lora_adapters={}, cudagraph_stats=None, perf_stats=None)
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512] EngineCore encountered a fatal error.
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512] Traceback (most recent call last):
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 1496, in run_engine_core
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]     engine_core.run_busy_loop()
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/fault_tolerance/engine_core_sentinel.py", line 178, in run_with_fault_tolerance
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]     busy_loop_func(self)
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 1555, in run_busy_loop
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]     self._process_engine_step()
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 1606, in _process_engine_step
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]     outputs, model_executed = self.step_fn()
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]                               ^^^^^^^^^^^^^^
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 727, in step_with_batch_queue
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]     exec_future = self.model_executor.execute_model(
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/executor/uniproc_executor.py", line 131, in execute_model
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]     output.result()
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]   File "/usr/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]     return self.__get_result()
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]            ^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]   File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]     raise self._exception
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/executor/uniproc_executor.py", line 109, in collective_rpc
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]     result = run_method(self.driver_worker, method, args, kwargs)
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/serial_utils.py", line 508, in run_method
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]     return func(*args, **kwargs)
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/worker_base.py", line 370, in execute_model
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]     return self.worker.execute_model(scheduler_output)
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]   File "/usr/local/lib/python3.12/dist-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]     return func(*args, **kwargs)
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_worker.py", line 1328, in execute_model
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]     output = self.model_runner.execute_model(
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]   File "/usr/local/lib/python3.12/dist-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]     return func(*args, **kwargs)
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py", line 2044, in execute_model
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]     model_output = self.model(**model_inputs)
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+--
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]     return self._op(*args, **kwargs)
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512]            ^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512] RuntimeError: CUDA error: an illegal memory access was encountered
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512] Search for `cudaErrorIllegalAddress' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.
+(EngineCore pid=63) ERROR 10-26 05:50:07 [core.py:1512] 
+Traceback (most recent call last):
+  File "/root/repo/scripts/run_eval.py", line 75, in <module>
+    main()
+  File "/root/repo/scripts/run_eval.py", line 45, in main
+    outs = llm.chat([data.math_messages(r["question"]) for r in rows], sp)
+Process EngineCore:
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/vllm/entrypoints/llm.py", line 702, in chat
+    return self._run_chat(
+           ^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/vllm/entrypoints/common/offline.py", line 401, in _run_chat
+    return self._run_engine(output_type=output_type, use_tqdm=use_tqdm)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/vllm/entrypoints/common/offline.py", line 611, in _run_engine
+    step_outputs = self.llm_engine.step()
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/llm_engine.py", line 327, in step
+    outputs = self.engine_core.get_output()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core_client.py", line 996, in get_output
+Traceback (most recent call last):
+    raise self._format_exception(outputs) from None
+vllm.v1.engine.exceptions.EngineDeadError: EngineCore encountered an issue. See stack trace (above) for the root cause.
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 1514, in run_engine_core
+    raise e
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 1496, in run_engine_core
+    engine_core.run_busy_loop()
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/fault_tolerance/engine_core_sentinel.py", line 178, in run_with_fault_tolerance
+    busy_loop_func(self)
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 1555, in run_busy_loop
+    self._process_engine_step()
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 1606, in _process_engine_step
+    outputs, model_executed = self.step_fn()
+                              ^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 727, in step_with_batch_queue
+    exec_future = self.model_executor.execute_model(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/executor/uniproc_executor.py", line 131, in execute_model
+    output.result()
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/executor/uniproc_executor.py", line 109, in collective_rpc
+    result = run_method(self.driver_worker, method, args, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/serial_utils.py", line 508, in run_method
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/worker_base.py", line 370, in execute_model
+    return self.worker.execute_model(scheduler_output)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_worker.py", line 1328, in execute_model
+    output = self.model_runner.execute_model(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+    return func(*args, **kwargs)
+--
+    return self._op(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: CUDA error: an illegal memory access was encountered
+Search for `cudaErrorIllegalAddress' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.
+
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/lib/python3.12/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 1521, in run_engine_core
+    engine_core.shutdown()
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/engine/core.py", line 828, in shutdown
+    self.model_executor.shutdown()
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/executor/uniproc_executor.py", line 154, in shutdown
+    worker.shutdown()
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/worker_base.py", line 250, in shutdown
+    self.worker.shutdown()
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_worker.py", line 1625, in shutdown
+    model_runner.shutdown()
+  File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu/model_runner.py", line 2340, in shutdown
+    torch.accelerator.synchronize()
+  File "/usr/local/lib/python3.12/dist-packages/torch/accelerator/__init__.py", line 270, in synchronize
+    torch._C._accelerator_synchronizeDevice(device_index)
+torch.AcceleratorError: CUDA error: an illegal memory access was encountered
+Search for `cudaErrorIllegalAddress' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.
+
+(MainProcess pid=7) INFO 10-26 05:50:07 [utils.py:628] [shutdown] Process manager: send sigterm to process EngineCore
+
+Processed prompts:   0%|          | 0/400 [00:02<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]
+
+[modal_app] exit=0 wall=103s
