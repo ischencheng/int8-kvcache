@@ -1,20 +1,21 @@
 # INT8 KV cache 项目讲解
 
 Qwen2.5-7B-Instruct / vLLM 0.32.0 / A100-80GB（没有 FP8 的卡）上，把 decode 的 KV cache 改成静态 per-channel INT8，
-从分析、PyTorch 参考、动态量化、静态量化、Triton 和 CUDA kernel 一路做到端到端，课程列出的扩展项全部做了。
+从分析、PyTorch 参考、动态量化、静态量化、kernel（先 Triton 后 CUDA）一路做到端到端，课程列出的扩展项全部做了。
+最后去掉了 Triton kernel，只保留 CUDA（第 3.8 节）；Triton 版留在 tag `triton-backend`，第 3 节里标"Triton"的数字是那时测的。
 每一步一个 commit（`git log --oneline`），过程记录在 [LOG.md](LOG.md)，原始数据在 `results/`。
 
 ## 0. 一页结论
 
 | 项 | 结果 |
 |---|---|
-| 方案 | K、V 都用静态 **per-channel** scale（`[kv_head, head_dim]`，校准取 max），K 额外做 **smooth-K**（存 k−μ，softmax 平移不变，不用加回）；decode 用 INT8 Tensor Core（s_k 折进 q、q 每 token-head 动态量化、P 按 tile 动态量化），prefill 反量化后算 |
-| 精度（GSM8K 1319 题，bf16 92.19%） | 静态 int8 + CUDA kernel（CUDA graph 开）**92.19%**；Triton 版 92.12%；teacher-forcing ΔNLL +0.0004（长回答 +0.0019）。vLLM 原生 int8_per_token_head 91.36%（ΔNLL +0.0017） |
+| 方案 | K、V 都用静态 **per-channel** scale（`[kv_head, head_dim]`，校准取 max），K 额外做 **smooth-K**（存 k−μ，softmax 平移不变，不用加回）；短 query（decode、投机验证，≤ 8 token）用 INT8 Tensor Core（s_k 折进 q、q 每 token-head 动态量化、P 按 tile 动态量化），prefill 把 int8 页反量化成 bf16 临时页交给 FA2。kernel 全部是 CUDA |
+| 精度（GSM8K 1319 题，bf16 92.19%） | 只用 CUDA 的最终版（CUDA graph 开）**92.12%**（删 Triton 前：CUDA 版 92.19%，Triton 版 92.12%）；teacher-forcing ΔNLL +0.0001 / +0.0013（所有行都走 INT8 kernel 时 +0.0005 / +0.0020）。vLLM 原生 int8_per_token_head 91.36%（ΔNLL +0.0017） |
 | 显存 | KV 容量 1.03M → **2.07M token**（2.0×） |
 | decode attention kernel（A100） | CUDA int8 比 FA2 bf16 快 **1.35–2.06×**（batch 1×32k 到 256×16k），有效带宽 1.36–1.45 TB/s |
 | 对比 FP8（H100） | CUDA int8 是 FA3 FP8 的 **0.86–1.05×**（课程"应接近 FP8"成立） |
-| 端到端 | 容量受限吞吐 1115 → **1431 tok/s（+28%）**；纯 decode TPOT 比 FA2 低 **13–35%**（4k × 128：36.9 → 24.1 ms；另一台机器重复 3 次 37.7 → 26.3 ms） |
-| 扩展 | TP 分布式校准等价；CUDA graph 兼容（batch 1 TPOT 9.9 vs 22.6 ms eager）；投机解码接受率 87.0% → 86.7%、加速比不变；PD 分离下 int8 页正确传递、传输量减半；W8A8 / W4A16 叠加不额外掉点；MLA latent 用 per-channel 不需要 smooth |
+| 端到端 | 容量受限吞吐 1112 → **1574 tok/s（+42%）**（删 Triton 前 prefill 慢，是 +28%）；prefill 和 FA2 持平；纯 decode TPOT 比 FA2 低 **13–35%**（4k × 128：36.9 → 24.1 ms，最终版同机重复 3 次 33.4 → 23.2 ms） |
+| 扩展 | TP 分布式校准等价；CUDA graph 兼容（batch 1 TPOT 9.9 vs 22.6 ms eager）；投机解码接受率 87.0% → 86.6%；PD 分离下 int8 页正确传递、传输量减半、D 端 TTFT 和 TPOT 都低于 bf16；W8A8 / W4A16 叠加不额外掉点；MLA latent 用 per-channel 不需要 smooth |
 
 ## 1. 整体结构：改了 vLLM 的哪里
 
@@ -37,14 +38,14 @@ patches/vllm-0.32.0-int8-static-kv.patch（构建镜像时打到已安装的 vLL
 ```
 prefill / decode 新 token:  qkv_proj → RoPE → k, v (bf16)
    └─ do_kv_cache_update → quant_reshape_and_cache  (k-μ)/s_k, v/s_v → rint → int8 → 按 slot_mapping 写页
-attention:
-   ├─ 多 token 请求（prefill、chunked prefill、投机验证）: MODE 1  int8 页 → ×s → bf16 → bf16 MMA
-   └─ 纯 decode 批:                                        MODE 2  q·s_k → 量化 q → int8 MMA(QK)
-                                                                   → P 按 tile 量化 → int8 MMA(PV) → ×s_v
+attention（按每个请求的 query 长度分流，批内不重排）:
+   ├─ 长 query（> 8 token：prefill、chunked prefill）  这些请求的 int8 页 → ×s → bf16 临时页 → vLLM 的 FA2
+   └─ 短 query（≤ 8 token：decode、投机验证）          q·s_k → 量化 q → int8 MMA(QK)
+                                                      → P 按 tile 量化 → int8 MMA(PV) → ×s_v
 ```
 
 运行方式：`kv_cache_dtype="int8_static", attention_config={"backend": "CUSTOM"}`，再用环境变量
-`KVQ_SCALES`（校准文件）、`KVQ_CFG`（数值配置名，见 `kvq/int8_ref.py:CONFIGS`）、`KVQ_KERNEL`（torch / triton / cuda）。
+`KVQ_SCALES`（校准文件）、`KVQ_CFG`（数值配置名，见 `kvq/int8_ref.py:CONFIGS`）、`KVQ_KERNEL`（cuda 默认 / torch）。
 用插件 + 小 patch 而不是 fork vLLM：改动面只有 3 个文件 12 行，其余都在我们的包里，换 vLLM 版本时只需要重做这个 patch。
 
 ## 2. 代码导览（按课程的阶段）
@@ -96,43 +97,49 @@ attention:
 - `calibrate.py` 在 FA2 上开采集跑校准集（GSM8K train / wikitext），一次产出 6 种 scale 文件；TP>1 时
   每个 rank 只看到自己的 kv head，`scales.merge_tp` 按 rank 顺序拼接（kv head 少于 rank 时去重复制的 head）。
 - `backend.py`：
-  - `Int8StaticBackend(TritonAttentionBackend)`：`get_name()` 返回 `"CUSTOM"`，`supported_kv_cache_dtypes` 加 `int8_static`。
+  - `Int8StaticBackend(TritonAttentionBackend)`：`get_name()` 返回 `"CUSTOM"`，只支持 `int8_static`。
+    继承 vLLM 的 Triton backend 只是为了复用它的 metadata（长度、页表、split-KV 缓冲区），计算全是我们的。
   - `Int8StaticBuilder.__init__`：把每层的静态 scale（按 TP rank 切片）交给 `layer.impl.set_static()`。
     它在模型加载之后、CUDA graph capture 之前执行，并且拿得到层名。投机解码的 draft 层（`draft_model.` 前缀）
     从 `KVQ_DRAFT_SCALES` 取。
-  - `Int8StaticImpl.do_kv_cache_update / forward`：torch 路径（阶段六）/ triton 路径 / cuda 路径（阶段七）三选一；
-    `kv_cache_dtype=auto` 时跑 bf16（triton 路径就是同一份 kernel 的 bf16 模式，用作公平基线）。
-    cuda 路径：写 cache 和纯 decode 批走 CUDA kernel，多 token 批（prefill / 混合批）仍走 Triton 的反量化 kernel。
+  - `Int8StaticBuilder.build`：批里有长 query 时，用 vLLM 的 CPU 长度（`query_start_loc_cpu`、`seq_lens_cpu_upper_bound`）
+    算出临时 bf16 页表（`cuda_kernels.plan_long`），每步一次、所有层共用。CPU 长度在 async 投机解码下可能是上界，
+    只用来决定拷几页；FA2 的 key 数在 forward 时用 GPU 上的精确长度算。
+  - `Int8StaticBuilder.get_cudagraph_support`：`UNIFORM_BATCH`（投机解码的 k+1 ≤ 8 时）。全 decode / 全验证的均匀批
+    只走 INT8 kernel，可以进 full graph；混合批走 piecewise，attention 在 graph 外执行，长 query 路径才能按 CPU 长度分配临时页。
+  - `Int8StaticImpl.do_kv_cache_update / forward`：cuda 路径（默认）或 torch 路径（阶段六的 PyTorch 实现）。
 
-### 2.7 阶段七 kernel：`kvq/triton_kernels/`（Triton）和 `kvq/cuda/int8_kv.cu`（CUDA）
+### 2.7 阶段七 kernel：`kvq/cuda/int8_kv.cu` + `kvq/cuda_kernels.py`
 
-**Triton 版**
+先写的是 Triton 版（一份 kernel 三种 MODE：bf16 / 反量化 / int8 MMA，`tl.dot(int8, int8)`），用来快速验证数值和拿第一版速度；
+CUDA 版写完后在所有点都更快，最后把 Triton 版删了（tag `triton-backend` 里还在，第 3 节的 Triton 数字来自它）。
+删掉 Triton 后 prefill 由"反量化 + FA2"接手，见下面的 `dequant_pages` 和第 3.8 节。
 
-- `quant_cache.py`：一个 program 一个 token × 全部 kv head；`div_rn` + `rint` 保证与 PyTorch 逐位一致。
-- `quant_q.py`：独立的 q 折叠 + 量化 kernel（attention kernel 序言里也能融合做，两种都测了速度）。
-- `int8_attention.py`：
-  - `_find_seq`：每个请求的 q block 从 `cu_q[i] // BLOCK_Q + i` 开始编号（上界打包，避免在 host 上算真实 block 数），
-    program 二分查找自己属于哪个请求。
-  - 行 = token × head（GQA 的 G 个 head 共享一个 K/V tile）；KV 按 64 token 一个 tile，按 block_table 逐 token 取物理块。
-  - MODE 2 的数学和 `attend_int8` 一一对应：`_quant_rows` 量化 q；`tl.dot(int8, int8, out_dtype=int32)`；
-    online softmax 用 exp2（softmax_scale 预乘 log2e）；P 量化 `rint(P / (rowmax/127))`；分母 l 用量化后的 P 求和。
-  - split-KV：纯 decode 且请求数 ≤ 128/Hkv 时 16 段，`_reduce_kernel` 按 `exp2(m_s - max)` 加权合并。
-
-**CUDA 版**（`kvq/cuda_kernels.py` 用 `torch.utils.cpp_extension.load` JIT 编译，`KVQ_KERNEL=cuda`）
+**CUDA 版**（`kvq/cuda_kernels.py` 用 `torch.utils.cpp_extension.load` JIT 编译，`KVQ_KERNEL=cuda`，默认；
+head_dim 64 和 128 两种，和 head_dim 有关的常量都在 `Geom<D>` 里）
 - `quant_cache_kernel`：一个 block 一个 token，每线程 8 个通道，16 B 读 / 8 B 写，`__fdiv_rn` + `__float2int_rn`。
 - `quant_q_kernel`：一个 warp 一个 (token, q head)，shuffle 求 amax。
-- `int8_decode_attn_kernel`（v3）—— 建议按这个顺序读：
-  1. grid = (请求, kv head, split)，4 个 warp；m16 的 16 行 = 这个 kv head 的 G 个 q head。
+- `int8_decode_attn_kernel`（v3，短 query 版）—— 建议按这个顺序读：
+  1. grid = (请求, kv head, split × m-tile)，4 个 warp。这个 kv head 的 q_len × G 个 (token, q head) 排成行 R = t·G + h，
+     16 行一个 m-tile；decode（q_len 1）只有一个 tile，就是 G 个 q head。q_len > 8 的请求直接退出（交给 FA2）。
   2. `load_pages` / `issue`：一个 32-token chunk 最多跨 2 页，只查 2 次 block_table（提前一轮取），
      `cp.async` 把 K/V 原样搬进每个 warp 自己的 2 级 smem 环（行距 144 B，B fragment 读取无 bank 冲突）。
   3. 序言：8 个线程一行，s_k 折进 q、行 amax、量化，写 smem，每个 warp 读出 4 个 k-step 的 A fragment 常驻寄存器。
   4. QK：`mma.sync.m16n8k32.s8`，K 的 B fragment **按 `slot_of_token(8j+g)` 置换后的行号**去读。
+     因果 mask 按行：第 t 个 query token 只看 n < L − q_len + 1 + t 的 key（decode 时就是 n < L）。
   5. softmax + P 量化：同一 quad 的 4 个线程持有同一行，`__shfl_xor` 求行最大值；P 按 32-token chunk 量化成 int8，
      直接 `pack4` 进 PV 的 A fragment（置换保证了 P 不用跨线程搬）。
   6. PV：V 保持原顺序，每线程 4 条 32 位 LDS 读 4 个 token × 4 个通道，8 条 `__byte_perm` 转置成 4 个 n-tile 的 B fragment；
      输出通道因此是置换的（`chan_of`）。
   7. 合并：每个 warp 写自己的 smem 片（行距 129 个 float），收尾时 4 份相加，乘 s_v，写 bf16；切分时写部分和，
      `split_reduce_kernel` 合并。**不用 smem 原子加**（sm_80 上是 CAS 循环）。
+- `dequant_pages_kernel`：长 query 请求的页，一个 block 一页，int8 × s_k / s_v → bf16，写成 FA2 分页 KV 要的
+  `[page, block, H, D]`。源页号在 kernel 里按 (请求, 页序号) 查这一步的页表（见第 4 节第 36 条）。
+  K 保持 k−μ（smooth-K 的 μ 对 softmax 不可见，FA2 里也不用加回）。
+- 混合批怎么拼（`cuda_kernels.paged_attention`）：vLLM 0.32 的 V2 runner 不把 decode 请求排到前面，长短请求交错。
+  所以不切批：先对整批调 FA2，短请求的 `seqused_k` 给它自己的 q_len（从临时第 0 页读几个 key，算出来的结果没用）；
+  再调 INT8 kernel，它只覆盖短请求的行。`seqused_k` 给 0 本来更省，但 FA2 会越界写（第 4 节第 36 条）。
+  不用 gather / scatter，也不用改 vLLM 的调度。
 
 ### 2.8 扩展
 
@@ -186,7 +193,8 @@ attention:
 
 ### 3.4 阶段七：kernel
 
-- 三个 kernel 都有 Triton 版和 CUDA 版；写 cache、q 量化与 PyTorch 逐位一致，attention 与 PyTorch 实现 B 差 1e-5。
+- 三个 kernel 先后写了 Triton 版和 CUDA 版（Triton 版已删除，数字来自 tag `triton-backend`）；写 cache、q 量化与 PyTorch 逐位一致，
+  attention 与 PyTorch 实现 B 差 1e-5。
 - 融合写 cache（8192 token）28 µs，比 vLLM 原生 bf16 写入 42 µs 还快；q 量化融合进 attention 序言，额外开销为 0。
 - CUDA decode kernel 三轮 ncu 优化（b32×32k）：1514 → 1173 → **743 µs**（Triton int8 892，FA2 1402）。
 
@@ -201,7 +209,8 @@ attention:
 ### 3.6 阶段八：端到端
 
 - 容量：1.03M → 2.07M token。
-- 容量受限吞吐（512 × 6k+1k）：FA2 1115、Triton int8 1361、**CUDA int8 1431 tok/s**、vLLM int8_per_token_head 676。
+- 容量受限吞吐（512 × 6k+1k）：FA2 1115、Triton int8 1361、CUDA int8 1431 tok/s、vLLM int8_per_token_head 676
+  （这几个是 prefill 还走 Triton 反量化 kernel 时测的；只用 CUDA 之后 FA2 1112 → **1574 tok/s**，见第 3.8 节）。
 - 纯 decode TPOT（ms）：同一批请求分别生成 L = 128 和 2L = 256 个 token，两次的 prefill 完全一样，
   多出来的 L 步都在所有 prefill 结束之后，`(T(2L) − T(L)) / L` 就是纯 decode 一步的时间。
 
@@ -231,10 +240,60 @@ attention:
 |---|---|
 | 3.5(a) 校准参数 | max 不要分位数；文本校准可用于数学任务；TP=2 下单卡 scale 按 rank 切 92.42%、分布式校准 92.72% |
 | 3.5(b) CUDA graph | 完全兼容（精度不变）。要点：scale 早于 capture 分配且只能原地改；kernel 无 host 同步、分支只依赖 capture 时固定的形状；padding slot −1；扩展提前编译 |
-| 3.5(c) 投机解码 | draft 的 KV 用 `speculative_config.kv_cache_dtype/attention_backend` 隔离；接受率 87.0% → 86.7%（draft 量化与否一样）；7B ngram 加速比 1.26× → 1.23× |
-| 3.5(d) PD | int8 页正确传递（D 端 92.6% = bf16 = 混部）；传输量 53.0 → 26.5 KB/token；D 端 TPOT −8%；静态 scale 不需要随 KV 传 |
+| 3.5(c) 投机解码 | draft 的 KV 用 `speculative_config.kv_cache_dtype/attention_backend` 隔离；接受率 87.0% → 86.6%（draft 量化与否一样）；验证批（q_len ≤ 8）走 INT8 kernel、可进 full graph；batch 1 下 1.5B + 0.5B draft 比 bf16 快 17%，7B ngram 加速比 1.23× → 1.15–1.18×（第 3.8 节） |
+| 3.5(d) PD | int8 页正确传递（D 端 92.4% vs bf16 92.0%）；传输量 53.0 → 26.5 KB/token；D 端 TTFT 6.41 → 5.77 s、TPOT 31.1 → 27.6 ms；静态 scale 不需要随 KV 传 |
 | 3.5(e) W8A8 / W4A16 | W8A8 92.34 → 92.19%，AWQ 90.98 → 90.90%；KV 量化作用在 bf16 的 K/V 投影输出上，与权重/激活量化解耦；vLLM 0.32 在 GPU 上没有真 W4A8-int 路径 |
 | MLA | latent 同时是 K 和 V：QK 折进 q_lat，PV 乘在 o_lat 上，smooth 的 μ 在 PV 角色必须加回；latent 通道温和，per-channel 不加 smooth 就够，GSM8K 72.33 → 71.3–72.0% |
+
+### 3.8 只保留 CUDA：改了什么、结果（`results/19-cuda-only-*`）
+
+Triton 版删掉之前，它除了 decode 还负责两类请求：prefill（反量化 kernel）和投机验证批（每请求 k+1 个 query）。
+CUDA 版原来只做 q_len = 1。删 Triton 要先给这两类请求找新的落点：
+
+| 请求 | 以前 | 现在 |
+|---|---|---|
+| decode（q_len 1） | CUDA INT8 kernel | 同左 |
+| 投机验证、短 chunk（q_len ≤ 8） | Triton 反量化（实现 A） | CUDA INT8 kernel（实现 B，按行因果 mask，多 m-tile），可进 full graph |
+| prefill（q_len > 8） | Triton 反量化 kernel | CUDA 把这些请求的 int8 页反量化成 bf16 临时页 → vLLM 的 FA2 |
+| head_dim 64（0.5B draft） | Triton | CUDA kernel 按 D 模板化 |
+
+结果（A100，CUDA graph 开）：
+
+| | FA2 bf16 | 删 Triton 前（prefill 走 Triton） | 只用 CUDA |
+|---|---|---|---|
+| GSM8K 1319 题 | 92.19% | 92.19% | 92.12%（+14 / −15 翻转） |
+| ΔNLL gsm8k / aime24 | 0 | +0.0001 / +0.0011 | +0.0001 / +0.0013 |
+| ΔNLL，所有行走 INT8 kernel | 0 | +0.0004 / +0.0019（Triton） | +0.0005 / +0.0020 |
+| prefill 16k × 16 / 16k × 32（s） | 19.55 / 39.09 | 25.72 / 51.38 | **19.56 / 39.08** |
+| prefill 4k × 64 / 4k × 128（s） | 15.82 / 31.94 | 17.50 / 35.03 | **15.84 / 31.96** |
+| 纯 decode TPOT 4k × 128（同机 3 次中位数，ms） | 33.4 | – | **23.2**（−31%） |
+| 容量受限吞吐 512 × 6k+1k（tok/s） | 1112 | 1431 | **1574（+42%）** |
+| 投机解码接受率（1.5B + 0.5B draft，都 int8） | 87.0% | 86.7% | 86.6% |
+| PD 分离 D 端 TTFT / TPOT（500 题同时到达） | 6.41 s / 31.1 ms | 8.90 s / 31.6 ms | **5.77 s / 27.6 ms** |
+| 混部 TTFT / TPOT / 吞吐 | 5.03 s / 29.7 ms / 6721 | 6.55 s / 28.6 ms / 6124 | **4.62 s / 26.5 ms / 7290** |
+
+（"删 Triton 前"一列和 FA2 的 prefill 来自 `results/09-e2e` 等旧目录，其余是同一轮新测的。PD 两列的 FA2 是本轮重测，
+以前那轮 bf16 的 D 端是 7.33 s / 34.4 ms。）
+
+- **prefill 现在和 FA2 一样快**：多出来的反量化拷贝（每层一次）在 prefill 的计算量面前看不出来。以前 Triton 反量化 kernel
+  慢 10–32%，是"int8 的 TTFT 比 bf16 高"和"吞吐只 +28%"的主要原因；这一项消掉后，吞吐从 +28% 涨到 +42%，
+  PD / 混部的 TTFT 也从比 bf16 高变成比 bf16 低（每步的 decode 更快，排队的请求更早轮到）。
+- **精度不变**：GSM8K 差 1 题；ΔNLL 和 Triton 版在小数点后 4 位上一致，所有行都走 INT8 kernel（`KVQ_SHORT_Q=1000000`，
+  prefill 也用 int8 QK/PV）时也一样，说明多 token 因果 mask 的 CUDA 实现是对的。
+- **投机解码**：验证批默认走 INT8 kernel，接受率 86.6%（bf16 87.0%）；让它走反量化 + FA2（`KVQ_SHORT_Q=1`）接受率也是 86.6%。
+- **batch 1 投机解码延迟**（TPOT ms，24 道题逐条跑，`results/19-cuda-only-spec-latency`；int8 删 Triton 前一列来自 `results/10-spec-latency`）：
+
+  | | bf16 | int8，删 Triton 前 | int8，只用 CUDA |
+  |---|---|---|---|
+  | 7B 不开投机 | 10.09 | 10.01 | 9.91 |
+  | 7B ngram（k = 4） | 8.18 | 8.14 | 8.65 |
+  | 1.5B + 0.5B draft（都 int8） | 14.03 | 18.78 | **11.69** |
+
+  draft 模型这组从比 bf16 慢 35% 变成快 17%：验证批和 draft 的 decode 现在都在 full graph 里走 INT8 kernel。
+  ngram 这组慢了 4–6%（两次测量 8.41 / 8.65 对 8.05 / 8.18），加速比从 1.23× 降到 1.15–1.18×。kernel 微基准
+  （`scripts/bench_short_q.py`）给出了原因：batch 1、上下文 512 时，q_len 5 的 INT8 kernel 33 µs、FA2 25 µs
+  （q_len 1 时是 21 对 27）。验证批要切 3 个 m-tile，每个都读一遍 KV，再加 16 段 split 的合并，短上下文时固定开销占主导；
+  上下文 ≥ 1k 时 INT8 持平或更快（4k：37 对 110 µs，batch 8 × 1k：34 对 74 µs）。
 
 ## 4. 遇到的问题（按类型）
 
@@ -279,6 +338,34 @@ attention:
 29. Modal 中途抢占容器，任务整段重跑（顺便验证了结果可重复）。
 30. zsh 下一个无匹配的 glob 让整条 `rm` 没执行，重复结果被提交了，下一个 commit 删掉。
 
+**去掉 Triton 之后**
+31. Triton 版除了 decode，还承担着 prefill 和投机验证批（多 token 请求走 MODE 1 反量化）。CUDA kernel 原来只做 q_len = 1，
+    删 Triton 前要先给这两类请求找落点：短的（≤ 8 token）扩进 INT8 kernel（行 = (token, head)，按行因果 mask，多个 m-tile），
+    长的反量化成 bf16 临时页交给 FA2。
+32. 本想让 decode 请求排在批前面再切成两段，但 vLLM 0.32 的 V2 runner 不支持 `reorder_batch_threshold`，长短请求交错。
+    改成两个 kernel 叠加：FA2 跑整批（短请求只读临时第 0 页的几个 key），INT8 kernel 随后只覆盖短请求的行。
+33. 继承来的 `AttentionCGSupport.ALWAYS` 不再成立：长 query 路径按 CPU 上的长度分配临时页，不能进 full graph。
+    降成 `UNIFORM_BATCH`：均匀的 decode / 投机验证批（q_len ≤ 8）只走 INT8 kernel，照样 full graph；混合批 piecewise。
+34. 一个旧单测偶发失败：量化往返误差界 `s/2 + 1e-6` 没算 fp32 自身的舍入（|x| ~ 100 时约 1e-5），又没固定随机种子。
+35. 后台等 Modal 任务结束时用 `pgrep -f "modal run ..."`，会匹配到等待循环自己的命令行，永远等不完；改成按 PID 等。
+36. 单测和 50 题冒烟都过了，GSM8K 1319 题一跑就 illegal memory access：只有"新请求的 prefill + 老请求的 decode"混在一批时才出现
+    （256 个请求里 68 个 prompt chunk、188 个 decode）。查法：`KVQ_DEBUG=1` 在每批 kernel 前做 CPU 端越界检查 →
+    `CUDA_LAUNCH_BLOCKING=1` 定位到 FA2 → 把出错那次 FA2 调用的 metadata 存下来（`KVQ_DEBUG_DUMP`），用随机张量离线重放，
+    逐个改一个因素（`scripts/replay_fa_call.py`）。结果有两个原因：
+    (a) 临时页的源页号在 metadata builder 里从页表 gather，读到的不是这一步的页表（forward 时页表是对的）。改成 builder 只在 CPU 上
+        记"第几个请求的第几页"，由反量化 kernel 在 forward 时自己查页表；临时页表也在 forward 第一层才拷到 GPU。
+    (b) FA2 对 `seqused_k = 0` 的行会越界写（MMU 报 VIRT_WRITE）；单测里短请求少、输出缓冲后面碰巧有空间，所以没暴露。
+        短请求改成读它自己 q_len 个 key（临时第 0 页），重放和 400 题都不再出错。
+    中间猜过"FA2 按整个 KV tile 查页表、临时页表太窄"，重放证明不是（加宽也照崩）；加宽本身无害，保留了。
+37. 我们扩展里的 launcher 没有在 kernel 后检查错误，越界会在下一次 CUDA 调用时才报出来，调用栈会指错 kernel。
+    这次靠转储时的 `.cpu()` 同步证明了反量化 kernel 已经跑完、出错的是 FA2。
+38. Triton kernel 对 head_dim 是通用的，CUDA 版写死了 128。删掉 Triton 后 Qwen2.5-0.5B（head_dim 64）当 int8 draft 直接起不来。
+    把 kernel 按 D 模板化（`Geom<D>`：k-step 数、PV n-tile 数、每线程通道数、cp.async 每行 lane 数、smem 大小），支持 64 和 128。
+39. 让投机验证批走"反量化 + FA2"（`KVQ_SHORT_Q=1`）时 GSM8K 掉到 29%：vLLM 的 `seq_lens_cpu_upper_bound` 在 async 投机解码下
+    对 decode 行是乐观上界（假设 draft 全被接受），我把它当成了 FA2 的 `seqused_k`，验证行多看了几个没被接受的旧 key。
+    改成 CPU 长度只决定拷几页（上界 ≥ 真实长度，多拷无害），`seqused_k` 在 forward 时用 GPU 上的精确长度现算。
+    默认配置不受影响：验证批（q_len ≤ 8）走 INT8 kernel，本来就用 GPU 长度。
+
 ## 5. 复盘要点（面试可以这样讲）
 
 - **为什么 per-channel**：先看分布，K 的离群在通道维，而且跨 token 不变。per-token 的 scale 会被离群通道吃掉，per-channel 正好对齐；
@@ -293,9 +380,12 @@ attention:
 
 ## 6. 局限和没做完的
 
-- **prefill 比 FA2 慢**：int8 backend 的 prefill 走自己的反量化 Triton kernel（16k × 16：23 s vs 19 s），TTFT 因此高约 20%。
-  可以改成反量化到 bf16 临时页后调 FA2，或继续优化 MODE 1。
-- CUDA kernel 只做了 decode、head_dim 128；Hopper 上没用 wgmma/TMA；76 KB smem 限制了占用率；group32 的 q scale 只在 Triton 版里有。
+- prefill 每层多一次"int8 页 → bf16 临时页"的拷贝，临时页按需分配、不在 vLLM 启动时的显存预算里（一个 16k 请求每层约 32 MB，
+  各层复用）。更彻底的做法是写一个直接读 int8 页的 prefill kernel。
+- batch 1、短上下文（< 1k）的投机验证批，INT8 kernel 比 FA2 慢约 8 µs/层（3 个 m-tile 各读一遍 KV + split 合并），
+  7B ngram 的 batch-1 加速比从 1.23× 降到 1.15–1.18×。可以让一个 CTA 依次处理多个 m-tile、复用 smem 里的 K/V。
+- CUDA kernel 只支持 head_dim 64 / 128；Hopper 上没用 wgmma/TMA；76 KB smem 限制了占用率；group32 的 q scale 随 Triton 版一起删了；
+  实现 A 的 decode（全程反量化）也只剩 PyTorch 路径。
 - PD 分离只能用存储型 connector（gVisor 限制），测不到真实网络传输下 TTFT 的变化。
 - vLLM 原生 int8_per_token_head 端到端 decode 比它的 kernel 测试慢得多（4k × 128 每步比 FA2 多 21 ms，kernel 本身才 0.6 ms/层），
   原因没查；它只是对照组。
@@ -305,7 +395,7 @@ attention:
 ## 7. 复现
 
 ```bash
-# 单测（参考实现 / int8 实现 / Triton / CUDA / CUDA graph）
+# 单测（参考实现 / int8 实现 / CUDA kernel 和长 query 路径 / CUDA graph）
 modal run modal_app.py --cmd "python3 -m pytest -q tests" --run-id tests --gpu A100-80GB
 # 各阶段的完整脚本
 modal run modal_app.py --cmd "bash scripts/stage5_dynamic.sh A_channel_smooth B_channel_smooth" --run-id s5 --gpu A100-80GB

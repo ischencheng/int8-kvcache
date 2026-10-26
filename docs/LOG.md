@@ -687,3 +687,55 @@ D 实例（kv_consumer）找到后直接注入自己的分页 cache、跳过 pro
   只偏 0.4 ms，和 FA2 一样。`--repeat` 加了每点预热，换一台 A100 把 1k × 128 和 4k × 128 各重复 3 次：
   重复之间差 0.1–0.9 ms（4k × 128 的两个 int8 配置例外：Triton 29.3–30.6、CUDA 24.0–26.6）；两台机器的同一个点差 2–9%。
 - 三种口径的教训：差值法混进了 prefill chunk；每请求时间戳在请求同时涌入时由 prefill 主导；只有纯 decode 能看 decode kernel 的收益。
+
+## Step 10 去掉 Triton，只用 CUDA（`results/15-*` 到 `results/19-*`）
+
+起因：CUDA 版在所有点都比 Triton 版快，两套 kernel 没必要并存。Triton 版留在 tag `triton-backend`。
+
+**删之前要先接住 Triton 负责的两类请求**（CUDA kernel 原来只做 q_len = 1）：
+
+1. 短 query（q_len ≤ 8：投机验证、短 chunk）扩进 CUDA INT8 kernel：m16 的行从"一个 token 的 G 个 q head"推广成
+   (token, head) 对 R = t·G + h，超过 16 行沿 grid.z 切 m-tile；每行因果上限 L − q_len + 1 + t。
+   这样均匀的验证批也只走 INT8 kernel，backend 的 CUDA graph 支持从继承来的 `ALWAYS` 改成 `UNIFORM_BATCH`，
+   验证批仍在 full graph 里（冒烟里 ngram 投机也捕获了 FULL graph）。
+2. 长 query（prefill）：把这些请求的 int8 页反量化成 bf16 临时页（`[page, block, H, D]`），交给 vLLM 的 FA2。
+   vLLM 0.32 的 V2 runner 不把 decode 排到批前面，所以不切批：FA2 先跑整批，INT8 kernel 再覆盖短请求的行。
+3. 参考实现 `paged_static_attention` 加 `short_q`：q_len ≤ short_q 的请求按实现 B 算。CUDA 测试：短 query 对参考
+   rel_l2 ≤ 2.3e-4，混合批长请求 8e-4（bf16 的 FA2），短请求逐位一致。
+
+**冒烟过了，1319 题一跑就 illegal memory access**，最后查出三个问题：
+
+| 现象 | 原因 | 修法 |
+|---|---|---|
+| `KVQ_DEBUG=1` 的 CPU 检查报"要反量化的源页号越界"，而 forward 时页表本身是对的 | 临时页的源页号在 metadata builder 里从页表 gather，读到的不是这一步的页表 | builder 只在 CPU 上记 (请求, 页序号)，反量化 kernel 在 forward 时自己查页表；临时页表也在第一层 forward 才拷到 GPU |
+| 检查全过，`CUDA_LAUNCH_BLOCKING=1` 指向 FA2 | FA2 对 `seqused_k = 0` 的行越界写（离线重放：只要没有 0 行就不崩） | 短请求给它自己 q_len 个 key（读临时第 0 页，结果随后被覆盖） |
+| `KVQ_SHORT_Q=1`（验证批走 FA2）掉到 29%；默认配置的 int8 draft 接受率 81.2%（应为 ~86.7%） | `seq_lens_cpu_upper_bound` 在 async 投机解码下是乐观上界，被我当成了 FA2 的 key 数；draft 模型处理 prompt 时也用到了它 | CPU 长度只决定拷几页，key 数在 forward 时用 GPU 上的精确长度算。修后接受率 86.6%，sq1 75.0% |
+
+查法：每批 kernel 前的 CPU 端越界检查（`KVQ_DEBUG=1`）→ 同步启动定位 kernel → 把出错那次 FA2 调用的 metadata 存下来
+（`KVQ_DEBUG_DUMP`）→ `scripts/replay_fa_call.py` 用随机张量离线重放，一次改一个因素。中间猜过"FA2 按整个 KV tile 查页表、
+临时页表太窄"，重放证明不是；加宽页表没坏处，保留了。另外，我们扩展里的 launcher 没有在 kernel 后检查错误，
+同步模式下越界也会算到下一个 CUDA 调用头上，这次靠转储时的 `.cpu()` 同步排除了反量化 kernel。
+
+**还丢了一个能力**：Triton 对 head_dim 通用，CUDA 版写死 128，Qwen2.5-0.5B（head_dim 64）当 int8 draft 起不来。
+kernel 按 D 模板化（`Geom<D>`：k-step 数 D/32、PV n-tile 数 D/8、每线程通道数 D/8、cp.async 每行 D/16 个 lane、smem 大小），
+支持 64 / 128，D=128 的代码路径不变（纯 decode TPOT 4k × 128 仍比 FA2 低 31%）。
+
+**结果**（A100，CUDA graph 开；对照列见 WALKTHROUGH 第 3.8 节）：
+
+| | FA2 bf16 | 只用 CUDA |
+|---|---|---|
+| GSM8K 1319 题 | 92.19% | 92.12%（+14 / −15） |
+| ΔNLL gsm8k / aime24（默认 / 全走 INT8 kernel） | 0 | +0.0001 / +0.0013，+0.0005 / +0.0020 |
+| prefill 4k × 64、4k × 128、16k × 16、16k × 32（s） | 15.82、31.94、19.55、39.09 | 15.84、31.96、19.56、39.08 |
+| 纯 decode TPOT 4k × 128（ms） | 33.4 | 23.2 |
+| 容量受限吞吐（tok/s） | 1112 | 1574（+42%，删 Triton 前 +28%） |
+| 投机解码 GSM8K 500 / 接受率（1.5B + 0.5B draft） | 74.8% / 87.0% | 76.2% / 86.6%（验证批走 FA2：75.0% / 86.6%） |
+| ngram 7B GSM8K 500 | 92.0% | 92.2% |
+| PD D 端 / 混部 TTFT（s） | 6.41 / 5.03 | 5.77 / 4.62 |
+
+- prefill 和 FA2 持平：以前 Triton 反量化 kernel 慢 10–32%，这是 int8 的 TTFT 偏高、吞吐只 +28% 的主要原因。
+- 单测 120 个全过（新增：短 query、混合批、仿服务的 256 请求批、CPU 长度偏大、head_dim 64、CUDA graph 下的 q_len 4 验证批）。
+- batch 1 投机解码延迟（ms，bf16 / int8）：7B ngram 8.18 / 8.65（删 Triton 前 int8 8.14），1.5B + 0.5B draft 14.03 / 11.69
+  （删 Triton 前 int8 18.78）。ngram 的回退来自 kernel：batch 1、上下文 512 时 q_len 5 的 INT8 kernel 33 µs，FA2 25 µs
+  （3 个 m-tile 各读一遍 KV + split 合并）；上下文 ≥ 1k 时 INT8 持平或更快（`scripts/bench_short_q.py`）。
+  `results/19-cuda-only-perf/latency_sd_int8_int8.json` 是长度修复之前测的，以 `results/19-cuda-only-spec-latency` 为准。

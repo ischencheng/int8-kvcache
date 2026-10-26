@@ -1,0 +1,6 @@
+{
+ "label": "sd_none_int8",
+ "model": "Qwen/Qwen2.5-1.5B-Instruct",
+ "n": 24,
+ "tpot_ms": 3.661861197803923
+}
