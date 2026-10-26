@@ -1,0 +1,43 @@
+{
+ "label": "ng_int8_mq8",
+ "task": "gsm8k",
+ "model": "Qwen/Qwen2.5-7B-Instruct",
+ "n_prompts": 500,
+ "n_samples": 500,
+ "accuracy": 0.92,
+ "wall_s": 39.77639102935791,
+ "gen_tokens": 146917,
+ "env": [
+  "KVQ_SCALES=/cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors",
+  "KVQ_CFG=B_channel_smooth",
+  "KVQ_KERNEL=triton",
+  "KVQ_INT8_MAX_Q=8"
+ ],
+ "llm": {
+  "max_model_len": 4096,
+  "gpu_memory_utilization": 0.85,
+  "seed": 0,
+  "disable_log_stats": false,
+  "kv_cache_dtype": "int8_static",
+  "attention_config": {
+   "backend": "CUSTOM"
+  },
+  "speculative_config": {
+   "method": "ngram",
+   "num_speculative_tokens": 4,
+   "prompt_lookup_max": 4,
+   "prompt_lookup_min": 2
+  }
+ },
+ "spec_decode": {
+  "vllm:spec_decode_num_drafts": 101259,
+  "vllm:spec_decode_num_draft_tokens": 405036,
+  "vllm:spec_decode_num_accepted_tokens": 45158,
+  "vllm:spec_decode_num_accepted_tokens_per_pos": [
+   20534,
+   12130,
+   7511,
+   4983
+  ]
+ }
+}

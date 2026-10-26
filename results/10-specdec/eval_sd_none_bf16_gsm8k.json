@@ -1,0 +1,17 @@
+{
+ "label": "sd_none_bf16",
+ "task": "gsm8k",
+ "model": "Qwen/Qwen2.5-1.5B-Instruct",
+ "n_prompts": 500,
+ "n_samples": 500,
+ "accuracy": 0.738,
+ "wall_s": 9.128335952758789,
+ "gen_tokens": 150778,
+ "env": [],
+ "llm": {
+  "max_model_len": 4096,
+  "gpu_memory_utilization": 0.85,
+  "seed": 0,
+  "disable_log_stats": false
+ }
+}

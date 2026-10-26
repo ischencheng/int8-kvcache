@@ -447,3 +447,41 @@ Qwen/Qwen2.5-7B-Instruct-AWQ（W4A16）。每个模型都用自己重新校准 K
 
 遇到的问题：RedHatAI 的 w4a16 checkpoint 用的是 `actorder='group'`，vLLM 0.32 直接拒绝加载
 （"group/dynamic activation ordering is no longer supported"），换成 Qwen 官方的 AWQ。
+
+## Step 9c 扩展 3.5(c)：投机解码
+
+**怎么隔离 draft 的 KV**：vLLM 0.32 的 `speculative_config` 有 `kv_cache_dtype`（draft 单独的 KV dtype，
+不设就继承 target 的）和 `attention_backend`（draft 的 backend 默认**独立自动选择**，不继承 target）。所以：
+- target int8 + draft bf16：`speculative_config.kv_cache_dtype="auto"`，draft 自动选 FA2；
+  如果不设，draft 会继承 `int8_static` 却拿到 FA2，直接报 dtype 不支持。
+- target int8 + draft int8：`speculative_config.attention_backend="CUSTOM"`；draft 的层名带 `draft_model.` 前缀，
+  backend 的 builder 从 `KVQ_DRAFT_SCALES`（draft 模型单独校准）取它的 scale。
+- 两种 dtype 并存时，vLLM 的 hybrid KV cache manager 会按各自的页大小管理（target 1 字节/元素，draft 2 字节/元素）。
+
+**实验**（`results/10-specdec/`，GSM8K 500 题）：vLLM 的 draft_model 要求 target 和 draft 词表大小相同，
+Qwen2.5-7B 是 152064、0.5B 是 151936，所以 draft_model 实验用 Qwen2.5-1.5B（target）+ 0.5B（draft），k=4；
+另在 7B 上用 ngram（无 draft 模型，只有 target 的 verify 批次读 int8 cache）：
+
+| 配置 | GSM8K | 接受率 | 平均接受长度（≤5） | 各位置接受数 |
+|---|---|---|---|---|
+| 1.5B 无投机，bf16 KV | 73.8% | – | – | – |
+| 1.5B 无投机，int8 KV | 75.0% | – | – | – |
+| draft：target bf16 / draft bf16 | 74.8% | 87.0% | 4.48 | 31425 / 29714 / 28214 / 26877 |
+| draft：target int8 / draft bf16 | 74.0% | 86.7% | 4.47 | 31665 / 29873 / 28328 / 26957 |
+| draft：target int8 / draft int8 | 75.2% | 86.7% | 4.47 | 31367 / 29632 / 28075 / 26763 |
+| 同上 + verify 也走 int8 算术 | 74.2% | 86.8% | 4.47 | 31419 / 29661 / 28134 / 26779 |
+| 7B ngram，bf16 KV | 92.0% | 11.1% | 1.44 | |
+| 7B ngram，int8 KV | 92.0% | 11.1% | 1.45 | |
+| 7B ngram，int8 KV + verify int8 算术 | 92.0% | 11.1% | 1.45 | |
+
+结论：
+- **接受率几乎不受影响**（87.0% → 86.7%），draft 的 KV 量化与否、verify 走反量化还是 int8 算术都一样。
+  原因：接受与否取决于 draft 和 target 的 argmax 是否一致，KV 量化带来的 logits 扰动远小于两个模型之间本来的差距。
+- draft 的 KV 可以一起量化：draft 自己的 cache 也省一半，接受率不变；draft 模型小、cache 也小，收益主要还在 target。
+- 投机验证批次（每请求 k+1 个 query）默认走反量化路径（多 token 请求），`KVQ_INT8_MAX_Q=8` 可以让它也走 int8 算术，精度不变。
+
+遇到的问题：
+1. 7B + 0.5B 直接报 "Target and draft model should have the same vocabulary size"，换成 1.5B + 0.5B。
+2. 离线 `LLM` 默认 `disable_log_stats=True`，`get_metrics()` 报 "Stat logging disabled"，拿不到接受率；第一轮白跑，打开后重跑。
+3. 用随机 token 做 prompt 的 TPOT 基准不能衡量投机解码：随机前缀让模型续写乱码，draft 几乎猜不中；大 batch 下
+   （GSM8K 500 题一起跑）投机解码本来就比不开慢（16.5k → 7–10k tok/s，计算已饱和）。加速比要在 batch 1、真实 prompt 下测，见下一步。

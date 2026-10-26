@@ -1,0 +1,33 @@
+{
+ "label": "sd_bf16_bf16",
+ "task": "gsm8k",
+ "model": "Qwen/Qwen2.5-1.5B-Instruct",
+ "n_prompts": 500,
+ "n_samples": 500,
+ "accuracy": 0.748,
+ "wall_s": 15.082619190216064,
+ "gen_tokens": 149061,
+ "env": [],
+ "llm": {
+  "max_model_len": 4096,
+  "gpu_memory_utilization": 0.85,
+  "seed": 0,
+  "disable_log_stats": false,
+  "speculative_config": {
+   "method": "draft_model",
+   "model": "Qwen/Qwen2.5-0.5B-Instruct",
+   "num_speculative_tokens": 4
+  }
+ },
+ "spec_decode": {
+  "vllm:spec_decode_num_drafts": 33406,
+  "vllm:spec_decode_num_draft_tokens": 133624,
+  "vllm:spec_decode_num_accepted_tokens": 116230,
+  "vllm:spec_decode_num_accepted_tokens_per_pos": [
+   31425,
+   29714,
+   28214,
+   26877
+  ]
+ }
+}
