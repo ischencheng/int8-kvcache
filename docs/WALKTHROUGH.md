@@ -44,7 +44,7 @@ attention:
 ```
 
 运行方式：`kv_cache_dtype="int8_static", attention_config={"backend": "CUSTOM"}`，再用环境变量
-`KVQ_SCALES`（校准文件）、`KVQ_CFG`（数值配置名，见 `kvq/int8_ref.py:CONFIGS`）、`KVQ_KERNEL`（torch / triton）。
+`KVQ_SCALES`（校准文件）、`KVQ_CFG`（数值配置名，见 `kvq/int8_ref.py:CONFIGS`）、`KVQ_KERNEL`（torch / triton / cuda）。
 用插件 + 小 patch 而不是 fork vLLM：改动面只有 3 个文件 12 行，其余都在我们的包里，换 vLLM 版本时只需要重做这个 patch。
 
 ## 2. 代码导览（按课程的阶段）
