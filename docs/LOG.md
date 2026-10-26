@@ -739,3 +739,43 @@ kernel 按 D 模板化（`Geom<D>`：k-step 数 D/32、PV n-tile 数 D/8、每�
   （删 Triton 前 int8 18.78）。ngram 的回退来自 kernel：batch 1、上下文 512 时 q_len 5 的 INT8 kernel 33 µs，FA2 25 µs
   （3 个 m-tile 各读一遍 KV + split 合并）；上下文 ≥ 1k 时 INT8 持平或更快（`scripts/bench_short_q.py`）。
   `results/19-cuda-only-perf/latency_sd_int8_int8.json` 是长度修复之前测的，以 `results/19-cuda-only-spec-latency` 为准。
+
+## Step 11 投机验证批的 INT8 kernel（`results/20-*`、`results/21-*`）
+
+起因：只用 CUDA 后，7B ngram 投机解码在 batch 1 下比 bf16 慢 4–6%（Step 10）。
+
+1. **先拆时间**（`scripts/profile_short_q.py`，torch profiler 按 kernel 汇总，batch 1、上下文 512，µs）：
+
+   | | attention kernel | split-KV 合并 kernel | FA2 |
+   |---|---|---|---|
+   | q_len 1 | 10.2 | 4.3 | 17.6（+ 拷贝） |
+   | q_len 5 | 13.9 | 11.9 | 21.5 |
+
+   多出来的时间大部分在合并 kernel：它一个 block 串行处理 5 个 token，每个 token 串行读 16 段，每次读都等上一次。
+2. **合并 kernel 改写**：每个 (请求, q head, token) 一个 block；一个 warp 把各段的 max 变成权重放进 smem，D 个线程再用
+   互不依赖（展开）的读取累加各段部分和。新旧 kernel 同机 A/B（`scripts/bench_short_q_ab.py`，µs）：
+
+   | | FA2 | 改前 | 改后 |
+   |---|---|---|---|
+   | batch 1 × 512，q_len 5 | 23.3 | 31.6 | **24.0** |
+   | batch 1 × 1k，q_len 5 | 34.7 | 33.2 | **25.2** |
+   | batch 1 × 4k，q_len 5 | 109.8 | 37.4 | **29.6** |
+   | batch 1 × 512，q_len 1 | 29.2 | 23.8 | **21.4** |
+   | batch 8 / 32（不走 split） | – | 不变 | 不变 |
+
+3. **"一个 CTA 处理多个 m-tile、共用 K/V"**（原计划，commit 0cdff68）：4 个 warp 排成 TPC 个 tile × 4/TPC 个 chunk 通道，
+   同通道的 warp 一起把 chunk 读进共用的 ring（named barrier 同步），各算各的 tile。单测（TPC = 1/2/4、CUDA graph 回放）
+   全过，但在所有点都更慢（`results/20-bench-short-q-ab`）：batch 1 × 512 的 q_len 5 从 24.1 到 34.6 µs，32 × 4k 从 224 到
+   383 µs。上下文短时 kernel 受延迟限制：split 16 段后每个 CTA 只有 1 个 chunk，合并 tile 让序言和收尾在一个 CTA 里串行
+   做 3–4 遍；省下的重复 K/V 读取本来就命中 L2；长上下文时只剩一个 chunk 通道，访存并行度掉到 1/4。代码删了（423e2ab）。
+4. **端到端**：`bench_spec_latency.py` 加了接受数和"每步时间"（TPOT 还受接受数影响，int8 的输出和 bf16 不同）。单次测量在
+   两台机器上给出了相反的方向（+2.8%、−1.6%），所以在一个容器里 bf16 / 新 int8 / 旧 int8（`KVQ_CUDA_SRC` 指向改前的 .cu）
+   交替跑 3 轮（`results/21-ngram-ab`）：
+
+   | 每步时间（ms） | 第 1 轮 | 第 2 轮 | 第 3 轮 | 均值 |
+   |---|---|---|---|---|
+   | bf16 FA2 | 11.53 | 11.63 | 11.55 | 11.57 |
+   | int8，改后 | 11.68 | 11.59 | 11.59 | **11.62（+0.45%）** |
+   | int8，改前 | 11.89 | 12.10 | 11.95 | 11.98（+3.6%） |
+
+   每步时间回到和 bf16 持平。TPOT 8.23 / 8.37 / 8.53 ms，剩下的 1.6% 来自 int8 在这 24 道题上每步接受的 token 少 1.4%。

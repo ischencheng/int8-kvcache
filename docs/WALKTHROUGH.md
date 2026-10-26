@@ -132,7 +132,8 @@ head_dim 64 和 128 两种，和 head_dim 有关的常量都在 `Geom<D>` 里）
   6. PV：V 保持原顺序，每线程 4 条 32 位 LDS 读 4 个 token × 4 个通道，8 条 `__byte_perm` 转置成 4 个 n-tile 的 B fragment；
      输出通道因此是置换的（`chan_of`）。
   7. 合并：每个 warp 写自己的 smem 片（行距 129 个 float），收尾时 4 份相加，乘 s_v，写 bf16；切分时写部分和，
-     `split_reduce_kernel` 合并。**不用 smem 原子加**（sm_80 上是 CAS 循环）。
+     `split_reduce_kernel` 合并。**不用 smem 原子加**（sm_80 上是 CAS 循环）。合并 kernel 每个 (请求, q head, query token)
+     一个 block：一个 warp 先把各段的 max 变成权重放进 smem，再由 D 个线程并行读各段的部分和（第 4 节第 40 条）。
 - `dequant_pages_kernel`：长 query 请求的页，一个 block 一页，int8 × s_k / s_v → bf16，写成 FA2 分页 KV 要的
   `[page, block, H, D]`。源页号在 kernel 里按 (请求, 页序号) 查这一步的页表（见第 4 节第 36 条）。
   K 保持 k−μ（smooth-K 的 μ 对 softmax 不可见，FA2 里也不用加回）。
@@ -240,7 +241,7 @@ head_dim 64 和 128 两种，和 head_dim 有关的常量都在 `Geom<D>` 里）
 |---|---|
 | 3.5(a) 校准参数 | max 不要分位数；文本校准可用于数学任务；TP=2 下单卡 scale 按 rank 切 92.42%、分布式校准 92.72% |
 | 3.5(b) CUDA graph | 完全兼容（精度不变）。要点：scale 早于 capture 分配且只能原地改；kernel 无 host 同步、分支只依赖 capture 时固定的形状；padding slot −1；扩展提前编译 |
-| 3.5(c) 投机解码 | draft 的 KV 用 `speculative_config.kv_cache_dtype/attention_backend` 隔离；接受率 87.0% → 86.6%（draft 量化与否一样）；验证批（q_len ≤ 8）走 INT8 kernel、可进 full graph；batch 1 下 1.5B + 0.5B draft 比 bf16 快 17%，7B ngram 加速比 1.23× → 1.15–1.18×（第 3.8 节） |
+| 3.5(c) 投机解码 | draft 的 KV 用 `speculative_config.kv_cache_dtype/attention_backend` 隔离；接受率 87.0% → 86.6%（draft 量化与否一样）；验证批（q_len ≤ 8）走 INT8 kernel、可进 full graph；batch 1 下 1.5B + 0.5B draft 比 bf16 快 17%，7B ngram 每步时间和 bf16 持平（第 3.8 节） |
 | 3.5(d) PD | int8 页正确传递（D 端 92.4% vs bf16 92.0%）；传输量 53.0 → 26.5 KB/token；D 端 TTFT 6.41 → 5.77 s、TPOT 31.1 → 27.6 ms；静态 scale 不需要随 KV 传 |
 | 3.5(e) W8A8 / W4A16 | W8A8 92.34 → 92.19%，AWQ 90.98 → 90.90%；KV 量化作用在 bf16 的 K/V 投影输出上，与权重/激活量化解耦；vLLM 0.32 在 GPU 上没有真 W4A8-int 路径 |
 | MLA | latent 同时是 K 和 V：QK 折进 q_lat，PV 乘在 o_lat 上，smooth 的 μ 在 PV 角色必须加回；latent 通道温和，per-channel 不加 smooth 就够，GSM8K 72.33 → 71.3–72.0% |
@@ -290,10 +291,15 @@ CUDA 版原来只做 q_len = 1。删 Triton 要先给这两类请求找新的落
   | 1.5B + 0.5B draft（都 int8） | 14.03 | 18.78 | **11.69** |
 
   draft 模型这组从比 bf16 慢 35% 变成快 17%：验证批和 draft 的 decode 现在都在 full graph 里走 INT8 kernel。
-  ngram 这组慢了 4–6%（两次测量 8.41 / 8.65 对 8.05 / 8.18），加速比从 1.23× 降到 1.15–1.18×。kernel 微基准
-  （`scripts/bench_short_q.py`）给出了原因：batch 1、上下文 512 时，q_len 5 的 INT8 kernel 33 µs、FA2 25 µs
-  （q_len 1 时是 21 对 27）。验证批要切 3 个 m-tile，每个都读一遍 KV，再加 16 段 split 的合并，短上下文时固定开销占主导；
-  上下文 ≥ 1k 时 INT8 持平或更快（4k：37 对 110 µs，batch 8 × 1k：34 对 74 µs）。
+  ngram 这组一开始慢了 4–6%。kernel 微基准（`scripts/bench_short_q_ab.py`）定位到 q_len 5 的验证批：batch 1、上下文 512 时
+  INT8 32 µs、FA2 23 µs，其中 split-KV 的合并 kernel 占了 12 µs（它在一个 block 里串行处理 5 个 token、每个 token 串行读 16 段）。
+  合并 kernel 改成每个 (请求, q head, token) 一个 block、并行读各段后降到 24 µs，和 FA2 持平；decode 也从 24 降到 20 µs。
+  端到端用"每步时间"比较（TPOT 还取决于接受了几个 draft，而 int8 的输出和 bf16 不同，n-gram 命中也不同），同一个容器里
+  bf16 / 新 int8 / 旧 int8 交替跑 3 轮（`results/21-ngram-ab`）：每步 11.57 / **11.62** / 11.98 ms，新 int8 只比 bf16 慢 0.45%
+  （三轮 +1.4%、−0.3%、+0.3%，在噪声里），旧 int8 每轮都慢 3.2–4.1%。TPOT 8.23 / 8.37 / 8.53 ms：剩下的 1.6% 来自这 24 道题上
+  int8 每步接受的 token 少 1.4%（1.408 对 1.428），不是 kernel。
+  也试了"一个 CTA 依次处理多个 m-tile、共用 smem 里的 K/V"，所有点都更慢（batch 1 × 512：24 → 35 µs；32 × 4k：224 → 383 µs），
+  没有保留（第 4 节第 41 条）。
 
 ## 4. 遇到的问题（按类型）
 
@@ -366,6 +372,20 @@ CUDA 版原来只做 q_len = 1。删 Triton 要先给这两类请求找新的落
     改成 CPU 长度只决定拷几页（上界 ≥ 真实长度，多拷无害），`seqused_k` 在 forward 时用 GPU 上的精确长度现算。
     默认配置不受影响：验证批（q_len ≤ 8）走 INT8 kernel，本来就用 GPU 长度。
 
+**投机验证批的延迟**
+40. 只用 CUDA 后 7B ngram 的 batch-1 TPOT 比 bf16 慢 4–6%。先按 kernel 拆时间（torch profiler）：q_len 5 比 q_len 1 多出来的
+    12 µs 里，attention kernel 只占 3.7 µs，split-KV 合并 kernel 占 7.6 µs：它在一个 block 里串行处理 5 个 token，每个 token
+    串行读 16 段，每次读都要等上一次的结果。改成每个 (请求, q head, token) 一个 block、一个 warp 先算权重、D 个线程并行读，
+    验证批 32 → 24 µs（FA2 23），decode 24 → 20 µs。
+41. 原计划是"一个 CTA 依次处理多个 m-tile、共用 smem 里的 K/V"，省掉 3 个 m-tile 各读一遍 KV。实现了（4 个 warp 分成
+    TPC 个 tile × 4/TPC 个 chunk 通道，同通道的 warp 一起加载、named barrier 同步），单测全过，但所有点都更慢：上下文短时
+    kernel 受延迟限制，split 16 段后每个 CTA 只有 1 个 chunk，合并 tile 只让序言（q 量化）和收尾（写部分和）在一个 CTA 里串行
+    做 3–4 遍；重复的 K/V 读取命中 L2，本来就不贵；长上下文时 4 个 chunk 通道合成 1 个，访存并行度只剩 1/4。
+    实现和数据留在 commit 0cdff68 和 `results/20-bench-short-q-ab`，代码删了。
+42. 端到端判断 kernel 好坏，不能看单次的 TPOT：(a) TPOT 还取决于接受了几个 draft，int8 的输出和 bf16 不同，接受数也不同，
+    要用"每步时间"（TPOT × 每步 token 数）；(b) 两台机器上同一对比方向都可能相反（+2.8% 和 −1.6%），差异和要找的效果一个量级，
+    要在同一个容器里交替跑几轮再比。另外 ngram 会关掉 async scheduling，CPU 的每步开销直接落在关键路径上。
+
 ## 5. 复盘要点（面试可以这样讲）
 
 - **为什么 per-channel**：先看分布，K 的离群在通道维，而且跨 token 不变。per-token 的 scale 会被离群通道吃掉，per-channel 正好对齐；
@@ -382,8 +402,6 @@ CUDA 版原来只做 q_len = 1。删 Triton 要先给这两类请求找新的落
 
 - prefill 每层多一次"int8 页 → bf16 临时页"的拷贝，临时页按需分配、不在 vLLM 启动时的显存预算里（一个 16k 请求每层约 32 MB，
   各层复用）。更彻底的做法是写一个直接读 int8 页的 prefill kernel。
-- batch 1、短上下文（< 1k）的投机验证批，INT8 kernel 比 FA2 慢约 8 µs/层（3 个 m-tile 各读一遍 KV + split 合并），
-  7B ngram 的 batch-1 加速比从 1.23× 降到 1.15–1.18×。可以让一个 CTA 依次处理多个 m-tile、复用 smem 里的 K/V。
 - CUDA kernel 只支持 head_dim 64 / 128；Hopper 上没用 wgmma/TMA；76 KB smem 限制了占用率；group32 的 q scale 随 Triton 版一起删了；
   实现 A 的 decode（全程反量化）也只剩 PyTorch 路径。
 - PD 分离只能用存储型 connector（gVisor 限制），测不到真实网络传输下 TTFT 的变化。
