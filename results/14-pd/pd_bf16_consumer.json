@@ -1,0 +1,10 @@
+{
+ "label": "bf16",
+ "role": "consumer",
+ "n": 500,
+ "wall_s": 27.835081185999996,
+ "accuracy": 0.926,
+ "mean_ttft_ms": 7326.303916468001,
+ "mean_tpot_ms": 34.35842089391826,
+ "output_tok_per_s": 5265.657355931091
+}

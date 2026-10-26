@@ -610,3 +610,38 @@ vLLM int8_per_token_head 2,006,208（scale 内联在页里，略少）。
   CUDA 扩展在模型构建时就 JIT 编译好；split-KV 的缓冲区复用 builder 预分配的那一份。
 - 差值法的问题：chunked prefill 下，先 prefill 完的请求会和别人的 prefill chunk 混在同一批里 decode，这些步也被算进"decode"，
   prefill 越慢的配置被高估越多（FA2 一列偏高）。所以又用 engine 的每请求时间戳补测了一遍，见下一步。
+
+## Step 9d 扩展 3.5(d)：PD 分离 vs 混部
+
+**怎么做的**：vLLM 的 PD 分离靠 KV connector 把 P 实例算好的 KV 页搬给 D 实例。主力是 NixlConnector（UCX/RDMA），
+但 **Modal 的 gVisor 沙箱里没有 `/sys/class/net`**，UCX 的 TCP 传输枚举不到网卡，共享内存传输又不支持 NIXL 要求的
+peer failure 处理，engine 起不来（`results/` 里的调试日志：`scandir(/sys/class/net) failed` → `NIXL_ERR_BACKEND`）。
+所以改用 vLLM 自带的 ExampleConnector：P 实例（kv_producer，只做 prefill）把每个请求每层的 KV 页按 prompt 哈希写成 safetensors，
+D 实例（kv_consumer）找到后直接注入自己的分页 cache、跳过 prompt 的 prefill。两个**独立的 engine**先后在同一张卡上跑
+（`scripts/pd_offline.py`），500 道 GSM8K 一次性提交（高并发），TTFT/TPOT 用 engine 时间戳逐请求统计（`results/14-pd/`）：
+
+| | KV 每 token 字节 | 存储总量（5.3 万 prompt token） | D 端 GSM8K | D 端 TTFT | D 端 TPOT | D 端吞吐 |
+|---|---|---|---|---|---|---|
+| PD 分离 bf16 | 52,978 | 2.81 GB | 92.6% | 7.33 s | 34.4 ms | 5266 tok/s |
+| PD 分离 int8 | **26,499** | **1.40 GB** | 92.6% | 8.90 s | **31.6 ms** | 5228 tok/s |
+| 混部 bf16 | – | – | 92.6% | 5.36 s | 32.2 ms | 6187 tok/s |
+| 混部 int8 | – | – | 93.0% | 6.55 s | **28.6 ms** | 6124 tok/s |
+
+结论：
+- **int8 KV 在 P/D 之间搬运完全正确**：D 端精度和 bf16、和混部都一样（92.6%）。int8 页按字节原样存取，静态 scale 两边各自
+  从同一个文件加载，**scale 不需要随 KV 一起传**（这是静态 scale 相对 per-token 动态 scale 的一个好处：后者的 scale 是 KV 的一部分）。
+- **传输量正好减半**：52,978 → 26,499 B/token（28 层 × 4 head × 256 × 2/1 字节，加 safetensors 头）。
+- D 端（纯 decode）TPOT 降 8%，混部降 11%（500 并发、短上下文，KV 读取只占一部分）。
+- TTFT 变高（7.3 → 8.9 s，混部 5.4 → 6.5 s）有两个原因：(1) 500 个请求同时提交，TTFT 主要是排队时间；
+  (2) **我们的 prefill 走自己写的反量化 Triton kernel，比 FA2 的 prefill 慢**（Step 8d 里 16k × 16 的 prefill 23 s vs 19 s）。
+  第二点是当前实现真实的代价：prefill 若改成"读 int8 → 反量化成 bf16 临时页 → 调 FA2"，或者继续优化 MODE 1 kernel，可以消掉。
+- 这个环境测不了真实网络传输下"字节减半 → TTFT 降多少"。课程说"传输时间摊到 TPOT、不计入 TTFT"取决于 connector：
+  NIXL 这类 pull 模式是 D 收到请求后再拉 KV，拉取时间计入 D 端 TTFT。
+
+遇到的问题（按时间）：
+1. NixlConnector 在 gVisor 里起不来（见上）。
+2. 第一版在线方案（P/D 两个 server + 我写的 FastAPI 代理）：`tail -50 文件1 文件2` 在 GNU tail 里不合法，报错没打出来；
+   而且 P/D 起不来时函数直接 return 没杀进程，后面几组会抢端口。改成 `tail -n` + 统一 `cleanup`。
+3. 单发请求代理是通的，但并发 64 时客户端收到 `Connection reset by peer`，bench 成功数为 0。换成两个离线 engine 的做法。
+4. ExampleConnector 把一个请求的 KV 按"计算它的那一步"写文件，chunked prefill 把长 prompt 切成几步时只留下最后一段
+   （D 端 `value tensor [64,4,256] cannot be broadcast to [80,4,256]`）。P/D 两边都关掉 chunked prefill、单步 token 预算设 16384 后正常。

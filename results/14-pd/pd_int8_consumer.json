@@ -1,0 +1,10 @@
+{
+ "label": "int8",
+ "role": "consumer",
+ "n": 500,
+ "wall_s": 27.96219457699999,
+ "accuracy": 0.926,
+ "mean_ttft_ms": 8902.62616342802,
+ "mean_tpot_ms": 31.581563859031817,
+ "output_tok_per_s": 5227.987366923044
+}

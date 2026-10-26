@@ -1,0 +1,10 @@
+{
+ "label": "int8",
+ "role": "colocated",
+ "n": 500,
+ "wall_s": 23.80408877000002,
+ "accuracy": 0.93,
+ "mean_ttft_ms": 6546.937503400013,
+ "mean_tpot_ms": 28.596705957294873,
+ "output_tok_per_s": 6124.326010064693
+}

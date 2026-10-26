@@ -1,0 +1,10 @@
+{
+ "label": "bf16",
+ "role": "colocated",
+ "n": 500,
+ "wall_s": 23.683720912000013,
+ "accuracy": 0.926,
+ "mean_ttft_ms": 5364.568076751998,
+ "mean_tpot_ms": 32.22439031159734,
+ "output_tok_per_s": 6187.372353545657
+}
