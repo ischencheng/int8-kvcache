@@ -545,3 +545,20 @@ MLA 每个 token 只缓存一行 latent：`c = kv_c_normed`（512 维）+ `k_pe`
    不读 cache，而 teacher-forcing 的文本一个 chunk 就处理完，伪量化只改了 cache 里的那份。decode（`forward_mqa`）才读 cache，
    所以 MLA 以生成准确率为准。GQA 那边 FA backend 的 prefill 也读 cache，ΔNLL 是有效的。
 2. 第一版 dump 触发条件是"batch 里最短序列 ≥1024"，GSM8K 回答短，永远等不到；改成最长序列 ≥600。
+
+### 3.5(c) 补测：batch 1 的加速比（`results/10-spec-latency/`，24 道 GSM8K 逐条跑，engine 时间戳算每请求 TPOT）
+
+| 配置 | TPOT | 相对无投机 |
+|---|---|---|
+| 7B 无投机 bf16 | 10.18 ms | – |
+| 7B 无投机 int8（CUDA kernel） | 10.01 ms | – |
+| 7B ngram bf16 | 8.06 ms | 1.26× |
+| 7B ngram int8 | 8.14 ms | 1.23× |
+| 1.5B 无投机 bf16 / int8 | 3.87 / 3.52 ms | – |
+| 1.5B + 0.5B draft（bf16/bf16、int8/bf16、int8/int8） | 13.9–18.8 ms | 变慢 |
+
+- **int8 KV 不改变投机解码的加速比**（ngram 1.26× vs 1.23×）。batch 1、短上下文时一步的时间主要是读 15 GB 权重，KV 只占一小部分，
+  所以 int8 本身只快 2%（1.5B 上 9%）。
+- 1.5B + 0.5B 的 draft_model 在 batch 1 反而慢 3–5 倍：draft 只比 target 小 3 倍，每步跑 4 次 draft + 1 次 verify，
+  这么小的模型上调度和 kernel 启动开销占主导。这是这组模型搭配的问题，与 KV 量化无关（三种 KV 组合同样慢）。
+- 这个容器中途被 Modal 抢占（preemption）后整段重跑，两次的 TPOT 在 1–3% 内一致（draft 那组 14–18 ms 波动较大）。

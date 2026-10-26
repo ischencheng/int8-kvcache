@@ -1,0 +1,6 @@
+{
+ "label": "ng7_none_bf16",
+ "model": "Qwen/Qwen2.5-7B-Instruct",
+ "n": 24,
+ "tpot_ms": 10.182031064546303
+}
