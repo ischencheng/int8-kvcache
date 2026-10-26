@@ -1,0 +1,25 @@
+{
+ "label": "w8a8_int8kv_bf16scales",
+ "task": "gsm8k",
+ "model": "RedHatAI/Qwen2.5-7B-Instruct-quantized.w8a8",
+ "n_prompts": 1319,
+ "n_samples": 1319,
+ "accuracy": 0.9188779378316907,
+ "wall_s": 37.598573207855225,
+ "gen_tokens": 383522,
+ "env": [
+  "KVQ_CFG=B_channel_smooth",
+  "KVQ_KERNEL=triton",
+  "KVQ_SCALES=/cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors"
+ ],
+ "llm": {
+  "max_model_len": 4096,
+  "gpu_memory_utilization": 0.85,
+  "seed": 0,
+  "disable_log_stats": false,
+  "kv_cache_dtype": "int8_static",
+  "attention_config": {
+   "backend": "CUSTOM"
+  }
+ }
+}

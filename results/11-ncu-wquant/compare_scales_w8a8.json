@@ -1,0 +1,10 @@
+{
+ "a": "/cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors",
+ "b": "/cache/scales/w8a8/math_per_channel_max_smooth.safetensors",
+ "layers": 28,
+ "max_rel_diff": {
+  "k_mu": 145.2306365966797,
+  "k_scale": 0.4829793870449066,
+  "v_scale": 0.6999999284744263
+ }
+}

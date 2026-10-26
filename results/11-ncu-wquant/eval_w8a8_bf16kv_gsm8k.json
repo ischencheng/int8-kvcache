@@ -1,0 +1,17 @@
+{
+ "label": "w8a8_bf16kv",
+ "task": "gsm8k",
+ "model": "RedHatAI/Qwen2.5-7B-Instruct-quantized.w8a8",
+ "n_prompts": 1319,
+ "n_samples": 1319,
+ "accuracy": 0.9234268385140257,
+ "wall_s": 42.509016036987305,
+ "gen_tokens": 383193,
+ "env": [],
+ "llm": {
+  "max_model_len": 4096,
+  "gpu_memory_utilization": 0.85,
+  "seed": 0,
+  "disable_log_stats": false
+ }
+}

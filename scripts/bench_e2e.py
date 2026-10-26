@@ -42,7 +42,7 @@ def main():
     from vllm.inputs import TokensPrompt
 
     kwargs = dict(max_model_len=32768, gpu_memory_utilization=0.9, seed=0, enable_prefix_caching=False,
-                  max_num_seqs=256)
+                  max_num_seqs=256, disable_log_stats=False)  # stats on: per-request token timestamps
     kwargs.update(json.loads(args.llm))
     llm = LLM(args.model, **kwargs)
     # The engine core (another process) owns the final block count; ask the worker.
@@ -79,9 +79,14 @@ def main():
             for b in batches:
                 ps = prompts(b, ctx)
                 t_pre, _ = timed(ps, 1)
-                t_all, _ = timed(ps, args.out_len)
+                t_all, outs = timed(ps, args.out_len)
+                # Per-request TPOT from engine timestamps (what serving benchmarks report); the
+                # (total - prefill) difference also counts steps where prefill chunks share the batch.
+                per_req = [(o.metrics.last_token_ts - o.metrics.first_token_ts) / (o.metrics.num_generation_tokens - 1)
+                           for o in outs if o.metrics is not None and o.metrics.num_generation_tokens > 1]
                 row = {"ctx": ctx, "batch": b, "prefill_s": t_pre, "total_s": t_all,
                        "tpot_ms": 1e3 * (t_all - t_pre) / (args.out_len - 1),
+                       "tpot_req_ms": 1e3 * sum(per_req) / len(per_req) if per_req else None,
                        "kv_limited": b * (ctx + args.out_len) > capacity}
                 res["tpot"].append(row)
                 print(json.dumps(row))
