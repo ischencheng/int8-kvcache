@@ -1,0 +1,20 @@
+{
+ "label": "ours_int8",
+ "env": [
+  "KVQ_SCALES=/cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors",
+  "KVQ_KERNEL=cuda",
+  "KVQ_CFG=B_channel_smooth"
+ ],
+ "nll": {
+  "gsm8k": 0.07089683709364084,
+  "aime24": 0.06370249078873337
+ },
+ "tokens": {
+  "gsm8k": 57864,
+  "aime24": 31140
+ },
+ "ppl": {
+  "gsm8k": 1.0734704778215276,
+  "aime24": 1.0657752736289754
+ }
+}

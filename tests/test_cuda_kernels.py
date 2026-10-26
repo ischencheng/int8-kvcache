@@ -89,7 +89,7 @@ def test_plan_long_page_table():
     cu = torch.tensor([0, 1, 13, 14, 314], dtype=torch.int32)        # q_lens 1, 12, 1, 300
     sl = torch.tensor([50, 40, 9, 330], dtype=torch.int32)
     plan = ck.plan_long(cu, sl, 16)
-    assert plan.seqused_k.tolist() == [1, 40, 1, 330] and plan.max_seqlen_k == 330 and plan.has_short
+    assert plan.max_seqlen_k == 330 and plan.has_short
     assert plan.src_req.tolist() == [1] * 3 + [3] * 21 and plan.src_j.tolist() == list(range(3)) + list(range(21))
     assert plan.block_table[1, :3].tolist() == [0, 1, 2] and plan.block_table[3, :21].tolist() == list(range(3, 24))
     # FlashAttention reads the page table up to the end of a 256-token KV tile past the last key
@@ -117,6 +117,20 @@ def test_mixed_batch_matches_ref(shape, case, per_channel):
         res["short"] = compare(ref[short], out[short])["rel_l2"]
     record("cuda_mixed", heads=shape, case=case, per_channel=per_channel, **res)
     assert res["long"] < 1e-2 and res.get("short", 0) < 5e-3   # long rows: bf16 FlashAttention on bf16 K/V
+
+
+def test_long_path_uses_gpu_lengths():
+    """vLLM's host-side lengths can be upper bounds (async spec decode counts every draft as accepted):
+    the plan may copy extra pages, but FlashAttention must use the exact GPU lengths."""
+    q_lens, seq_lens = CASES["mixed"]
+    q, k, v, cu, sl, bt = random_paged_case(28, 4, q_lens, seq_lens, scale=3.0)
+    st = make_static(k, v)
+    kq, vq = to_int8(k, v, st)
+    ref = reference(st)(q, kq, vq, cu, sl, bt, SCALE)
+    bt = torch.cat([bt, bt[:, :1].expand(-1, 2)], 1)                # vLLM's tables are wider than the request
+    plan = ck.plan_long(cu.cpu(), (sl + 5).cpu(), kq.shape[1])      # optimistic host lengths
+    out = ck.paged_attention(q, kq, vq, torch.empty_like(q), cu, sl, bt, max(q_lens), SCALE, st, plan)
+    assert compare(ref, out)["rel_l2"] < 1e-2
 
 
 def test_cuda_decode_on_real_dumps(dump):

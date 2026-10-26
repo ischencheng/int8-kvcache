@@ -1,0 +1,9 @@
+{
+ "label": "int8",
+ "role": "producer",
+ "n": 500,
+ "wall_s": 8.242590425999992,
+ "store_bytes": 1404936512,
+ "prompt_tokens": 53018,
+ "bytes_per_token": 26499.236334829682
+}

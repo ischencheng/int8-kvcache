@@ -1,0 +1,44 @@
+{
+ "label": "sd_int8_int8_sq1",
+ "task": "gsm8k",
+ "model": "Qwen/Qwen2.5-1.5B-Instruct",
+ "n_prompts": 500,
+ "n_samples": 500,
+ "accuracy": 0.294,
+ "wall_s": 76.71450018882751,
+ "gen_tokens": 195805,
+ "env": [
+  "KVQ_SCALES=/cache/scales/qwen2.5-1.5b/math_per_channel_max_smooth.safetensors",
+  "KVQ_CFG=B_channel_smooth",
+  "KVQ_KERNEL=cuda",
+  "KVQ_DRAFT_SCALES=/cache/scales/qwen2.5-0.5b/math_per_channel_max_smooth.safetensors",
+  "KVQ_SHORT_Q=1"
+ ],
+ "llm": {
+  "max_model_len": 4096,
+  "gpu_memory_utilization": 0.85,
+  "seed": 0,
+  "disable_log_stats": false,
+  "kv_cache_dtype": "int8_static",
+  "attention_config": {
+   "backend": "CUSTOM"
+  },
+  "speculative_config": {
+   "method": "draft_model",
+   "model": "Qwen/Qwen2.5-0.5B-Instruct",
+   "num_speculative_tokens": 4,
+   "attention_backend": "CUSTOM"
+  }
+ },
+ "spec_decode": {
+  "vllm:spec_decode_num_drafts": 59619,
+  "vllm:spec_decode_num_draft_tokens": 238476,
+  "vllm:spec_decode_num_accepted_tokens": 136747,
+  "vllm:spec_decode_num_accepted_tokens_per_pos": [
+   41347,
+   34801,
+   31383,
+   29216
+  ]
+ }
+}

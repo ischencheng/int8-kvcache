@@ -1,0 +1,9 @@
+{
+ "label": "bf16",
+ "role": "producer",
+ "n": 500,
+ "wall_s": 8.831179397000028,
+ "store_bytes": 2808794240,
+ "prompt_tokens": 53018,
+ "bytes_per_token": 52978.12516503829
+}
