@@ -1,0 +1,22 @@
+{
+ "label": "fa2_bf16",
+ "env": [],
+ "llm": {
+  "max_model_len": 32768,
+  "gpu_memory_utilization": 0.9,
+  "seed": 0,
+  "enable_prefix_caching": false,
+  "max_num_seqs": 512,
+  "disable_log_stats": false
+ },
+ "kv_capacity_tokens": 1030464,
+ "tpot": [],
+ "throughput": {
+  "requests": 512,
+  "ctx": 6144,
+  "out": 1024,
+  "wall_s": 471.5255261799998,
+  "output_tok_per_s": 1111.8973860173558,
+  "max_concurrent_by_kv": 143
+ }
+}

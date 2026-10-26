@@ -1,0 +1,6 @@
+{
+ "label": "sd_bf16_bf16",
+ "model": "Qwen/Qwen2.5-1.5B-Instruct",
+ "n": 24,
+ "tpot_ms": 14.134365724055046
+}

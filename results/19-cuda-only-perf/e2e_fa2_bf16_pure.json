@@ -1,0 +1,36 @@
+{
+ "label": "fa2_bf16",
+ "env": [],
+ "llm": {
+  "max_model_len": 32768,
+  "gpu_memory_utilization": 0.9,
+  "seed": 0,
+  "enable_prefix_caching": false,
+  "max_num_seqs": 256,
+  "disable_log_stats": false
+ },
+ "kv_capacity_tokens": 1035680,
+ "tpot": [
+  {
+   "ctx": 4096,
+   "batch": 128,
+   "t_L_s": [
+    39.173806281,
+    39.21442515499996,
+    39.23331647000009
+   ],
+   "t_2L_s": [
+    43.470096991000105,
+    43.49316794699996,
+    43.478718182999955
+   ],
+   "tpot_pure_ms": 33.42767806250002,
+   "samples_ms": [
+    33.56477117187584,
+    33.42767806250002,
+    33.16720088281144
+   ],
+   "kv_limited": false
+  }
+ ]
+}
