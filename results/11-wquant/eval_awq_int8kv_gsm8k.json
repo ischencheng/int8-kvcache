@@ -1,0 +1,25 @@
+{
+ "label": "awq_int8kv",
+ "task": "gsm8k",
+ "model": "Qwen/Qwen2.5-7B-Instruct-AWQ",
+ "n_prompts": 1319,
+ "n_samples": 1319,
+ "accuracy": 0.909021986353298,
+ "wall_s": 58.13056516647339,
+ "gen_tokens": 388517,
+ "env": [
+  "KVQ_CFG=B_channel_smooth",
+  "KVQ_KERNEL=triton",
+  "KVQ_SCALES=/cache/scales/awq/math_per_channel_max_smooth.safetensors"
+ ],
+ "llm": {
+  "max_model_len": 4096,
+  "gpu_memory_utilization": 0.85,
+  "seed": 0,
+  "disable_log_stats": false,
+  "kv_cache_dtype": "int8_static",
+  "attention_config": {
+   "backend": "CUSTOM"
+  }
+ }
+}

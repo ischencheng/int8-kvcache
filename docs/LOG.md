@@ -421,3 +421,29 @@ v3 在 A100 上的有效带宽 1.45 TB/s（峰值约 2.0 TB/s），比 FA2 bf16 
   开始受指令发射和延迟限制。CUDA v3 的每条指令等待从 v1 的 9.4 周期降到 5.5。
 - 剩下的提升空间：占用率（76 KB smem → 每个 SM 只能放 2 个 block，8 个 warp）；int32→float 的 I2F（可以用 2^23 魔数加法代替）；
   Hopper 上换 wgmma + TMA。这几项没有继续做。
+
+## Step 9e 扩展 3.5(e)：和 W8A8 / W4 权重量化叠加
+
+模型：RedHatAI/Qwen2.5-7B-Instruct-quantized.w8a8（INT8 权重 + INT8 动态激活，A100 上走 CUTLASS int8 GEMM）、
+Qwen/Qwen2.5-7B-Instruct-AWQ（W4A16）。每个模型都用自己重新校准 KV scale，同时对照"直接沿用 bf16 模型的 scale"
+（`results/11-wquant/`，GSM8K 1319 题，CUDA graph 开启）：
+
+| 模型 | bf16 KV | int8 KV（本模型校准） | int8 KV（沿用 bf16 模型的 scale） |
+|---|---|---|---|
+| bf16 原模型 | 92.19% | 91.89% | – |
+| W8A8 INT8 | 92.34% | 92.19% | 91.89% |
+| W4A16 AWQ | 90.98% | 90.90% | 91.43% |
+
+- **能兼容，原因**：KV 量化作用在 K/V 投影的**输出**上。W8A8 的 int8 GEMM 在 epilogue 里就反量化成 bf16，
+  W4A16 本来就输出 bf16，到 RoPE 和写 cache 时数据流已经是 bf16，KV 量化看到的只是一个分布略有变化的 bf16 张量，
+  和权重 / 激活怎么量化没有耦合。两种模型叠加 int8 KV 都不额外掉点。
+- **scale 要不要重新校准**：逐通道看，W8A8 / AWQ 模型的 k_scale 和 bf16 模型最多差 48% / 44%，v_scale 差 70% / 55%
+  （k_mu 的相对差很大是因为有些通道均值接近 0，相对差没有意义）。但沿用 bf16 的 scale 准确率仍在噪声内：
+  max 型 per-channel scale 对小幅分布漂移不敏感。工程上还是建议对量化后的模型重新校准（成本只有几分钟）。
+- **W4A8**：vLLM 0.32 在 GPU 上没有真正的 W4A8-int 路径。`CompressedTensorsW4A8Int` 构造 kernel 时
+  `act_type=params_dtype`（bf16），实际跑的是 W4A16 的混合精度 kernel，int8 激活只有 CPU kernel；
+  W4A8-FP8 需要 Hopper，而且 Qwen2.5-7B 没有公开的 W4A8 checkpoint。按上面的原因，W4A8 的激活量化同样发生在 GEMM 输入侧，
+  K/V 投影输出仍是 bf16，和 int8 KV 不冲突，所以用 W4A16 作为 4bit 权重的代表来验证。
+
+遇到的问题：RedHatAI 的 w4a16 checkpoint 用的是 `actorder='group'`，vLLM 0.32 直接拒绝加载
+（"group/dynamic activation ordering is no longer supported"），换成 Qwen 官方的 AWQ。

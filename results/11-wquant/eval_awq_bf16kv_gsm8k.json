@@ -1,0 +1,17 @@
+{
+ "label": "awq_bf16kv",
+ "task": "gsm8k",
+ "model": "Qwen/Qwen2.5-7B-Instruct-AWQ",
+ "n_prompts": 1319,
+ "n_samples": 1319,
+ "accuracy": 0.9097801364670205,
+ "wall_s": 66.9891607761383,
+ "gen_tokens": 388555,
+ "env": [],
+ "llm": {
+  "max_model_len": 4096,
+  "gpu_memory_utilization": 0.85,
+  "seed": 0,
+  "disable_log_stats": false
+ }
+}
