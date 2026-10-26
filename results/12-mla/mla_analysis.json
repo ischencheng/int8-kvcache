@@ -1,0 +1,627 @@
+{
+ "layers": {
+  "0": {
+   "c": {
+    "absmax": 4.0,
+    "channel_ratio": 14.124137878417969,
+    "err": {
+     "per_tensor": 0.07261528074741364,
+     "per_channel": 0.008026890456676483,
+     "per_token": 0.03128458559513092
+    },
+    "err_per_channel_smooth": 0.007614636328071356
+   },
+   "kpe": {
+    "absmax": 19.75,
+    "channel_ratio": 5.266666889190674,
+    "err": {
+     "per_tensor": 0.01521023828536272,
+     "per_channel": 0.003616739995777607,
+     "per_token": 0.013341962359845638
+    },
+    "err_per_channel_smooth": 0.0027254545129835606
+   }
+  },
+  "1": {
+   "c": {
+    "absmax": 3.078125,
+    "channel_ratio": 6.566666603088379,
+    "err": {
+     "per_tensor": 0.05527475103735924,
+     "per_channel": 0.009581795893609524,
+     "per_token": 0.017647089436650276
+    },
+    "err_per_channel_smooth": 0.009365230798721313
+   },
+   "kpe": {
+    "absmax": 26.625,
+    "channel_ratio": 8.07582950592041,
+    "err": {
+     "per_tensor": 0.016880281269550323,
+     "per_channel": 0.0032216135878115892,
+     "per_token": 0.014414314180612564
+    },
+    "err_per_channel_smooth": 0.0018995890859514475
+   }
+  },
+  "2": {
+   "c": {
+    "absmax": 1.8828125,
+    "channel_ratio": 3.6240601539611816,
+    "err": {
+     "per_tensor": 0.03247221186757088,
+     "per_channel": 0.009667807258665562,
+     "per_token": 0.014278300106525421
+    },
+    "err_per_channel_smooth": 0.009542061015963554
+   },
+   "kpe": {
+    "absmax": 29.5,
+    "channel_ratio": 7.612903118133545,
+    "err": {
+     "per_tensor": 0.016898609697818756,
+     "per_channel": 0.0032792254351079464,
+     "per_token": 0.014170356094837189
+    },
+    "err_per_channel_smooth": 0.0022773072123527527
+   }
+  },
+  "3": {
+   "c": {
+    "absmax": 3.46875,
+    "channel_ratio": 3.700000047683716,
+    "err": {
+     "per_tensor": 0.02948862500488758,
+     "per_channel": 0.009069952182471752,
+     "per_token": 0.015415518544614315
+    },
+    "err_per_channel_smooth": 0.008880386129021645
+   },
+   "kpe": {
+    "absmax": 16.375,
+    "channel_ratio": 4.7207207679748535,
+    "err": {
+     "per_tensor": 0.012624552473425865,
+     "per_channel": 0.0036685324739664793,
+     "per_token": 0.010177940130233765
+    },
+    "err_per_channel_smooth": 0.0030236411839723587
+   }
+  },
+  "4": {
+   "c": {
+    "absmax": 3.71875,
+    "channel_ratio": 3.4000000953674316,
+    "err": {
+     "per_tensor": 0.030522890388965607,
+     "per_channel": 0.008792541921138763,
+     "per_token": 0.016906315460801125
+    },
+    "err_per_channel_smooth": 0.008642282336950302
+   },
+   "kpe": {
+    "absmax": 22.0,
+    "channel_ratio": 6.017094135284424,
+    "err": {
+     "per_tensor": 0.017593981698155403,
+     "per_channel": 0.00376658933237195,
+     "per_token": 0.013620609417557716
+    },
+    "err_per_channel_smooth": 0.003152526216581464
+   }
+  },
+  "5": {
+   "c": {
+    "absmax": 6.65625,
+    "channel_ratio": 5.392405033111572,
+    "err": {
+     "per_tensor": 0.044691409915685654,
+     "per_channel": 0.008706138469278812,
+     "per_token": 0.01597757823765278
+    },
+    "err_per_channel_smooth": 0.008687861263751984
+   },
+   "kpe": {
+    "absmax": 26.0,
+    "channel_ratio": 6.162962913513184,
+    "err": {
+     "per_tensor": 0.01886388286948204,
+     "per_channel": 0.003745441325008869,
+     "per_token": 0.014914611354470253
+    },
+    "err_per_channel_smooth": 0.003125836607068777
+   }
+  },
+  "6": {
+   "c": {
+    "absmax": 11.25,
+    "channel_ratio": 6.180257320404053,
+    "err": {
+     "per_tensor": 0.04570622742176056,
+     "per_channel": 0.009484512731432915,
+     "per_token": 0.014605695381760597
+    },
+    "err_per_channel_smooth": 0.009253178723156452
+   },
+   "kpe": {
+    "absmax": 22.125,
+    "channel_ratio": 6.349775791168213,
+    "err": {
+     "per_tensor": 0.017474720254540443,
+     "per_channel": 0.003760614665225148,
+     "per_token": 0.01365160197019577
+    },
+    "err_per_channel_smooth": 0.0028989154379814863
+   }
+  },
+  "7": {
+   "c": {
+    "absmax": 8.625,
+    "channel_ratio": 4.561983585357666,
+    "err": {
+     "per_tensor": 0.03910086676478386,
+     "per_channel": 0.008819099515676498,
+     "per_token": 0.01405812706798315
+    },
+    "err_per_channel_smooth": 0.008673511445522308
+   },
+   "kpe": {
+    "absmax": 21.25,
+    "channel_ratio": 6.476190567016602,
+    "err": {
+     "per_tensor": 0.019157446920871735,
+     "per_channel": 0.003783388063311577,
+     "per_token": 0.014225954189896584
+    },
+    "err_per_channel_smooth": 0.002916526049375534
+   }
+  },
+  "8": {
+   "c": {
+    "absmax": 20.125,
+    "channel_ratio": 11.39823055267334,
+    "err": {
+     "per_tensor": 0.10140308737754822,
+     "per_channel": 0.009786125272512436,
+     "per_token": 0.01724853925406933
+    },
+    "err_per_channel_smooth": 0.00971057265996933
+   },
+   "kpe": {
+    "absmax": 27.75,
+    "channel_ratio": 6.577777862548828,
+    "err": {
+     "per_tensor": 0.019772052764892578,
+     "per_channel": 0.003937914967536926,
+     "per_token": 0.01529613509774208
+    },
+    "err_per_channel_smooth": 0.0032697892747819424
+   }
+  },
+  "9": {
+   "c": {
+    "absmax": 12.375,
+    "channel_ratio": 5.142857074737549,
+    "err": {
+     "per_tensor": 0.04765299707651138,
+     "per_channel": 0.009518731385469437,
+     "per_token": 0.013929790817201138
+    },
+    "err_per_channel_smooth": 0.009328599087893963
+   },
+   "kpe": {
+    "absmax": 22.875,
+    "channel_ratio": 5.6307692527771,
+    "err": {
+     "per_tensor": 0.01729179359972477,
+     "per_channel": 0.004043830092996359,
+     "per_token": 0.01343921571969986
+    },
+    "err_per_channel_smooth": 0.003449169686064124
+   }
+  },
+  "10": {
+   "c": {
+    "absmax": 34.0,
+    "channel_ratio": 15.432623863220215,
+    "err": {
+     "per_tensor": 0.12348262220621109,
+     "per_channel": 0.010025972500443459,
+     "per_token": 0.020924609154462814
+    },
+    "err_per_channel_smooth": 0.009931814856827259
+   },
+   "kpe": {
+    "absmax": 26.75,
+    "channel_ratio": 6.534351348876953,
+    "err": {
+     "per_tensor": 0.02192222699522972,
+     "per_channel": 0.004215160384774208,
+     "per_token": 0.015049329027533531
+    },
+    "err_per_channel_smooth": 0.003237777156755328
+   }
+  },
+  "11": {
+   "c": {
+    "absmax": 18.5,
+    "channel_ratio": 7.541401386260986,
+    "err": {
+     "per_tensor": 0.0659521296620369,
+     "per_channel": 0.008951520547270775,
+     "per_token": 0.016941290348768234
+    },
+    "err_per_channel_smooth": 0.008728789165616035
+   },
+   "kpe": {
+    "absmax": 22.0,
+    "channel_ratio": 5.2537312507629395,
+    "err": {
+     "per_tensor": 0.01560471672564745,
+     "per_channel": 0.003937956411391497,
+     "per_token": 0.012418510392308235
+    },
+    "err_per_channel_smooth": 0.0034851939417421818
+   }
+  },
+  "12": {
+   "c": {
+    "absmax": 13.25,
+    "channel_ratio": 4.282828330993652,
+    "err": {
+     "per_tensor": 0.02812998741865158,
+     "per_channel": 0.008699665777385235,
+     "per_token": 0.01457664929330349
+    },
+    "err_per_channel_smooth": 0.008554586209356785
+   },
+   "kpe": {
+    "absmax": 24.375,
+    "channel_ratio": 6.36734676361084,
+    "err": {
+     "per_tensor": 0.01952577568590641,
+     "per_channel": 0.003938843496143818,
+     "per_token": 0.014824839308857918
+    },
+    "err_per_channel_smooth": 0.003255551913753152
+   }
+  },
+  "13": {
+   "c": {
+    "absmax": 17.5,
+    "channel_ratio": 5.6565656661987305,
+    "err": {
+     "per_tensor": 0.03994398191571236,
+     "per_channel": 0.009237854741513729,
+     "per_token": 0.013775957748293877
+    },
+    "err_per_channel_smooth": 0.009064607322216034
+   },
+   "kpe": {
+    "absmax": 24.25,
+    "channel_ratio": 5.878787994384766,
+    "err": {
+     "per_tensor": 0.014817231334745884,
+     "per_channel": 0.003990126773715019,
+     "per_token": 0.010942642576992512
+    },
+    "err_per_channel_smooth": 0.003046734957024455
+   }
+  },
+  "14": {
+   "c": {
+    "absmax": 8.6875,
+    "channel_ratio": 3.4749999046325684,
+    "err": {
+     "per_tensor": 0.0343911349773407,
+     "per_channel": 0.008929033763706684,
+     "per_token": 0.011728920042514801
+    },
+    "err_per_channel_smooth": 0.008771865628659725
+   },
+   "kpe": {
+    "absmax": 24.5,
+    "channel_ratio": 6.452674865722656,
+    "err": {
+     "per_tensor": 0.015751849859952927,
+     "per_channel": 0.004241114482283592,
+     "per_token": 0.011101854033768177
+    },
+    "err_per_channel_smooth": 0.003286880673840642
+   }
+  },
+  "15": {
+   "c": {
+    "absmax": 11.0625,
+    "channel_ratio": 3.0649349689483643,
+    "err": {
+     "per_tensor": 0.027580339461565018,
+     "per_channel": 0.00878045242279768,
+     "per_token": 0.012347198091447353
+    },
+    "err_per_channel_smooth": 0.008545204065740108
+   },
+   "kpe": {
+    "absmax": 21.375,
+    "channel_ratio": 5.34375,
+    "err": {
+     "per_tensor": 0.01808839477598667,
+     "per_channel": 0.0039237854070961475,
+     "per_token": 0.013747144490480423
+    },
+    "err_per_channel_smooth": 0.0035949191078543663
+   }
+  },
+  "16": {
+   "c": {
+    "absmax": 15.0625,
+    "channel_ratio": 4.918367385864258,
+    "err": {
+     "per_tensor": 0.025976577773690224,
+     "per_channel": 0.009041973389685154,
+     "per_token": 0.012041295878589153
+    },
+    "err_per_channel_smooth": 0.00879664160311222
+   },
+   "kpe": {
+    "absmax": 22.125,
+    "channel_ratio": 6.183405876159668,
+    "err": {
+     "per_tensor": 0.018312735483050346,
+     "per_channel": 0.004258902743458748,
+     "per_token": 0.013839783146977425
+    },
+    "err_per_channel_smooth": 0.0034828567877411842
+   }
+  },
+  "17": {
+   "c": {
+    "absmax": 12.5625,
+    "channel_ratio": 3.6880733966827393,
+    "err": {
+     "per_tensor": 0.03539343923330307,
+     "per_channel": 0.008676736615598202,
+     "per_token": 0.014116358943283558
+    },
+    "err_per_channel_smooth": 0.00857634749263525
+   },
+   "kpe": {
+    "absmax": 23.375,
+    "channel_ratio": 5.540740966796875,
+    "err": {
+     "per_tensor": 0.017787408083677292,
+     "per_channel": 0.003954950720071793,
+     "per_token": 0.014369401149451733
+    },
+    "err_per_channel_smooth": 0.0033398333471268415
+   }
+  },
+  "18": {
+   "c": {
+    "absmax": 7.75,
+    "channel_ratio": 2.224215269088745,
+    "err": {
+     "per_tensor": 0.018163403496146202,
+     "per_channel": 0.008462739177048206,
+     "per_token": 0.011641298420727253
+    },
+    "err_per_channel_smooth": 0.00825437344610691
+   },
+   "kpe": {
+    "absmax": 21.0,
+    "channel_ratio": 4.941176414489746,
+    "err": {
+     "per_tensor": 0.01600731909275055,
+     "per_channel": 0.0038180158007889986,
+     "per_token": 0.01315982174128294
+    },
+    "err_per_channel_smooth": 0.0033784937113523483
+   }
+  },
+  "19": {
+   "c": {
+    "absmax": 34.25,
+    "channel_ratio": 5.320388317108154,
+    "err": {
+     "per_tensor": 0.03658275678753853,
+     "per_channel": 0.008717515505850315,
+     "per_token": 0.017126813530921936
+    },
+    "err_per_channel_smooth": 0.008533121086657047
+   },
+   "kpe": {
+    "absmax": 18.5,
+    "channel_ratio": 5.2158589363098145,
+    "err": {
+     "per_tensor": 0.01384702417999506,
+     "per_channel": 0.00406535342335701,
+     "per_token": 0.00998413935303688
+    },
+    "err_per_channel_smooth": 0.003123585833236575
+   }
+  },
+  "20": {
+   "c": {
+    "absmax": 13.4375,
+    "channel_ratio": 3.0281689167022705,
+    "err": {
+     "per_tensor": 0.025181449949741364,
+     "per_channel": 0.008379494771361351,
+     "per_token": 0.019914578646421432
+    },
+    "err_per_channel_smooth": 0.008152575232088566
+   },
+   "kpe": {
+    "absmax": 22.0,
+    "channel_ratio": 4.6622514724731445,
+    "err": {
+     "per_tensor": 0.014456728473305702,
+     "per_channel": 0.004146936349570751,
+     "per_token": 0.01168579701334238
+    },
+    "err_per_channel_smooth": 0.0035256745759397745
+   }
+  },
+  "21": {
+   "c": {
+    "absmax": 36.75,
+    "channel_ratio": 7.259259223937988,
+    "err": {
+     "per_tensor": 0.04670122638344765,
+     "per_channel": 0.008814135566353798,
+     "per_token": 0.014694196172058582
+    },
+    "err_per_channel_smooth": 0.008555692620575428
+   },
+   "kpe": {
+    "absmax": 22.75,
+    "channel_ratio": 5.643410682678223,
+    "err": {
+     "per_tensor": 0.01620013453066349,
+     "per_channel": 0.0039063855074346066,
+     "per_token": 0.012980539351701736
+    },
+    "err_per_channel_smooth": 0.003112438367679715
+   }
+  },
+  "22": {
+   "c": {
+    "absmax": 12.125,
+    "channel_ratio": 2.503225803375244,
+    "err": {
+     "per_tensor": 0.021889669820666313,
+     "per_channel": 0.008864552713930607,
+     "per_token": 0.011952982284128666
+    },
+    "err_per_channel_smooth": 0.008720836602151394
+   },
+   "kpe": {
+    "absmax": 27.5,
+    "channel_ratio": 5.534591197967529,
+    "err": {
+     "per_tensor": 0.018697410821914673,
+     "per_channel": 0.004259902518242598,
+     "per_token": 0.014235950075089931
+    },
+    "err_per_channel_smooth": 0.0034682678524404764
+   }
+  },
+  "23": {
+   "c": {
+    "absmax": 25.375,
+    "channel_ratio": 4.639999866485596,
+    "err": {
+     "per_tensor": 0.04630308225750923,
+     "per_channel": 0.0089492779225111,
+     "per_token": 0.012671818025410175
+    },
+    "err_per_channel_smooth": 0.008792893029749393
+   },
+   "kpe": {
+    "absmax": 19.625,
+    "channel_ratio": 3.738095283508301,
+    "err": {
+     "per_tensor": 0.01510101929306984,
+     "per_channel": 0.004441238474100828,
+     "per_token": 0.01125775370746851
+    },
+    "err_per_channel_smooth": 0.0036350376904010773
+   }
+  },
+  "24": {
+   "c": {
+    "absmax": 49.75,
+    "channel_ratio": 6.8034186363220215,
+    "err": {
+     "per_tensor": 0.04854658618569374,
+     "per_channel": 0.008517248556017876,
+     "per_token": 0.02092006802558899
+    },
+    "err_per_channel_smooth": 0.008162888698279858
+   },
+   "kpe": {
+    "absmax": 20.875,
+    "channel_ratio": 4.671328544616699,
+    "err": {
+     "per_tensor": 0.0168989896774292,
+     "per_channel": 0.004414042923599482,
+     "per_token": 0.011880907230079174
+    },
+    "err_per_channel_smooth": 0.003546579973772168
+   }
+  },
+  "25": {
+   "c": {
+    "absmax": 17.125,
+    "channel_ratio": 2.9621622562408447,
+    "err": {
+     "per_tensor": 0.025925753638148308,
+     "per_channel": 0.008753080852329731,
+     "per_token": 0.014850231818854809
+    },
+    "err_per_channel_smooth": 0.008458348922431469
+   },
+   "kpe": {
+    "absmax": 19.125,
+    "channel_ratio": 4.636363506317139,
+    "err": {
+     "per_tensor": 0.01518325973302126,
+     "per_channel": 0.004281286150217056,
+     "per_token": 0.011699984781444073
+    },
+    "err_per_channel_smooth": 0.0035335610155016184
+   }
+  },
+  "26": {
+   "c": {
+    "absmax": 16.125,
+    "channel_ratio": 3.350649356842041,
+    "err": {
+     "per_tensor": 0.02503141760826111,
+     "per_channel": 0.008362789638340473,
+     "per_token": 0.01871401257812977
+    },
+    "err_per_channel_smooth": 0.008195050992071629
+   },
+   "kpe": {
+    "absmax": 14.9375,
+    "channel_ratio": 3.7054264545440674,
+    "err": {
+     "per_tensor": 0.013623633421957493,
+     "per_channel": 0.004594535566866398,
+     "per_token": 0.00984785333275795
+    },
+    "err_per_channel_smooth": 0.0045587001368403435
+   }
+  }
+ },
+ "decode_op_error": {
+  "0": {
+   "ref_vs_kernel": 0.0017587081529200077,
+   "A_plain": 0.010311505757272243,
+   "A_smooth": 0.01641611009836197,
+   "A_smooth_rope8": 0.01599561981856823,
+   "B_plain": 0.02292262576520443,
+   "B_smooth": 0.03425038233399391,
+   "B_smooth_rope8": 0.03342900052666664
+  },
+  "13": {
+   "ref_vs_kernel": 0.001748166629113257,
+   "A_plain": 0.010383172892034054,
+   "A_smooth": 0.01078755222260952,
+   "A_smooth_rope8": 0.014134421944618225,
+   "B_plain": 0.01787644252181053,
+   "B_smooth": 0.017107348889112473,
+   "B_smooth_rope8": 0.019595591351389885
+  },
+  "26": {
+   "ref_vs_kernel": 0.0017474103951826692,
+   "A_plain": 0.014701135456562042,
+   "A_smooth": 0.014373823069036007,
+   "A_smooth_rope8": 0.015323586761951447,
+   "B_plain": 0.019878387451171875,
+   "B_smooth": 0.020525755360722542,
+   "B_smooth_rope8": 0.02075463905930519
+  }
+ }
+}

@@ -1,0 +1,26 @@
+{
+ "label": "mla_all_smooth",
+ "task": "gsm8k",
+ "model": "deepseek-ai/DeepSeek-V2-Lite-Chat",
+ "n_prompts": 1319,
+ "n_samples": 1319,
+ "accuracy": 0.7202426080363912,
+ "wall_s": 100.90694832801819,
+ "gen_tokens": 348582,
+ "env": [
+  "KVQ_MLA=fakequant",
+  "KVQ_MLA_SCALES=/cache/mla/dsv2-lite/scales_smooth.safetensors",
+  "KVQ_MLA_ROPE=1"
+ ],
+ "llm": {
+  "max_model_len": 4096,
+  "gpu_memory_utilization": 0.85,
+  "seed": 0,
+  "disable_log_stats": false,
+  "trust_remote_code": true,
+  "attention_config": {
+   "backend": "TRITON_MLA"
+  },
+  "enforce_eager": true
+ }
+}

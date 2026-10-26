@@ -1,0 +1,22 @@
+{
+ "label": "mla_bf16",
+ "task": "aime24",
+ "model": "deepseek-ai/DeepSeek-V2-Lite-Chat",
+ "n_prompts": 30,
+ "n_samples": 30,
+ "accuracy": 0.0,
+ "wall_s": 71.43243765830994,
+ "gen_tokens": 25709,
+ "env": [],
+ "llm": {
+  "max_model_len": 4096,
+  "gpu_memory_utilization": 0.85,
+  "seed": 0,
+  "disable_log_stats": false,
+  "trust_remote_code": true,
+  "attention_config": {
+   "backend": "TRITON_MLA"
+  },
+  "enforce_eager": true
+ }
+}

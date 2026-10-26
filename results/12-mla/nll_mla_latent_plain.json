@@ -1,0 +1,20 @@
+{
+ "label": "mla_latent_plain",
+ "env": [
+  "KVQ_MLA=fakequant",
+  "KVQ_MLA_SCALES=/cache/mla/dsv2-lite/scales.safetensors",
+  "KVQ_MLA_ROPE=0"
+ ],
+ "nll": {
+  "gsm8k": 0.10310697347879351,
+  "aime24": 0.08751974855734085
+ },
+ "tokens": {
+  "gsm8k": 52184,
+  "aime24": 25684
+ },
+ "ppl": {
+  "gsm8k": 1.1086099946008887,
+  "aime24": 1.091463819065931
+ }
+}

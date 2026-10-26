@@ -1,0 +1,20 @@
+{
+ "label": "mla_all_smooth",
+ "env": [
+  "KVQ_MLA=fakequant",
+  "KVQ_MLA_SCALES=/cache/mla/dsv2-lite/scales_smooth.safetensors",
+  "KVQ_MLA_ROPE=1"
+ ],
+ "nll": {
+  "gsm8k": 0.10308535276202968,
+  "aime24": 0.08755130609437158
+ },
+ "tokens": {
+  "gsm8k": 52184,
+  "aime24": 25684
+ },
+ "ppl": {
+  "gsm8k": 1.108586025917305,
+  "aime24": 1.091498263519307
+ }
+}

@@ -503,3 +503,45 @@ Qwen2.5-7B 是 152064、0.5B 是 151936，所以 draft_model 实验用 Qwen2.5-1
   （`scales.merge_tp`），复制的 head 只留一份；DP 副本之间对 max/min 取最大最小、sum 和 token 数相加即可（本实验没开 DP）。
 - 两份 scale 逐通道最多差 64%（k_scale）/ 48%（v_scale），但准确率一样。差异来自校准数据本身不同：TP 改变累加顺序，
   模型 greedy 生成的校准 token 也跟着变，而 max 对极端 token 敏感。不是拼接顺序错误（那样离群 head 会差 10–20 倍）。
+
+## Step 9f 进阶：MLA（DeepSeek-V2-Lite）的 int8 KV
+
+MLA 每个 token 只缓存一行 latent：`c = kv_c_normed`（512 维）+ `k_pe`（64 维 RoPE 部分）。吸收 W_UK/W_UV 后的 decode 是
+`s_t = (q_lat·c_t + q_pe·kpe_t)·scale`，`o_lat = Σ p_t c_t`，再乘 W_UV。**同一个 c 既当 K（对 512 个通道缩并）又当 V（对 token 缩并）**，
+所以和 GQA 的分析不同（`kvq/mla.py` 顶部注释）：
+- QK 角色：per-channel 的 s_c 在缩并维上 → 折进 q_lat（和 GQA 的 K 一样）；
+- PV 角色：s_c 与 token 无关 → 乘在 o_lat 上；
+- **smooth 的 μ 在 PV 角色里必须加回来**：`Σ p_t (c_t − μ) = o_lat − μ`（Σp=1）。softmax 平移不变只对 QK 成立。
+  `tests/test_mla_ref.py` 专门验证了"不加回 μ 输出就错"；
+- k_pe 带 RoPE（随位置变化），可以单独一组 scale，也可以留 bf16（64/576 通道）。
+
+做法（`scripts/ext_mla.sh`，A100，`TRITON_MLA` backend，`results/12-mla/`）：
+1. 采集 27 层的 c / k_pe 统计和 3 层 decode dump（`KVQ_MLA=capture`，包住 `MLAAttentionImpl.do_kv_cache_update`
+   和 `TritonMLAImpl.forward_mqa`；MLA impl 不知道层名，按第一次调用的顺序编号）；
+2. 分布：c 的通道最大/中位数比中位 4.6、最大 15.4（Qwen 的 K 最高 74），per_channel 往返误差 0.89%，
+   **smooth 几乎没用（0.88%）**：latent 经过 `kv_a_layernorm`，没有 Qwen2 那种 qkv bias 带来的常数偏移；k_pe per_channel 0.40%；
+3. decode 算子误差（对 vLLM Triton MLA kernel 的捕获输出，参考实现本身 0.18%）：
+
+| 层 | A（反量化） | A + smooth | A + smooth + k_pe int8 | B（int8 算术） | B + smooth | B + smooth + k_pe int8 |
+|---|---|---|---|---|---|---|
+| 0 | 1.03% | 1.64% | 1.60% | 2.29% | 3.43% | 3.34% |
+| 13 | 1.04% | 1.08% | 1.41% | 1.79% | 1.71% | 1.96% |
+| 26 | 1.47% | 1.44% | 1.53% | 1.99% | 2.05% | 2.08% |
+
+4. 端到端：在写 cache 前把 c（和可选的 k_pe）按静态 scale 量化再反量化（= int8 latent cache 实际存的东西），GSM8K 1319 题：
+
+| 配置 | GSM8K | 翻转（对/错） |
+|---|---|---|
+| bf16 | 72.33% | – |
+| c int8 per_channel，k_pe bf16 | 71.34% | +67 / −80 |
+| c int8 per_channel + smooth（μ 加回），k_pe bf16 | 71.04% | +67 / −84 |
+| c 和 k_pe 都 int8，smooth | 72.02% | +69 / −73 |
+
+结论：MLA 的 latent 比 Qwen2.5 的 K 好量化得多，per_channel 不加 smooth 就够；差异在 ±1 个点（约 1 个标准误，
+这个模型翻转数本来就多），可以全部 576 维都存 int8（显存 1152 → 576 B/token）。
+
+遇到的问题：
+1. **MLA 的 ΔNLL 测不到量化**（都在 1e-5 级）：MLA 的 prefill（`forward_mha`）对当前 chunk 直接用新算的 `kv_c_normed`，
+   不读 cache，而 teacher-forcing 的文本一个 chunk 就处理完，伪量化只改了 cache 里的那份。decode（`forward_mqa`）才读 cache，
+   所以 MLA 以生成准确率为准。GQA 那边 FA backend 的 prefill 也读 cache，ΔNLL 是有效的。
+2. 第一版 dump 触发条件是"batch 里最短序列 ≥1024"，GSM8K 回答短，永远等不到；改成最长序列 ≥600。
