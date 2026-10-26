@@ -1,0 +1,23 @@
+{
+ "label": "vllm_int8_pth",
+ "task": "gsm8k",
+ "model": "Qwen/Qwen2.5-7B-Instruct",
+ "n_prompts": 1319,
+ "n_samples": 1319,
+ "accuracy": 0.913570887035633,
+ "wall_s": 50.492212533950806,
+ "gen_tokens": 386466,
+ "env": [],
+ "llm": {
+  "max_model_len": 4096,
+  "gpu_memory_utilization": 0.85,
+  "seed": 0,
+  "kv_cache_dtype": "int8_per_token_head",
+  "attention_config": {
+   "backend": "TRITON_ATTN"
+  }
+ },
+ "spec_decode": {
+  "error": "AssertionError('Stat logging disabled')"
+ }
+}

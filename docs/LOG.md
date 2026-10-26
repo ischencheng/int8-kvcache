@@ -562,3 +562,51 @@ MLA 每个 token 只缓存一行 latent：`c = kv_c_normed`（512 维）+ `k_pe`
 - 1.5B + 0.5B 的 draft_model 在 batch 1 反而慢 3–5 倍：draft 只比 target 小 3 倍，每步跑 4 次 draft + 1 次 verify，
   这么小的模型上调度和 kernel 启动开销占主导。这是这组模型搭配的问题，与 KV 量化无关（三种 KV 组合同样慢）。
 - 这个容器中途被 Modal 抢占（preemption）后整段重跑，两次的 TPOT 在 1–3% 内一致（draft 那组 14–18 ms 波动较大）。
+
+## Step 8d 端到端：精度（CUDA graph 打开）、容量、吞吐、TPOT（阶段八 + 扩展 3.5(b)）
+
+Qwen2.5-7B，A100，vLLM 默认的 CUDA graph 模式（FULL_AND_PIECEWISE）打开（`results/09-e2e/`）。
+
+**精度**（GSM8K 1319 题）：
+
+| 配置 | GSM8K | 翻转 | ΔNLL gsm8k / aime24 |
+|---|---|---|---|
+| bf16 FA2 | 92.19% | – | 0 / 0 |
+| 我们 int8_static + Triton，CUDA graph | 92.12% | +13 / −14 | （见 Step 6c）|
+| 我们 int8_static + **CUDA kernel**，CUDA graph | **92.19%** | +11 / −11 | |
+| vLLM 原生 int8_per_token_head | 91.36% | +14 / −25 | +0.0017 / +0.0026 |
+
+**KV 容量**（同样 0.9 显存利用率）：bf16 1,034,368 token → int8_static 2,068,896–2,071,520 token（2.0×）；
+vLLM int8_per_token_head 2,006,208（scale 内联在页里，略少）。
+
+**容量受限的吞吐**（512 个请求 × 6144 上下文 + 1024 输出，`max_num_seqs=512`）：
+
+| 配置 | KV 允许的最大并发 | 输出吞吐 |
+|---|---|---|
+| bf16 FA2 | 143 | 1115 tok/s |
+| 我们 int8 + Triton | 287 | 1361 tok/s（+22%） |
+| **我们 int8 + CUDA kernel** | 287 | **1431 tok/s（+28%）** |
+| vLLM int8_per_token_head | 278 | 676 tok/s（−39%） |
+
+并发翻倍，再加上 decode attention 更快，吞吐提升 22–28%。vLLM 的 int8_per_token_head 虽然并发也翻倍，但它的 kernel
+（尤其是 prefill：ctx 16k × 32 的 prefill 146 s，FA2 39 s）太慢，吞吐反而掉 39%。
+
+**TPOT（差值法）**（`docs/tables/stage8_e2e_diff_method.md`）：`(带 128 个输出的总时间 − 只 prefill 的时间) / 127`，
+摘录（ms）：
+
+| ctx × batch | FA2 bf16 | 我们 Triton bf16 | 我们 Triton int8 | 我们 CUDA int8 | vLLM int8 原生 | 我们 int8 eager |
+|---|---|---|---|---|---|---|
+| 1k × 1 | 10.36 | 9.84 | 9.88 | 9.92 | 10.11 | 22.62 |
+| 4k × 64 | 29.05 | 21.55 | 20.47 | 19.26 | 40.18 | 21.76 |
+| 4k × 128 | 55.89 | 34.08 | 31.65 | 28.46 | 59.77 | 32.68 |
+| 16k × 32 | 50.55 | 31.04 | 27.45 | 25.77 | 62.05 | 29.11 |
+
+- int8 的收益在大 batch、长上下文才出现（4k × 128：同一份 kernel bf16 34.1 → int8 31.7（Triton）/ 28.5（CUDA））；
+  batch 1 时每步主要是读 15 GB 权重，KV 那点访存省不出差别。
+- **3.5(b) CUDA graph**：int8 backend 完全兼容（CUDA graph 下精度 92.12%/92.19%，和 eager 一样）。关掉 graph 后
+  batch 1 的 TPOT 从 9.9 ms 涨到 22.6 ms：attention 之外的几百个小 kernel 的启动开销。兼容需要做的事：
+  静态 scale 在 metadata builder 里分配（早于 capture），之后只能原地改；kernel 里不能有 host 同步，所有分支只依赖
+  capture 时就固定的形状（decode 批大小、是否切分）；padding slot 写成 −1 由写 cache 的 kernel 跳过；
+  CUDA 扩展在模型构建时就 JIT 编译好；split-KV 的缓冲区复用 builder 预分配的那一份。
+- 差值法的问题：chunked prefill 下，先 prefill 完的请求会和别人的 prefill chunk 混在同一批里 decode，这些步也被算进"decode"，
+  prefill 越慢的配置被高估越多（FA2 一列偏高）。所以又用 engine 的每请求时间戳补测了一遍，见下一步。

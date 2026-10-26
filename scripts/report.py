@@ -129,9 +129,11 @@ def e2e(dirs):
             cells = []
             for k in labels:
                 m = [r for r in runs[k]["tpot"] if r["ctx"] == ctx and r["batch"] == b]
-                cells.append(f"{m[0]['tpot_ms']:.2f}{'*' if m[0]['kv_limited'] else ''}" if m else "-")
+                key = "tpot_req_ms" if m and m[0].get("tpot_req_ms") else "tpot_ms"
+                cells.append(f"{m[0][key]:.2f}{'*' if m[0]['kv_limited'] else ''}" if m else "-")
             print(f"| {ctx} | {b} | " + " | ".join(cells) + " |")
-        print("\nTPOT in ms; * = KV-limited (requests queue)\n")
+        print("\nTPOT in ms (per-request engine timestamps when recorded, else (total - prefill) / steps); "
+              "* = KV-limited (requests queue)\n")
         print("| config | KV capacity (tokens) |")
         print("|---|---|")
         for k in labels:

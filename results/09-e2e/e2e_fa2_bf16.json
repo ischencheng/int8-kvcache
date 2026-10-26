@@ -1,0 +1,102 @@
+{
+ "label": "fa2_bf16",
+ "env": [],
+ "llm": {
+  "max_model_len": 32768,
+  "gpu_memory_utilization": 0.9,
+  "seed": 0,
+  "enable_prefix_caching": false,
+  "max_num_seqs": 256
+ },
+ "kv_capacity_tokens": 1034368,
+ "tpot": [
+  {
+   "ctx": 1024,
+   "batch": 1,
+   "prefill_s": 0.06648827699996218,
+   "total_s": 1.3825492429999713,
+   "tpot_ms": 10.362684771653615,
+   "kv_limited": false
+  },
+  {
+   "ctx": 1024,
+   "batch": 16,
+   "prefill_s": 0.9320709060000354,
+   "total_s": 2.3464335639999945,
+   "tpot_ms": 11.136713842519363,
+   "kv_limited": false
+  },
+  {
+   "ctx": 1024,
+   "batch": 64,
+   "prefill_s": 3.7091717980000567,
+   "total_s": 5.677718907000099,
+   "tpot_ms": 15.500370937008205,
+   "kv_limited": false
+  },
+  {
+   "ctx": 1024,
+   "batch": 128,
+   "prefill_s": 7.436500802000069,
+   "total_s": 10.00930370499998,
+   "tpot_ms": 20.258290574802444,
+   "kv_limited": false
+  },
+  {
+   "ctx": 4096,
+   "batch": 1,
+   "prefill_s": 0.25845393599990985,
+   "total_s": 1.5884010069999022,
+   "tpot_ms": 10.472024181102302,
+   "kv_limited": false
+  },
+  {
+   "ctx": 4096,
+   "batch": 16,
+   "prefill_s": 3.9671755099999473,
+   "total_s": 5.64858489900007,
+   "tpot_ms": 13.239444007874985,
+   "kv_limited": false
+  },
+  {
+   "ctx": 4096,
+   "batch": 64,
+   "prefill_s": 15.827226235000012,
+   "total_s": 19.51649718200008,
+   "tpot_ms": 29.049377535433607,
+   "kv_limited": false
+  },
+  {
+   "ctx": 4096,
+   "batch": 128,
+   "prefill_s": 31.711589301000004,
+   "total_s": 38.809851532999915,
+   "tpot_ms": 55.891828598424496,
+   "kv_limited": false
+  },
+  {
+   "ctx": 16384,
+   "batch": 1,
+   "prefill_s": 1.222787161000042,
+   "total_s": 2.6091028760000654,
+   "tpot_ms": 10.915871771653727,
+   "kv_limited": false
+  },
+  {
+   "ctx": 16384,
+   "batch": 16,
+   "prefill_s": 19.42493399600005,
+   "total_s": 22.62505909799995,
+   "tpot_ms": 25.197835448818125,
+   "kv_limited": false
+  },
+  {
+   "ctx": 16384,
+   "batch": 32,
+   "prefill_s": 38.84739682899999,
+   "total_s": 45.267569588000015,
+   "tpot_ms": 50.55254140944901,
+   "kv_limited": false
+  }
+ ]
+}

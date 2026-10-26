@@ -1,0 +1,111 @@
+{
+ "label": "ours_int8_eager",
+ "env": [
+  "KVQ_SCALES=/cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors",
+  "KVQ_KERNEL=triton",
+  "KVQ_CFG=B_channel_smooth"
+ ],
+ "llm": {
+  "max_model_len": 32768,
+  "gpu_memory_utilization": 0.9,
+  "seed": 0,
+  "enable_prefix_caching": false,
+  "max_num_seqs": 256,
+  "kv_cache_dtype": "int8_static",
+  "attention_config": {
+   "backend": "CUSTOM"
+  },
+  "enforce_eager": true
+ },
+ "kv_capacity_tokens": 2084976,
+ "tpot": [
+  {
+   "ctx": 1024,
+   "batch": 1,
+   "prefill_s": 0.08188471799985564,
+   "total_s": 2.9544476579999355,
+   "tpot_ms": 22.61860582677228,
+   "kv_limited": false
+  },
+  {
+   "ctx": 1024,
+   "batch": 16,
+   "prefill_s": 0.9608319620001566,
+   "total_s": 4.0236436129998765,
+   "tpot_ms": 24.116627173226142,
+   "kv_limited": false
+  },
+  {
+   "ctx": 1024,
+   "batch": 64,
+   "prefill_s": 3.8271199209998485,
+   "total_s": 6.908795824000208,
+   "tpot_ms": 24.26516459055401,
+   "kv_limited": false
+  },
+  {
+   "ctx": 1024,
+   "batch": 128,
+   "prefill_s": 7.659219376000237,
+   "total_s": 10.158510910000132,
+   "tpot_ms": 19.679460897636964,
+   "kv_limited": false
+  },
+  {
+   "ctx": 4096,
+   "batch": 1,
+   "prefill_s": 0.2810156509999615,
+   "total_s": 2.523330103000262,
+   "tpot_ms": 17.656019307088982,
+   "kv_limited": false
+  },
+  {
+   "ctx": 4096,
+   "batch": 16,
+   "prefill_s": 4.38813921000019,
+   "total_s": 6.692942480000056,
+   "tpot_ms": 18.14805724409343,
+   "kv_limited": false
+  },
+  {
+   "ctx": 4096,
+   "batch": 64,
+   "prefill_s": 17.484580875999654,
+   "total_s": 20.248689084000034,
+   "tpot_ms": 21.76463155905811,
+   "kv_limited": false
+  },
+  {
+   "ctx": 4096,
+   "batch": 128,
+   "prefill_s": 35.036473441,
+   "total_s": 39.18643924399976,
+   "tpot_ms": 32.676896086612274,
+   "kv_limited": false
+  },
+  {
+   "ctx": 16384,
+   "batch": 1,
+   "prefill_s": 1.6146140820001165,
+   "total_s": 3.8404522119999456,
+   "tpot_ms": 17.52628448818763,
+   "kv_limited": false
+  },
+  {
+   "ctx": 16384,
+   "batch": 16,
+   "prefill_s": 25.758297111000047,
+   "total_s": 28.300509745,
+   "tpot_ms": 20.017422314960253,
+   "kv_limited": false
+  },
+  {
+   "ctx": 16384,
+   "batch": 32,
+   "prefill_s": 51.47826310899973,
+   "total_s": 55.175193476000004,
+   "tpot_ms": 29.10968792913604,
+   "kv_limited": false
+  }
+ ]
+}

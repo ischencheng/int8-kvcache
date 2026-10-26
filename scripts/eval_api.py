@@ -24,12 +24,20 @@ async def main():
         body = {"model": args.model, "messages": data.math_messages(r["question"]), "temperature": 0,
                 "max_tokens": 1024}
         async with sem, session.post(f"{args.url}/v1/chat/completions", json=body) as resp:
-            text = (await resp.json())["choices"][0]["message"]["content"]
+            raw = await resp.text()
+        try:
+            text = json.loads(raw)["choices"][0]["message"]["content"]
+        except (KeyError, ValueError, IndexError):
+            return {"id": r["id"], "answer": r["answer"], "correct": False, "text": "", "error": raw[:500]}
         return {"id": r["id"], "answer": r["answer"], "correct": evaluate.math_correct(text, r["answer"]), "text": text}
 
     async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=7200)) as s:
         items = await asyncio.gather(*[one(s, r) for r in rows])
-    res = {"label": args.label, "n": len(items), "accuracy": sum(i["correct"] for i in items) / len(items)}
+    errors = [i["error"] for i in items if "error" in i]
+    for e in errors[:3]:
+        print("request error:", e)
+    res = {"label": args.label, "n": len(items), "errors": len(errors),
+           "accuracy": sum(i["correct"] for i in items) / len(items)}
     print(json.dumps(res))
     out = os.environ["OUT"]
     with open(f"{out}/eval_api_{args.label}.json", "w") as f:

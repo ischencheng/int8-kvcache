@@ -1,9 +1,11 @@
-"""Minimal prefill/decode proxy for vLLM's NixlConnector (extension 3.5(d)).
+"""Minimal prefill/decode proxy (extension 3.5(d)).
 
-Each request goes to the prefill server first with max_tokens=1 and
-kv_transfer_params.do_remote_decode=true; its response carries the block ids the
-decode server should pull. The original request then goes to the decode server with
-those kv_transfer_params, and the decode server's (streamed) answer is returned.
+Each request goes to the prefill server first with max_tokens=1, then the original request goes
+to the decode server, whose (streamed) answer is returned.
+  --mode nixl     NixlConnector: the prefill response carries kv_transfer_params (block ids to pull),
+                  forwarded to the decode server.
+  --mode storage  ExampleConnector: the prefill server writes the KV pages to shared storage keyed by
+                  the prompt, the decode server finds them there; no kv_transfer_params needed.
 """
 import argparse
 import copy
@@ -22,9 +24,10 @@ _ids = itertools.count()
 async def _forward(path, req_json, request_id):
     session = app.state.session
     pre = copy.deepcopy(req_json)
-    pre.update(max_tokens=1, stream=False, kv_transfer_params={
-        "do_remote_decode": True, "do_remote_prefill": False, "remote_engine_id": None,
-        "remote_block_ids": None, "remote_host": None, "remote_port": None})
+    pre.update(max_tokens=1, stream=False)
+    if ARGS.mode == "nixl":
+        pre["kv_transfer_params"] = {"do_remote_decode": True, "do_remote_prefill": False, "remote_engine_id": None,
+                                     "remote_block_ids": None, "remote_host": None, "remote_port": None}
     pre.pop("max_completion_tokens", None)
     pre.pop("stream_options", None)
     headers = {"X-Request-Id": request_id}
@@ -32,7 +35,8 @@ async def _forward(path, req_json, request_id):
         r.raise_for_status()
         kv = (await r.json()).get("kv_transfer_params")
     dec = dict(req_json)
-    dec["kv_transfer_params"] = kv
+    if ARGS.mode == "nixl":
+        dec["kv_transfer_params"] = kv
     return session.post(f"{ARGS.decode}{path}", json=dec, headers=headers)
 
 
@@ -77,5 +81,6 @@ if __name__ == "__main__":
     ap.add_argument("--prefill", default="http://localhost:8100")
     ap.add_argument("--decode", default="http://localhost:8200")
     ap.add_argument("--port", type=int, default=8000)
+    ap.add_argument("--mode", choices=["nixl", "storage"], default="storage")
     ARGS = ap.parse_args()
     uvicorn.run(app, host="0.0.0.0", port=ARGS.port, log_level="warning")

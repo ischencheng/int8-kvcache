@@ -1,0 +1,105 @@
+{
+ "label": "vllm_triton_bf16",
+ "env": [],
+ "llm": {
+  "max_model_len": 32768,
+  "gpu_memory_utilization": 0.9,
+  "seed": 0,
+  "enable_prefix_caching": false,
+  "max_num_seqs": 256,
+  "attention_config": {
+   "backend": "TRITON_ATTN"
+  }
+ },
+ "kv_capacity_tokens": 1034448,
+ "tpot": [
+  {
+   "ctx": 1024,
+   "batch": 1,
+   "prefill_s": 0.07109807899996667,
+   "total_s": 1.3383030200000121,
+   "tpot_ms": 9.977991661417681,
+   "kv_limited": false
+  },
+  {
+   "ctx": 1024,
+   "batch": 16,
+   "prefill_s": 0.988804302999938,
+   "total_s": 2.399283106000098,
+   "tpot_ms": 11.106132307087874,
+   "kv_limited": false
+  },
+  {
+   "ctx": 1024,
+   "batch": 64,
+   "prefill_s": 3.9289566359999526,
+   "total_s": 5.751066387000037,
+   "tpot_ms": 14.347320874016413,
+   "kv_limited": false
+  },
+  {
+   "ctx": 1024,
+   "batch": 128,
+   "prefill_s": 7.879745532000015,
+   "total_s": 10.263178863000007,
+   "tpot_ms": 18.767191582677103,
+   "kv_limited": false
+  },
+  {
+   "ctx": 4096,
+   "batch": 1,
+   "prefill_s": 0.3127638769999521,
+   "total_s": 1.636425594000002,
+   "tpot_ms": 10.422533204724804,
+   "kv_limited": false
+  },
+  {
+   "ctx": 4096,
+   "batch": 16,
+   "prefill_s": 4.816442685000084,
+   "total_s": 6.46285648300011,
+   "tpot_ms": 12.96388817322855,
+   "kv_limited": false
+  },
+  {
+   "ctx": 4096,
+   "batch": 64,
+   "prefill_s": 19.222311150999985,
+   "total_s": 22.028428659000042,
+   "tpot_ms": 22.095413448819343,
+   "kv_limited": false
+  },
+  {
+   "ctx": 4096,
+   "batch": 128,
+   "prefill_s": 38.47398241500002,
+   "total_s": 42.79891748,
+   "tpot_ms": 34.05460681102344,
+   "kv_limited": false
+  },
+  {
+   "ctx": 16384,
+   "batch": 1,
+   "prefill_s": 2.089298435000046,
+   "total_s": 3.660155100999873,
+   "tpot_ms": 12.368950125982888,
+   "kv_limited": false
+  },
+  {
+   "ctx": 16384,
+   "batch": 16,
+   "prefill_s": 33.21986469500007,
+   "total_s": 35.77575132900006,
+   "tpot_ms": 20.12509160629913,
+   "kv_limited": false
+  },
+  {
+   "ctx": 16384,
+   "batch": 32,
+   "prefill_s": 66.40780295100012,
+   "total_s": 70.19262763000006,
+   "tpot_ms": 29.801769125983775,
+   "kv_limited": false
+  }
+ ]
+}

@@ -1,0 +1,29 @@
+{
+ "label": "ours_int8_cuda",
+ "env": [
+  "KVQ_SCALES=/cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors",
+  "KVQ_KERNEL=cuda",
+  "KVQ_CFG=B_channel_smooth"
+ ],
+ "llm": {
+  "max_model_len": 32768,
+  "gpu_memory_utilization": 0.9,
+  "seed": 0,
+  "enable_prefix_caching": false,
+  "max_num_seqs": 512,
+  "kv_cache_dtype": "int8_static",
+  "attention_config": {
+   "backend": "CUSTOM"
+  }
+ },
+ "kv_capacity_tokens": 2063632,
+ "tpot": [],
+ "throughput": {
+  "requests": 512,
+  "ctx": 6144,
+  "out": 1024,
+  "wall_s": 366.37372066399985,
+  "output_tok_per_s": 1431.0196677037948,
+  "max_concurrent_by_kv": 287
+ }
+}
