@@ -9,6 +9,7 @@ comparable there).
 --throughput N: N long requests at once, the regime where KV capacity caps concurrency.
 """
 import argparse
+import statistics
 import json
 import os
 import random
@@ -33,6 +34,7 @@ def main():
     ap.add_argument("--throughput", type=int, default=0, help="N requests for the capacity-bound run")
     ap.add_argument("--pure", action="store_true",
                     help="pure-decode TPOT = (T(2L) - T(L)) / L: the extra L steps run after every prefill finished")
+    ap.add_argument("--repeat", type=int, default=1, help="pure mode: (T(L), T(2L)) pairs per point, median reported")
     ap.add_argument("--tp-ctx", type=int, default=6144)
     ap.add_argument("--tp-out", type=int, default=1024)
     args = ap.parse_args()
@@ -81,10 +83,12 @@ def main():
             for b in batches:
                 ps = prompts(b, ctx)
                 if args.pure:
-                    t1, _ = timed(ps, args.out_len)
-                    t2, _ = timed(ps, 2 * args.out_len)
-                    row = {"ctx": ctx, "batch": b, "t_L_s": t1, "t_2L_s": t2,
-                           "tpot_pure_ms": 1e3 * (t2 - t1) / args.out_len,
+                    if args.repeat > 1:
+                        timed(ps, 2)  # first call at this shape: JIT compiles land here, not in T(L)
+                    pairs = [(timed(ps, args.out_len)[0], timed(ps, 2 * args.out_len)[0]) for _ in range(args.repeat)]
+                    samples = [1e3 * (t2 - t1) / args.out_len for t1, t2 in pairs]
+                    row = {"ctx": ctx, "batch": b, "t_L_s": [p[0] for p in pairs], "t_2L_s": [p[1] for p in pairs],
+                           "tpot_pure_ms": statistics.median(samples), "samples_ms": samples,
                            "kv_limited": b * (ctx + 2 * args.out_len) > capacity}
                     res["tpot"].append(row)
                     print(json.dumps(row))
