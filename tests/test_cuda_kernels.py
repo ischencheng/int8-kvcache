@@ -1,28 +1,37 @@
-"""Stage 7 (CUDA): the CUDA kernels against the PyTorch references and the Triton kernels."""
+"""Stage 7 (CUDA): the CUDA kernels and the long-query path against the PyTorch references."""
 import pytest
 import torch
-from conftest import DUMPS, random_paged_case, record
-from test_triton_kernels import CASES, _segm, make_static, to_int8
+from conftest import CASES, DUMPS, make_static, random_paged_case, record, segm_buffers, to_int8
 
 from kvq import cuda_kernels as ck
 from kvq import quant
 from kvq.int8_ref import Cfg, paged_static_attention
 from kvq.ref_attn import compare
-from kvq.triton_kernels.int8_attention import paged_attention as triton_attention
 
 SCALE = 128 ** -0.5
 CFG32 = Cfg(smooth_k=True, p_tile=32)            # the CUDA kernel quantizes P per 32-token chunk
+
+
+def reference(st, per_channel=True):
+    cfg = CFG32 if per_channel else Cfg(smooth_k=True, p_tile=32, k_gran="per_head", v_gran="per_head")
+    return paged_static_attention(cfg, st, cache_is_int8=True, short_q=ck.SHORT_Q)
+
+
+def short_rows(cu, limit=ck.SHORT_Q):
+    """Token mask of the requests the INT8 kernel handles."""
+    q_lens = (cu[1:] - cu[:-1]).long()
+    return torch.repeat_interleave(q_lens <= limit, q_lens)
 
 
 @pytest.mark.parametrize("per_channel", [True, False])
 def test_quant_cache_matches_torch(per_channel):
     g = torch.Generator(device="cuda").manual_seed(0)
     T, H, D, nb, bs = 200, 4, 128, 64, 16
-    key = torch.randn(T + 8, H, D, generator=g, device="cuda").to(torch.bfloat16) * 5
+    key = torch.randn(T + 8, H, D, generator=g, device="cuda").to(torch.bfloat16) * 5   # +8 padded rows
     value = torch.randn(T + 8, H, D, generator=g, device="cuda").to(torch.bfloat16)
     slots = torch.randperm(nb * bs, generator=g, device="cuda")[:T].long()
     slots[::17] = -1
-    kv = torch.zeros(nb, H, bs, 2 * D, dtype=torch.int8, device="cuda")
+    kv = torch.zeros(nb, H, bs, 2 * D, dtype=torch.int8, device="cuda")  # vLLM's logical layout
     kc, vc = kv.transpose(1, 2).split(D, dim=-1)
     st = make_static(key[:T, None], value[:T, None], per_channel)
     ck.quant_reshape_and_cache(key, value, kc, vc, slots, st)
@@ -46,34 +55,63 @@ def test_quant_q_matches_torch(group):
 
 
 @pytest.mark.parametrize("heads", [(28, 4), (12, 2), (32, 8), (16, 1)])
+@pytest.mark.parametrize("case", ["decode", "short"])
 @pytest.mark.parametrize("variant", ["single", "segments", "per_head"])
-def test_decode_matches_ref(heads, variant):
-    q, k, v, cu, sl, bt = random_paged_case(*heads, *CASES["decode"], scale=3.0)
+def test_short_queries_match_ref(heads, case, variant):
+    """Decode and short multi-token queries (causal inside the request, several m tiles when q_len * G > 16)."""
+    q_lens, seq_lens = CASES[case]
+    q, k, v, cu, sl, bt = random_paged_case(*heads, q_lens, seq_lens, scale=3.0)
     st = make_static(k, v, per_channel=variant != "per_head")
     kq, vq = to_int8(k, v, st)
-    cfg = Cfg(smooth_k=True, p_tile=32, k_gran="per_head", v_gran="per_head") if variant == "per_head" else CFG32
-    ref = paged_static_attention(cfg, st, cache_is_int8=True)(q, kq, vq, cu, sl, bt, SCALE)
+    ref = reference(st, variant != "per_head")(q, kq, vq, cu, sl, bt, SCALE)
     out = ck.decode_attention(q, kq, vq, torch.empty_like(q), cu, sl, bt, SCALE, st,
-                              segm=_segm(q.shape[0], heads[0]) if variant == "segments" else None)
+                              segm=segm_buffers(q.shape[0], heads[0]) if variant == "segments" else None,
+                              max_query_len=max(q_lens))
     err = compare(ref, out)
-    record("cuda_decode", heads=heads, variant=variant, **err)
+    record("cuda_short", heads=heads, case=case, variant=variant, **err)
     assert err["rel_l2"] < 5e-3
 
 
-def test_cuda_matches_triton_and_skips_non_decode_rows():
-    q, k, v, cu, sl, bt = random_paged_case(28, 4, *CASES["decode"], scale=3.0)
+def test_short_kernel_leaves_long_requests_alone():
+    q, k, v, cu, sl, bt = random_paged_case(28, 4, *CASES["mixed"], scale=3.0)
     st = make_static(k, v)
     kq, vq = to_int8(k, v, st)
-    a = ck.decode_attention(q, kq, vq, torch.empty_like(q), cu, sl, bt, SCALE, st)
-    b = triton_attention(q, kq, vq, torch.empty_like(q), cu, sl, bt, 1, SCALE, st)
-    err = compare(b, a)
-    record("cuda_vs_triton", **err)
-    assert err["rel_l2"] < 2e-2   # P is quantized per 32 tokens here, per 64 in the Triton kernel
+    out = torch.full_like(q, 7.0)
+    ck.decode_attention(q, kq, vq, out, cu, sl, bt, SCALE, st, max_query_len=int((cu[1:] - cu[:-1]).max()))
+    short = short_rows(cu)
+    assert (out[~short] == 7.0).all() and not (out[short] == 7.0).any()
 
 
-@pytest.fixture(params=DUMPS, ids=[n for n, _ in DUMPS])
-def dump(request):
-    return request.param
+def test_plan_long_page_table():
+    cu = torch.tensor([0, 1, 13, 14, 314], dtype=torch.int32)        # q_lens 1, 12, 1, 300
+    sl = torch.tensor([50, 40, 9, 330], dtype=torch.int32)
+    bt = torch.arange(4 * 21, dtype=torch.int32, device="cuda").reshape(4, 21) + 1000
+    plan = ck.plan_long(cu, sl, bt, 16)
+    assert plan.seqused_k.tolist() == [0, 40, 0, 330] and plan.max_seqlen_k == 330 and plan.has_short
+    assert plan.src_pages.tolist() == bt[1, :3].tolist() + bt[3, :21].tolist()
+    assert plan.block_table[1, :3].tolist() == [0, 1, 2] and plan.block_table[3, :21].tolist() == list(range(3, 24))
+    assert ck.plan_long(torch.tensor([0, 1, 9]), torch.tensor([5, 8]), bt, 16) is None   # q_len 8 is short
+
+
+@pytest.mark.parametrize("heads", [(28, 4), (12, 2)])
+@pytest.mark.parametrize("case", ["mixed", "prefill"])
+@pytest.mark.parametrize("per_channel", [True, False])
+def test_mixed_batch_matches_ref(heads, case, per_channel):
+    """Whole batch the way the backend runs it: long requests dequantize + FlashAttention, short ones INT8."""
+    q_lens, seq_lens = CASES[case]
+    q, k, v, cu, sl, bt = random_paged_case(*heads, q_lens, seq_lens, scale=3.0)
+    st = make_static(k, v, per_channel=per_channel)
+    kq, vq = to_int8(k, v, st)
+    ref = reference(st, per_channel)(q, kq, vq, cu, sl, bt, SCALE)
+    plan = ck.plan_long(cu.cpu(), sl.cpu(), bt, kq.shape[1])
+    assert plan is not None and plan.has_short == (case == "mixed")
+    out = ck.paged_attention(q, kq, vq, torch.empty_like(q), cu, sl, bt, max(q_lens), SCALE, st, plan)
+    short = short_rows(cu)
+    res = {"all": compare(ref, out)["rel_l2"], "long": compare(ref[~short], out[~short])["rel_l2"]}
+    if short.any():
+        res["short"] = compare(ref[short], out[short])["rel_l2"]
+    record("cuda_mixed", heads=heads, case=case, per_channel=per_channel, **res)
+    assert res["long"] < 1e-2 and res.get("short", 0) < 5e-3   # long rows: bf16 FlashAttention on bf16 K/V
 
 
 def test_cuda_decode_on_real_dumps(dump):

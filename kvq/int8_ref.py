@@ -159,9 +159,10 @@ def paged_int8_attention(cfg, static=None):
     return fn
 
 
-def paged_static_attention(cfg, static, cache_is_int8):
-    """Static-scale attention as the INT8 backend runs it: decode rows use the INT8
-    arithmetic (B), multi-token rows (prefill / chunked prefill) dequantize (A).
+def paged_static_attention(cfg, static, cache_is_int8, short_q=1):
+    """Static-scale attention as the INT8 backend runs it: requests with at most short_q query
+    tokens use the INT8 arithmetic (B), longer ones (prefill / chunked prefill) dequantize (A).
+    short_q=1 is the stage-6 torch path; the CUDA path uses cuda_kernels.SHORT_Q.
 
     cache_is_int8=True : the cache already holds int8 (the real static backend).
     cache_is_int8=False: the cache is bf16 and is quantized with the static scales at
@@ -181,6 +182,8 @@ def paged_static_attention(cfg, static, cache_is_int8):
         return attend_int8(qb, kq, ks, vq, vs, mask, softmax_scale_[0], cfg)
 
     def prefill(qb, k, v, mask, valid):
+        if qb.shape[1] <= short_q:  # run_paged hands a short request over in one piece
+            return decode(qb, k, v, mask, valid)
         kq, vq = prep(k, v)
         return attend_dequant(qb, kq, ks, vq, vs, mask, softmax_scale_[0])
 
