@@ -1,6 +1,6 @@
 #!/bin/bash
 # Batch-1 ngram spec decode on 7B: bf16 FA2, INT8 with the current kernels, INT8 with the kernels before
-# the split-KV merge rewrite (scripts/_prev_kernel/int8_kv.cu = git show 596c408:kvq/cuda/int8_kv.cu),
+# the split-KV merge rewrite (scripts/_prev_kernel/int8_kv.cu = git show 52d0931:kvq/cuda/int8_kv.cu),
 # interleaved for 3 rounds in one container (run-to-run drift is as large as the effect).
 set -x
 S=/cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors

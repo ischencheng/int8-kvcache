@@ -1,6 +1,6 @@
 """A/B of the INT8 attention for decode (q_len 1) and verification batches (q_len 5) on one GPU:
 the previous kernel (built from scripts/_prev_kernel/int8_kv.cu when present, e.g.
-`git show 596c408:kvq/cuda/int8_kv.cu`), the current one, and FA2 on a bf16 cache."""
+`git show 52d0931:kvq/cuda/int8_kv.cu`), the current one, and FA2 on a bf16 cache."""
 import json
 import os
 

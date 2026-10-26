@@ -381,7 +381,7 @@ CUDA 版原来只做 q_len = 1。删 Triton 要先给这两类请求找新的落
     TPC 个 tile × 4/TPC 个 chunk 通道，同通道的 warp 一起加载、named barrier 同步），单测全过，但所有点都更慢：上下文短时
     kernel 受延迟限制，split 16 段后每个 CTA 只有 1 个 chunk，合并 tile 只让序言（q 量化）和收尾（写部分和）在一个 CTA 里串行
     做 3–4 遍；重复的 K/V 读取命中 L2，本来就不贵；长上下文时 4 个 chunk 通道合成 1 个，访存并行度只剩 1/4。
-    实现和数据留在 commit 0cdff68 和 `results/20-bench-short-q-ab`，代码删了。
+    实现和数据留在 commit 7c89bde 和 `results/20-bench-short-q-ab`，代码删了。
 42. 端到端判断 kernel 好坏，不能看单次的 TPOT：(a) TPOT 还取决于接受了几个 draft，int8 的输出和 bf16 不同，接受数也不同，
     要用"每步时间"（TPOT × 每步 token 数）；(b) 两台机器上同一对比方向都可能相反（+2.8% 和 −1.6%），差异和要找的效果一个量级，
     要在同一个容器里交替跑几轮再比。另外 ngram 会关掉 async scheduling，CPU 的每步开销直接落在关键路径上。

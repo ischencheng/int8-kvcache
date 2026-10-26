@@ -763,11 +763,11 @@ kernel 按 D 模板化（`Geom<D>`：k-step 数 D/32、PV n-tile 数 D/8、每�
    | batch 1 × 512，q_len 1 | 29.2 | 23.8 | **21.4** |
    | batch 8 / 32（不走 split） | – | 不变 | 不变 |
 
-3. **"一个 CTA 处理多个 m-tile、共用 K/V"**（原计划，commit 0cdff68）：4 个 warp 排成 TPC 个 tile × 4/TPC 个 chunk 通道，
+3. **"一个 CTA 处理多个 m-tile、共用 K/V"**（原计划，commit 7c89bde）：4 个 warp 排成 TPC 个 tile × 4/TPC 个 chunk 通道，
    同通道的 warp 一起把 chunk 读进共用的 ring（named barrier 同步），各算各的 tile。单测（TPC = 1/2/4、CUDA graph 回放）
    全过，但在所有点都更慢（`results/20-bench-short-q-ab`）：batch 1 × 512 的 q_len 5 从 24.1 到 34.6 µs，32 × 4k 从 224 到
    383 µs。上下文短时 kernel 受延迟限制：split 16 段后每个 CTA 只有 1 个 chunk，合并 tile 让序言和收尾在一个 CTA 里串行
-   做 3–4 遍；省下的重复 K/V 读取本来就命中 L2；长上下文时只剩一个 chunk 通道，访存并行度掉到 1/4。代码删了（423e2ab）。
+   做 3–4 遍；省下的重复 K/V 读取本来就命中 L2；长上下文时只剩一个 chunk 通道，访存并行度掉到 1/4。代码删了（8459b09）。
 4. **端到端**：`bench_spec_latency.py` 加了接受数和"每步时间"（TPOT 还受接受数影响，int8 的输出和 bf16 不同）。单次测量在
    两台机器上给出了相反的方向（+2.8%、−1.6%），所以在一个容器里 bf16 / 新 int8 / 旧 int8（`KVQ_CUDA_SRC` 指向改前的 .cu）
    交替跑 3 轮（`results/21-ngram-ab`）：
