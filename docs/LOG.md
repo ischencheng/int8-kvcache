@@ -660,3 +660,30 @@ D 实例（kv_consumer）找到后直接注入自己的分页 cache、跳过 pro
 的大部分步里都夹着别人的 8192 token prefill chunk，每步的时间主要是 prefill；而我们的 prefill（反量化 kernel）比 FA2 慢。
 也就是说，**"请求同时涌入"的场景下 TPOT 由 prefill 速度决定**，int8 decode kernel 的收益要在 prefill 结束之后才体现。
 差值法和这个口径都没把 decode 单独拎出来，所以再用两个输出长度做差测纯 decode（下一节）。
+
+### 8d 补测 2：纯 decode TPOT（两个输出长度做差，`results/09-e2e-tpot-pure/`、`results/09-e2e-tpot-pure-rep/`）
+
+同一批请求（随机 token、prefix cache 关）分别生成 L = 128 和 2L = 256 个 token（`bench_e2e.py --pure`）。两次的 prefill
+完全一样，多出来的 L 步都在所有 prefill 结束之后，所以 `(T(2L) − T(L)) / L` 就是纯 decode 一步的时间。A100，CUDA graph 开，ms：
+
+| ctx × batch | FA2 bf16 | 我们 Triton bf16 | 我们 Triton int8 | 我们 CUDA int8 | vLLM int8 原生 |
+|---|---|---|---|---|---|
+| 1k × 128（单次，作废） | 20.77 | 18.56 | 15.53 | 17.97 | 28.03 |
+| 1k × 128（重复 3 次中位数） | 21.20 | 19.98 | 19.14 | **18.33** | – |
+| 4k × 64 | 27.09 | 23.71 | 21.39 | **20.57** | 43.58 |
+| 4k × 128 | 36.88 | 32.87 | 28.37 | **24.07** | 58.09 |
+| 4k × 128（重复 3 次中位数） | 37.69 | 33.78 | 30.52 | **26.27** | – |
+| 16k × 16 | 20.72 | 19.92 | 16.88 | **15.85** | 35.47 |
+| 16k × 32 | 30.37 | 29.92 | 23.80 | **21.56** | 57.10 |
+
+- 这个口径下 int8 的收益完整体现：CUDA int8 比 FA2 快 13–35%（4k × 128：36.9 → 24.1 ms），同一份 Triton 代码
+  bf16 → int8 快 4–20%，KV 总量越大收益越大。和 kernel 测试的量级对得上：4k × 128 的 kernel 差
+  （735 − 373）µs × 28 层 ≈ 10 ms，TPOT 差 12.8 ms。
+- vLLM 原生 int8_per_token_head 每步比 FA2 慢 58–88%（后四个点；1k × 128 只有单次值，不算）。kernel 测试里 128 × 4k 它反而比 FA2 快（605 vs 735 µs），
+  端到端每步却多 21 ms（每层 0.75 ms，比它整个 kernel 还长），所以慢在 attention kernel 之外。它是对照组，没追。
+- 单次测量的 1k × 128 一行作废：它是每个配置测的第一个点，Triton 的首次 JIT 编译落进了 T(L)，TPOT 被算小。
+  主任务里五个配置是在同一个容器里按顺序跑的，编译缓存留在磁盘上，所以偏差大小因配置而异：我们的 bf16 最先跑，
+  要编 bf16 kernel，偏 1.4 ms；Triton int8 要编 int8 kernel，偏 3.6 ms；CUDA int8 的 prefill kernel 已经在缓存里，
+  只偏 0.4 ms，和 FA2 一样。`--repeat` 加了每点预热，换一台 A100 把 1k × 128 和 4k × 128 各重复 3 次：
+  重复之间差 0.1–0.9 ms（4k × 128 的两个 int8 配置例外：Triton 29.3–30.6、CUDA 24.0–26.6）；两台机器的同一个点差 2–9%。
+- 三种口径的教训：差值法混进了 prefill chunk；每请求时间戳在请求同时涌入时由 prefill 主导；只有纯 decode 能看 decode kernel 的收益。

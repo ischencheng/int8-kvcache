@@ -13,7 +13,7 @@ Qwen2.5-7B-Instruct / vLLM 0.32.0 / A100-80GB（没有 FP8 的卡）上，把 de
 | 显存 | KV 容量 1.03M → **2.07M token**（2.0×） |
 | decode attention kernel（A100） | CUDA int8 比 FA2 bf16 快 **1.35–2.06×**（batch 1×32k 到 256×16k），有效带宽 1.36–1.45 TB/s |
 | 对比 FP8（H100） | CUDA int8 是 FA3 FP8 的 **0.86–1.05×**（课程"应接近 FP8"成立） |
-| 端到端 | 容量受限吞吐 1115 → **1431 tok/s（+28%）**；TPOT 见第 3.6 节 |
+| 端到端 | 容量受限吞吐 1115 → **1431 tok/s（+28%）**；纯 decode TPOT 比 FA2 低 **13–35%**（4k × 128：36.9 → 24.1 ms；另一台机器重复 3 次 37.7 → 26.3 ms） |
 | 扩展 | TP 分布式校准等价；CUDA graph 兼容（batch 1 TPOT 9.9 vs 22.6 ms eager）；投机解码接受率 87.0% → 86.7%、加速比不变；PD 分离下 int8 页正确传递、传输量减半；W8A8 / W4A16 叠加不额外掉点；MLA latent 用 per-channel 不需要 smooth |
 
 ## 1. 整体结构：改了 vLLM 的哪里
@@ -202,7 +202,27 @@ attention:
 
 - 容量：1.03M → 2.07M token。
 - 容量受限吞吐（512 × 6k+1k）：FA2 1115、Triton int8 1361、**CUDA int8 1431 tok/s**、vLLM int8_per_token_head 676。
-<!-- TPOT_REQ -->
+- 纯 decode TPOT（ms）：同一批请求分别生成 L = 128 和 2L = 256 个 token，两次的 prefill 完全一样，
+  多出来的 L 步都在所有 prefill 结束之后，`(T(2L) − T(L)) / L` 就是纯 decode 一步的时间。
+
+  | ctx × batch | FA2 bf16 | 我们 Triton bf16 | 我们 Triton int8 | 我们 CUDA int8 | vLLM int8 原生 |
+  |---|---|---|---|---|---|
+  | 1k × 128 † | 21.20 | 19.98 | 19.14 | **18.33** | 28.03 |
+  | 4k × 64 | 27.09 | 23.71 | 21.39 | **20.57** | 43.58 |
+  | 4k × 128 | 36.88 | 32.87 | 28.37 | **24.07** | 58.09 |
+  | 16k × 16 | 20.72 | 19.92 | 16.88 | **15.85** | 35.47 |
+  | 16k × 32 | 30.37 | 29.92 | 23.80 | **21.56** | 57.10 |
+
+  † 每个配置测的第一个点。单次测量时 Triton 的首次 JIT 编译落进了 T(L)，TPOT 被算小（Triton int8 算成 15.5 ms），
+  这一行换成另一台 A100 上"每点先预热、重复 3 次取中位数"的结果；vLLM 原生一列仍是单次值。
+
+  CUDA int8 比 FA2 快 13–35%，同一份 Triton 代码 bf16 → int8 快 4–20%，KV 总量（ctx × batch）越大收益越大。
+  重复测量那台机器上 4k × 128 是 FA2 37.7 / bf16 33.8 / Triton int8 30.5 / CUDA int8 26.3 ms（CUDA 三次 24.0–26.6），
+  CUDA 比 FA2 快 30%，单次表里是 35%，机器之间差几个百分点。
+  vLLM 原生 int8_per_token_head 每步比 FA2 慢 58–88%（后四个点），远超 kernel 测试里的差距（128 × 4k 它的 kernel 甚至比 FA2 快），
+  慢在 attention kernel 之外，没追（见第 6 节）。
+- TPOT 先后用了三种口径，只有纯 decode 这一种把 decode 单独拎了出来（第 4 节第 17 条）：差值法混进了 prefill chunk；
+  engine 的每请求时间戳在请求同时涌入时由 prefill 主导，int8 反而看不出收益。
 - CUDA graph：batch 1 时 eager 22.6 ms vs graph 9.9 ms。
 
 ### 3.7 扩展
@@ -237,7 +257,9 @@ attention:
 14. 离线 `LLM` 默认关统计，`get_metrics()` 拿不到投机解码接受率。
 15. draft_model 要求词表一致（7B 152064 vs 0.5B 151936）。
 16. RedHatAI w4a16 的 `actorder='group'` 被 0.32 拒绝，换官方 AWQ。
-17. chunked prefill 下"总时间 − prefill 时间"的 TPOT 不准（prefill 和 decode 混批），改用 engine 时间戳。
+17. TPOT 的口径：chunked prefill 下"总时间 − prefill 时间"混进了 prefill chunk；engine 每请求时间戳在请求同时涌入时由 prefill 主导；
+    最后用两个输出长度做差测纯 decode。每个配置第一个点的 T(L) 含 Triton JIT 编译，同一容器里编译缓存还会被下一个配置复用，
+    偏差大小因配置而异（0.4–3.6 ms），要每个点先预热。
 18. ExampleConnector 遇到 chunked prefill 只保存最后一段 KV。
 
 **Kernel**
@@ -275,6 +297,8 @@ attention:
   可以改成反量化到 bf16 临时页后调 FA2，或继续优化 MODE 1。
 - CUDA kernel 只做了 decode、head_dim 128；Hopper 上没用 wgmma/TMA；76 KB smem 限制了占用率；group32 的 q scale 只在 Triton 版里有。
 - PD 分离只能用存储型 connector（gVisor 限制），测不到真实网络传输下 TTFT 的变化。
+- vLLM 原生 int8_per_token_head 端到端 decode 比它的 kernel 测试慢得多（4k × 128 每步比 FA2 多 21 ms，kernel 本身才 0.6 ms/层），
+  原因没查；它只是对照组。
 - AIME24 对 Qwen2.5-7B-Instruct 太难（13.3%），没法用准确率比较；改用它在 AIME 上的长回答做 ΔNLL。GPQA 是 gated 数据集，没用。
 - 这是课程项目、不是对外贡献，所以没走仓库里贡献流程要求的 RLCR / Codex review。
 
