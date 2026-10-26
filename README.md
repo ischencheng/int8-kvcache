@@ -20,6 +20,7 @@ Results, the reasoning behind each step and the problems hit along the way are i
 | KV capacity | 1.03M tokens | 2.07M tokens |
 | decode attention, 128 x 32k | 5584 us | 2709 us (CUDA) |
 | capacity-bound throughput (512 x 6k+1k) | 1115 tok/s | 1431 tok/s |
+| pure-decode TPOT, 4k ctx x 128 requests | 36.9 ms | 24.1 ms (CUDA) |
 
 On H100 the CUDA INT8 decode kernel runs at 0.86-1.05x the speed of FA3 with an FP8 cache.
 
