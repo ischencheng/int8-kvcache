@@ -8,7 +8,6 @@ from vllm.v1.attention.backends.fa_utils import flash_attn_varlen_func
 
 from kvq import cuda_kernels as ck
 from kvq import quant
-from kvq.triton_kernels.int8_attention import paged_attention
 
 batch, ctx = 64, 4096
 q, k, v, cu, sl, bt = decode_case(batch, ctx)
@@ -19,8 +18,6 @@ out = torch.empty_like(q)
 fns = [
     lambda: flash_attn_varlen_func(q=q, k=k, v=v, out=out, cu_seqlens_q=cu, max_seqlen_q=1, seqused_k=sl,
                                    max_seqlen_k=ctx, softmax_scale=SCALE, causal=True, block_table=bt, fa_version=2),
-    lambda: paged_attention(q, k, v, out, cu, sl, bt, 1, SCALE),
-    lambda: paged_attention(q, kq, vq, out, cu, sl, bt, 1, SCALE, st),
     lambda: ck.decode_attention(q, kq, vq, out, cu, sl, bt, SCALE, st),
 ]
 for fn in fns:   # compile / warm up outside the profiled range

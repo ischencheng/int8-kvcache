@@ -3,7 +3,7 @@
 # (RedHatAI's w4a16 checkpoint uses actorder=group, which vLLM 0.32 rejects.)
 set -x
 INT8='"kv_cache_dtype":"int8_static","attention_config":{"backend":"CUSTOM"}'
-ENV="--env KVQ_CFG=B_channel_smooth --env KVQ_KERNEL=triton"
+ENV="--env KVQ_CFG=B_channel_smooth --env KVQ_KERNEL=cuda"
 BF16_SCALES=/cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors
 for pair in "RedHatAI/Qwen2.5-7B-Instruct-quantized.w8a8 w8a8" "Qwen/Qwen2.5-7B-Instruct-AWQ awq"; do
   set -- $pair; M=$1; T=$2

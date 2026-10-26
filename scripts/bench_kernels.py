@@ -1,16 +1,13 @@
 """Stage 7/8 microbenchmarks: decode paged attention and the KV write path.
 
 Decode attention, Qwen2.5-7B shapes (28 q heads, 4 kv heads, D 128, block 16), sweeping
-batch x context. Same split-KV policy for every Triton kernel (vLLM's: 16 segments when
+batch x context. Same split-KV policy for every kernel that has one (vLLM's: 16 segments when
 batch <= 128 / kv_heads). Implementations:
   fa2_bf16          vLLM's FlashAttention-2 kernel (what A100 serving uses today)
   vllm_triton_bf16  vLLM's unified Triton attention, bf16 cache
   vllm_int8_pth     vLLM's unified Triton attention, int8_per_token_head cache (dequantize on load)
-  ours_bf16         our kernel, bf16 cache (same code as the int8 modes: the fair baseline)
-  ours_int8_deq     our kernel, int8 cache, dequantize each tile (implementation A)
-  ours_int8         our kernel, int8 cache, INT8 tensor-core QK/PV (implementation B)
-  ours_int8_g32     ... with one q scale per 32 channels
   cuda_int8         our CUDA kernel (mma.sync m16n8k32 s8), implementation B
+(Our Triton kernel's columns in results/08-bench-* were measured at tag triton-backend.)
   fa3_fp8           (H100 only) FlashAttention-3 with an FP8 cache
 Effective bandwidth = KV bytes the kernel must read / time.
 """
@@ -30,9 +27,6 @@ from vllm.v1.kv_cache_interface import KVQuantMode
 
 from kvq import cuda_kernels as ck
 from kvq import quant
-from kvq.triton_kernels.int8_attention import paged_attention
-from kvq.triton_kernels.quant_cache import quant_reshape_and_cache
-from kvq.triton_kernels.quant_q import quant_q
 
 HQ, HKV, D, BS = 28, 4, 128, 16
 SCALE = D ** -0.5
@@ -96,10 +90,6 @@ def decode_row(batch, ctx, fp8):
                                                    0, None, None, None, **seg_kw,
                                                    kv_quant_mode=KVQuantMode.INT8_PER_TOKEN_HEAD,
                                                    k_scale_cache=ksc, v_scale_cache=vsc),
-        "ours_bf16": lambda: paged_attention(q, k, v, out, cu, sl, bt, 1, SCALE, segm=sg),
-        "ours_int8_deq": lambda: paged_attention(q, kq, vq, out, cu, sl, bt, 1, SCALE, st, int8_math=False, segm=sg),
-        "ours_int8": lambda: paged_attention(q, kq, vq, out, cu, sl, bt, 1, SCALE, st, segm=sg),
-        "ours_int8_g32": lambda: paged_attention(q, kq, vq, out, cu, sl, bt, 1, SCALE, st, q_groups=4, segm=sg),
         "cuda_int8": lambda: ck.decode_attention(q, kq, vq, out, cu, sl, bt, SCALE, st, segm=sg),
     }
     if fp8:
@@ -150,8 +140,6 @@ def write_path_rows():
             "vllm_bf16_write": bench(lambda: triton_reshape_and_cache_flash(key, val, kc, vc, slots, "auto", one, one)),
             "vllm_int8_pth_write": bench(lambda: triton_reshape_and_cache_flash_per_token_head_quant(
                 key, val, kci, vci, ksc, vsc, slots, kv_quant_mode=KVQuantMode.INT8_PER_TOKEN_HEAD)),
-            "ours_bf16_write": bench(lambda: quant_reshape_and_cache(key, val, kc, vc, slots, None)),
-            "ours_int8_fused": bench(lambda: quant_reshape_and_cache(key, val, kci, vci, slots, st)),
             "torch_int8_two_pass": bench(torch_two_pass),
             "cuda_int8_fused": bench(lambda: ck.quant_reshape_and_cache(key, val, kci, vci, slots, st)),
         })
@@ -160,7 +148,7 @@ def write_path_rows():
 
 
 def q_quant_rows():
-    """Standalone q quantization kernel vs folding it into the attention prologue."""
+    """Standalone q quantization kernel vs the attention kernel that folds it into its prologue."""
     rows = []
     for batch, ctx in ((32, 4096), (128, 4096), (256, 1024)):
         q, k, v, cu, sl, bt = decode_case(batch, ctx)
@@ -171,11 +159,8 @@ def q_quant_rows():
         sg = segm(batch)
         rows.append({
             "batch": batch, "ctx": ctx,
-            "quant_q_kernel": bench(lambda: quant_q(q, st["k_scale"])),
             "cuda_quant_q": bench(lambda: ck.quant_q(q, st["k_scale"])),
-            "attn_fused_q": bench(lambda: paged_attention(q, kq, vq, out, cu, sl, bt, 1, SCALE, st, segm=sg)),
-            "attn_prequant_q": bench(lambda: paged_attention(q, kq, vq, out, cu, sl, bt, 1, SCALE, st, segm=sg,
-                                                             q_prequant=quant_q(q, st["k_scale"]))),
+            "cuda_attn_fused_q": bench(lambda: ck.decode_attention(q, kq, vq, out, cu, sl, bt, SCALE, st, segm=sg)),
         })
         print(json.dumps(rows[-1]))
     return rows

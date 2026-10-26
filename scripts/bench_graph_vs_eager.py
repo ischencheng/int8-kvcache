@@ -6,7 +6,6 @@ from bench_kernels import SCALE, decode_case, segm, static_for
 
 from kvq import cuda_kernels as ck
 from kvq import quant
-from kvq.triton_kernels.int8_attention import paged_attention
 
 
 def timed(fn, iters=50):
@@ -41,8 +40,7 @@ for batch, ctx in [(1, 4096), (32, 4096), (64, 4096)]:
     vq = quant.quantize(v, st["v_scale"])
     out = torch.empty_like(q)
     sg = segm(batch)
-    fns = {"triton_int8": lambda: paged_attention(q, kq, vq, out, cu, sl, bt, 1, SCALE, st, segm=sg),
-           "cuda_int8": lambda: ck.decode_attention(q, kq, vq, out, cu, sl, bt, SCALE, st, segm=sg),
+    fns = {"cuda_int8": lambda: ck.decode_attention(q, kq, vq, out, cu, sl, bt, SCALE, st, segm=sg),
            "cuda_int8_nosplit": lambda: ck.decode_attention(q, kq, vq, out, cu, sl, bt, SCALE, st)}
     row = {"batch": batch, "ctx": ctx}
     for name, fn in fns.items():

@@ -2,7 +2,7 @@
 # Extension 3.5(e), W4A16 part: Qwen2.5-7B-Instruct-AWQ with bf16 KV, INT8 KV (own scales), INT8 KV (bf16 scales).
 set -x
 INT8='"kv_cache_dtype":"int8_static","attention_config":{"backend":"CUSTOM"}'
-ENV="--env KVQ_CFG=B_channel_smooth --env KVQ_KERNEL=triton"
+ENV="--env KVQ_CFG=B_channel_smooth --env KVQ_KERNEL=cuda"
 BF16_SCALES=/cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors
 M=Qwen/Qwen2.5-7B-Instruct-AWQ; T=awq
 python3 scripts/calibrate.py --model $M --tag $T --calib math --n 512

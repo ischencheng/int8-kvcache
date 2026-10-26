@@ -1,0 +1,32 @@
+{
+ "label": "smoke_int8",
+ "env": [
+  "KVQ_SCALES=/cache/scales/qwen2.5-7b/math_per_channel_max_smooth.safetensors",
+  "KVQ_KERNEL=cuda",
+  "KVQ_CFG=B_channel_smooth"
+ ],
+ "llm": {
+  "max_model_len": 32768,
+  "gpu_memory_utilization": 0.9,
+  "seed": 0,
+  "enable_prefix_caching": false,
+  "max_num_seqs": 256,
+  "disable_log_stats": false,
+  "kv_cache_dtype": "int8_static",
+  "attention_config": {
+   "backend": "CUSTOM"
+  }
+ },
+ "kv_capacity_tokens": 2068896,
+ "tpot": [
+  {
+   "ctx": 16384,
+   "batch": 2,
+   "prefill_s": 2.3956186130000106,
+   "total_s": 2.4796920260000093,
+   "tpot_ms": 12.010487571428387,
+   "tpot_req_ms": 93.77745771428587,
+   "kv_limited": false
+  }
+ ]
+}

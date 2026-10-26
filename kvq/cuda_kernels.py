@@ -15,7 +15,9 @@ from dataclasses import dataclass
 import numpy as np
 import torch
 
-SHORT_Q = 8  # q_len at or below this: INT8 kernel; above: dequantize + FlashAttention
+# q_len at or below this: INT8 kernel; above: dequantize + FlashAttention. KVQ_SHORT_Q=1000000 puts
+# every row on the INT8 kernel (teacher-forced NLL of the decode numerics; slow for long prompts).
+SHORT_Q = int(os.environ.get("KVQ_SHORT_Q", 8))
 
 _EXT = None
 

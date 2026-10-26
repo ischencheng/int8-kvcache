@@ -10,9 +10,11 @@ from kvq.ref_attn import compare, paged_attention_ref
 
 @pytest.mark.parametrize("gran", quant.GRANULARITIES)
 def test_roundtrip_error_bound(gran):
-    x = torch.randn(512, 4, 128, device="cuda") * torch.linspace(0.1, 30, 128, device="cuda")
+    g = torch.Generator(device="cuda").manual_seed(0)
+    x = torch.randn(512, 4, 128, generator=g, device="cuda") * torch.linspace(0.1, 30, 128, device="cuda")
     y, s = quant.quant_dequant(x, gran)
-    assert ((x - y).abs() <= s / 2 + 1e-6).all()
+    # half a step, plus the fp32 rounding of x / s * s (relative ~1e-7 of |x|, up to ~1e-5 at |x| ~ 100)
+    assert ((x - y).abs() <= s / 2 + 1e-6 * (1 + x.abs())).all()
 
 
 @pytest.mark.parametrize("k_gran", ["per_head", "per_channel", "per_token_head", "per_tensor"])

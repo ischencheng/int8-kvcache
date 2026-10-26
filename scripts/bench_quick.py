@@ -8,7 +8,6 @@ from vllm.v1.attention.backends.fa_utils import flash_attn_varlen_func
 
 from kvq import cuda_kernels as ck
 from kvq import quant
-from kvq.triton_kernels.int8_attention import paged_attention
 
 points = [(1, 4096), (8, 16384), (32, 4096), (32, 32768), (64, 4096), (64, 16384), (128, 4096), (256, 1024)]
 for batch, ctx in points:
@@ -22,9 +21,6 @@ for batch, ctx in points:
            "fa2_bf16": bench(lambda: flash_attn_varlen_func(q=q, k=k, v=v, out=out, cu_seqlens_q=cu, max_seqlen_q=1,
                                                             seqused_k=sl, max_seqlen_k=ctx, softmax_scale=SCALE,
                                                             causal=True, block_table=bt, fa_version=2)),
-           "triton_bf16": bench(lambda: paged_attention(q, k, v, out, cu, sl, bt, 1, SCALE, segm=sg)),
-           "triton_int8": bench(lambda: paged_attention(q, kq, vq, out, cu, sl, bt, 1, SCALE, st, segm=sg)),
            "cuda_int8": bench(lambda: ck.decode_attention(q, kq, vq, out, cu, sl, bt, SCALE, st, segm=sg))}
     row["GBps_cuda"] = batch * ctx * 4 * 128 * 2 / (row["cuda_int8"] * 1e-6) / 1e9
-    row["GBps_triton_int8"] = batch * ctx * 4 * 128 * 2 / (row["triton_int8"] * 1e-6) / 1e9
     print(json.dumps({k_: round(v_, 1) if isinstance(v_, float) else v_ for k_, v_ in row.items()}), flush=True)

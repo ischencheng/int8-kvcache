@@ -61,27 +61,31 @@ def kernels(paths):
         names = [k for k in rows[0] if k not in ("batch", "ctx") and not k.startswith("kv_bytes")
                  and not k.endswith("_error")]
         print(f"\n### {res['gpu']}: decode attention, us (lower is better)\n")
-        ref8 = "fa3_fp8" if "fa3_fp8" in names else None
-        extra = ["triton int8 / triton bf16", "cuda int8 vs fa2"] + (["cuda int8 vs fa3 fp8"] if ref8 else [])
+        # speedup columns whose two kernels are in this file (our Triton kernel only before tag triton-backend)
+        ratios = [(lbl, a, b) for lbl, a, b in (("triton int8 / triton bf16", "ours_bf16", "ours_int8"),
+                                                ("cuda int8 vs fa2", "fa2_bf16", "cuda_int8"),
+                                                ("cuda int8 vs fa3 fp8", "fa3_fp8", "cuda_int8"))
+                  if a in names and b in names]
+        extra = [lbl for lbl, _, _ in ratios]
         print("| batch | ctx | " + " | ".join(names) + " | " + " | ".join(extra) + " |")
         print("|---|---|" + "---|" * (len(names) + len(extra)))
         for r in rows:
             cells = [f"{r[n]:.1f}" if r.get(n) else "err" for n in names]
-            sp = [r["ours_bf16"] / r["ours_int8"], r["fa2_bf16"] / r["cuda_int8"]]
-            if ref8:
-                sp.append(r["fa3_fp8"] / r["cuda_int8"] if r.get("fa3_fp8") else math.nan)
+            sp = [r[a] / r[b] if r.get(a) and r.get(b) else math.nan for _, a, b in ratios]
             print(f"| {r['batch']} | {r['ctx']} | " + " | ".join(cells) + " | "
                   + " | ".join(f"{x:.2f}x" for x in sp) + " |")
         print("\nachieved KV bandwidth, GB/s (bytes the kernel must read / time)\n")
-        print("| batch | ctx | fa2_bf16 | ours_bf16 | ours_int8 | cuda_int8 | vllm_int8_pth |")
-        print("|---|---|---|---|---|---|---|")
+        # bytes each kernel must read: bf16 or int8 pages (int8_per_token_head adds its inline scales)
+        nbytes = {"fa2_bf16": "kv_bytes_bf16", "ours_bf16": "kv_bytes_bf16", "ours_int8": "kv_bytes_int8",
+                  "cuda_int8": "kv_bytes_int8", "vllm_int8_pth": "kv_bytes_int8"}
+        bw_names = [n for n in nbytes if n in names]
+        print("| batch | ctx | " + " | ".join(bw_names) + " |")
+        print("|---|---|" + "---|" * len(bw_names))
         for r in rows:
-            def bw(name, nbytes):
-                return f"{nbytes / (r[name] * 1e-6) / 1e9:.0f}" if r.get(name) else "-"
-            print(f"| {r['batch']} | {r['ctx']} | {bw('fa2_bf16', r['kv_bytes_bf16'])} | "
-                  f"{bw('ours_bf16', r['kv_bytes_bf16'])} | {bw('ours_int8', r['kv_bytes_int8'])} | "
-                  f"{bw('cuda_int8', r['kv_bytes_int8'])} | "
-                  f"{bw('vllm_int8_pth', r['kv_bytes_int8'] * 1.03)} |")
+            def bw(name):
+                b = r[nbytes[name]] * (1.03 if name == "vllm_int8_pth" else 1)
+                return f"{b / (r[name] * 1e-6) / 1e9:.0f}" if r.get(name) else "-"
+            print(f"| {r['batch']} | {r['ctx']} | " + " | ".join(bw(n) for n in bw_names) + " |")
         fig, axes = plt.subplots(1, 3, figsize=(16, 4.2)) if plt else (None, [])
         for ax, b in zip(axes, (1, 32, 128)):
             sub = [r for r in rows if r["batch"] == b]
@@ -107,11 +111,11 @@ def kernels(paths):
                 print(f"| {r['tokens']} | " + " | ".join(f"{r[k]:.1f}" for k in keys) + " |")
         if res.get("q_quant"):
             print("\n### q quantization: standalone kernel vs fused into attention, us\n")
-            print("| batch | ctx | quant_q kernel | attention (fused q) | attention (prequantized q) |")
-            print("|---|---|---|---|---|")
+            keys = [k for k in res["q_quant"][0] if k not in ("batch", "ctx")]
+            print("| batch | ctx | " + " | ".join(keys) + " |")
+            print("|---|---|" + "---|" * len(keys))
             for r in res["q_quant"]:
-                print(f"| {r['batch']} | {r['ctx']} | {r['quant_q_kernel']:.1f} | {r['attn_fused_q']:.1f} | "
-                      f"{r['attn_prequant_q']:.1f} |")
+                print(f"| {r['batch']} | {r['ctx']} | " + " | ".join(f"{r[k]:.1f}" for k in keys) + " |")
 
 
 def e2e(dirs):
