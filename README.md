@@ -1,5 +1,4 @@
-# INT8 KV cache for vLLM 0.32 (course project 4)
-
+# INT8 KV cache for vLLM 0.32
 Static per-channel INT8 KV cache for decode attention on a GPU without FP8 (A100), built
 the way the course describes: analyse the KV distribution, write a PyTorch golden
 reference, verify INT8 numerics in PyTorch (dynamic quantization), move to static scales
