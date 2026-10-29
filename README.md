@@ -11,8 +11,6 @@ Short queries (decode, spec-decode verification: up to 8 tokens per request) run
 tensor-core kernel; prefill dequantizes its pages into a temporary bf16 cache for vLLM's
 FlashAttention. The Triton kernels are kept at tag `triton-backend`.
 
-Results, the reasoning behind each step and the problems hit along the way are in
-[docs/WALKTHROUGH.md](docs/WALKTHROUGH.md); the step-by-step log is [docs/LOG.md](docs/LOG.md).
 
 ## Results (Qwen2.5-7B-Instruct, vLLM 0.32.0, A100-80GB)
 
