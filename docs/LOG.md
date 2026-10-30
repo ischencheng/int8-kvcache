@@ -708,13 +708,27 @@ D 实例（kv_consumer）找到后直接注入自己的分页 cache、跳过 pro
 | 现象 | 原因 | 修法 |
 |---|---|---|
 | `KVQ_DEBUG=1` 的 CPU 检查报"要反量化的源页号越界"，而 forward 时页表本身是对的 | 临时页的源页号在 metadata builder 里从页表 gather，读到的不是这一步的页表 | builder 只在 CPU 上记 (请求, 页序号)，反量化 kernel 在 forward 时自己查页表；临时页表也在第一层 forward 才拷到 GPU |
-| 检查全过，`CUDA_LAUNCH_BLOCKING=1` 指向 FA2 | FA2 对 `seqused_k = 0` 的行越界写（离线重放：只要没有 0 行就不崩） | 短请求给它自己 q_len 个 key（读临时第 0 页，结果随后被覆盖） |
+| 检查全过，`CUDA_LAUNCH_BLOCKING=1` 指向 FA2 | FA2 自己的 bug：`seqused_k = 0` 的行把 softmax_lse 写出界（离线重放：只要没有 0 行就不崩；根因见下） | 短请求给它自己 q_len 个 key（读临时第 0 页，结果随后被覆盖） |
 | `KVQ_SHORT_Q=1`（验证批走 FA2）掉到 29%；默认配置的 int8 draft 接受率 81.2%（应为 ~86.7%） | `seq_lens_cpu_upper_bound` 在 async 投机解码下是乐观上界，被我当成了 FA2 的 key 数；draft 模型处理 prompt 时也用到了它 | CPU 长度只决定拷几页，key 数在 forward 时用 GPU 上的精确长度算。修后接受率 86.6%，sq1 75.0% |
 
 查法：每批 kernel 前的 CPU 端越界检查（`KVQ_DEBUG=1`）→ 同步启动定位 kernel → 把出错那次 FA2 调用的 metadata 存下来
 （`KVQ_DEBUG_DUMP`）→ `scripts/replay_fa_call.py` 用随机张量离线重放，一次改一个因素。中间猜过"FA2 按整个 KV tile 查页表、
 临时页表太窄"，重放证明不是；加宽页表没坏处，保留了。另外，我们扩展里的 launcher 没有在 kernel 后检查错误，
 同步模式下越界也会算到下一个 CUDA 调用头上，这次靠转储时的 `.cpu()` 同步排除了反量化 kernel。
+
+**FA2 越界的根因**（`scripts/repro_fa2_empty_rows.py`，`results/22-fa2-lse-oob*`，A100）：`mha_varlen_fwd` 传了
+`block_table` 就走 split-KV kernel（num_splits = 1），`softmax_lse` 按 `(h, total_q)` 分配（`unpadded_lse = true`）。
+没有 key block 可算的行提前退出，把 +inf 写到 `(bidb·h + bidh)·max_seqlen_q + m_block·64`，这是 padded
+`(b, h, max_seqlen_q)` 的偏移，没看 `unpadded_lse`；同一个 kernel 的正常收尾用的是 `bidh·total_q + q_offset`
+（vLLM 的 flash-attention fork，`flash_fwd_kernel.h` 第 552 行 vs 第 1045 行）。dump 那批 LSE 只有 721,504 字节，bidb 大约 ≥ 34 的空行全写出界，最远超出 4.7 MB。
+
+- memcheck（`PYTORCH_NO_CUDA_MEMORY_CACHING=1`）：165 个 4 字节越界写，全在 `flash_fwd_splitkv_kernel`，block 都是预测的空行，
+  `地址 − 4 × 偏移` 是同一个基址，正是那块 721,504 字节的分配。每行至少 1 个 key：0 个错误。
+- 单测大小的批（`CASES["mixed"]`）只超出 146 KB，留在 PyTorch 缓存池里，不崩，memcheck 也看不到；关掉缓存才报。
+  重建的 dump 批直接跑也没崩（后面的地址正好映射着）。一个 8k prefill + 511 个空 decode 的批超出 ~470 MB，直接跑就 illegal memory access。
+- 没出界的也写错了地方，落在别的行的 LSE 槽上：`return_softmax_lse=True` 时 27 个预测槽里 19–20 个变成 +inf（看 block 执行先后），
+  其余槽不变。
+- 上游 Dao-AILab flash-attn 2.8.3.post2 同一行代码、同样的结果（`results/22-fa2-lse-oob-upstream*`）。issue 草稿：`docs/upstream-issue-draft.md`（未发）。
 
 **还丢了一个能力**：Triton 对 head_dim 通用，CUDA 版写死 128，Qwen2.5-0.5B（head_dim 64）当 int8 draft 起不来。
 kernel 按 D 模板化（`Geom<D>`：k-step 数 D/32、PV n-tile 数 D/8、每线程通道数 D/8、cp.async 每行 D/16 个 lane、smem 大小），

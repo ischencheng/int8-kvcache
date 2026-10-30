@@ -1,0 +1,65 @@
+2.8.0+cu128 2.8.3.post2
+========= COMPUTE-SANITIZER
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xac0
+=========     by thread (0,0,0) in block (0,3,0)
+=========     Address 0x2b9e76cb1400 is out of bounds
+=========     and is 449792 bytes after the nearest allocation at 0x2b9e76c43700 of size 1 bytes
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame:  [0x13e88] in libcudart.so.12
+=========         Host Frame: cudaLaunchKernel [0x79f87] in libcudart.so.12
+=========         Host Frame: flash::run_flash_splitkv_fwd<Flash_fwd_kernel_traits<128, 64, 128, 4, false, false, cutlass::bfloat16_t, Flash_kernel_traits<128, 64, 128, 4, cutlass::bfloat16_t> >, true>(flash::Flash_fwd_params&, CUstream_st*)::{lambda()#1}::operator()() const::{lambda()#2}::operator()() const::{lambda()#1}::operator()() const::{lambda()#1}::operator()() const::{lambda()#1}::operator()() const::{lambda()#2}::operator()() const::{lambda()#1}::operator()() const::{lambda()#2}::operator()() const::{lambda()#1}::operator()() const::{lambda()#2}::operator()() const::{lambda()#1}::operator()() const [0x2def32] in flash_attn_2_cuda.cpython-311-x86_64-linux-gnu.so
+=========         Host Frame: void flash::run_flash_splitkv_fwd<Flash_fwd_kernel_traits<128, 64, 128, 4, false, false, cutlass::bfloat16_t, Flash_kernel_traits<128, 64, 128, 4, cutlass::bfloat16_t> >, true>(flash::Flash_fwd_params&, CUstream_st*) [0x2e1cf1] in flash_attn_2_cuda.cpython-311-x86_64-linux-gnu.so
+=========         Host Frame: flash::mha_varlen_fwd(at::Tensor&, at::Tensor const&, at::Tensor const&, std::optional<at::Tensor>&, at::Tensor const&, at::Tensor const&, std::optional<at::Tensor>&, std::optional<at::Tensor const>&, std::optional<at::Tensor>&, std::optional<at::Tensor>&, int, int, float, float, bool, bool, int, int, float, bool, std::optional<at::Generator>) in flash_api.cpp:739 [0x13f507] in flash_attn_2_cuda.cpython-311-x86_64-linux-gnu.so
+=========         Host Frame: pybind11::cpp_function::initialize<std::vector<at::Tensor, std::allocator<at::Tensor> > (*&)(at::Tensor&, at::Tensor const&, at::Tensor const&, std::optional<at::Tensor>&, at::Tensor const&, at::Tensor const&, std::optional<at::Tensor>&, std::optional<at::Tensor const>&, std::optional<at::Tensor>&, std::optional<at::Tensor>&, int, int, float, float, bool, bool, int, int, float, bool, std::optional<at::Generator>), std::vector<at::Tensor, std::allocator<at::Tensor> >, at::Tensor&, at::Tensor const&, at::Tensor const&, std::optional<at::Tensor>&, at::Tensor const&, at::Tensor const&, std::optional<at::Tensor>&, std::optional<at::Tensor const>&, std::optional<at::Tensor>&, std::optional<at::Tensor>&, int, int, float, float, bool, bool, int, int, float, bool, std::optional<at::Generator>, pybind11::name, pybind11::scope, pybind11::sibling, char [31]>(std::vector<at::Tensor, std::allocator<at::Tensor> > (*&)(at::Tensor&, at::Tensor const&, at::Tensor const&, std::optional<at::Tensor>&, at::Tensor const&, at::Tensor const&, std::optional<at::Tensor>&, std::optional<at::Tensor const>&, std::optional<at::Tensor>&, std::optional<at::Tensor>&, int, int, float, float, bool, bool, int, int, float, bool, std::optional<at::Generator>), std::vector<at::Tensor, std::allocator<at::Tensor> > (*)(at::Tensor&, at::Tensor const&, at::Tensor const&, std::optional<at::Tensor>&, at::Tensor const&, at::Tensor const&, std::optional<at::Tensor>&, std::optional<at::Tensor const>&, std::optional<at::Tensor>&, std::optional<at::Tensor>&, int, int, float, float, bool, bool, int, int, float, bool, std::optional<at::Generator>), pybind11::name const&, pybind11::scope const&, pybind11::sibling const&, char const (&) [31])::{lambda(pybind11::detail::function_call&)#3}::_FUN(pybind11::detail::function_call&) in pybind11.h:249 [0x1603f7] in flash_attn_2_cuda.cpython-311-x86_64-linux-gnu.so
+=========         Host Frame: pybind11::cpp_function::dispatcher(_object*, _object*, _object*) in pybind11.h:971 [0x15a2a3] in flash_attn_2_cuda.cpython-311-x86_64-linux-gnu.so
+=========         Host Frame: cfunction_call in methodobject.c:542 [0x350139] in libpython3.11.so.1.0
+=========         Host Frame: _PyEval_EvalFrameDefault in ceval.c:4774 [0x3c236f] in libpython3.11.so.1.0
+=========         Host Frame: _PyFunction_Vectorcall in call.c:0 [0x329966] in libpython3.11.so.1.0
+=========         Host Frame: _PyEval_EvalFrameDefault in ceval.c:5381 [0x3c8e2e] in libpython3.11.so.1.0
+=========         Host Frame: _PyFunction_Vectorcall in call.c:0 [0x329966] in libpython3.11.so.1.0
+=========         Host Frame: _PyEval_EvalFrameDefault in ceval.c:5381 [0x3c8e2e] in libpython3.11.so.1.0
+=========         Host Frame: _PyFunction_Vectorcall in call.c:0 [0x329966] in libpython3.11.so.1.0
+=========         Host Frame: _PyEval_EvalFrameDefault in ceval.c:5381 [0x3c8e2e] in libpython3.11.so.1.0
+=========         Host Frame: _PyFunction_Vectorcall in call.c:0 [0x329966] in libpython3.11.so.1.0
+=========         Host Frame: _PyEval_EvalFrameDefault in ceval.c:5381 [0x3c8e2e] in libpython3.11.so.1.0
+=========         Host Frame: _PyFunction_Vectorcall in call.c:0 [0x329966] in libpython3.11.so.1.0
+=========         Host Frame: pybind11::object pybind11::detail::object_api<pybind11::handle>::operator()<(pybind11::return_value_policy)1, pybind11::detail::args_proxy, pybind11::detail::kwargs_proxy>(pybind11::detail::args_proxy&&, pybind11::detail::kwargs_proxy&&) const [0x872179] in libtorch_python.so
+=========         Host Frame: torch::impl::dispatch::PythonKernelHolder::operator()(c10::OperatorHandle const&, c10::DispatchKeySet, std::vector<c10::IValue, std::allocator<c10::IValue> >*) [0xb7870a] in libtorch_python.so
+=========         Host Frame: torch::impl::dispatch::initDispatchBindings(_object*)::{lambda(pybind11::object const&, c10::DispatchKeySet, pybind11::args, pybind11::kwargs const&)#1}::operator()(pybind11::object const&, c10::DispatchKeySet, pybind11::args, pybind11::kwargs const&) const [clone .isra.0] [0xb70162] in libtorch_python.so
+=========         Host Frame: pybind11::cpp_function::initialize<torch::impl::dispatch::initDispatchBindings(_object*)::{lambda(pybind11::object const&, c10::DispatchKeySet, pybind11::args, pybind11::kwargs const&)#1}, pybind11::object, pybind11::object const&, c10::DispatchKeySet, pybind11::args, pybind11::kwargs const&, pybind11::name, pybind11::is_method, pybind11::sibling>(torch::impl::dispatch::initDispatchBindings(_object*)::{lambda(pybind11::object const&, c10::DispatchKeySet, pybind11::args, pybind11::kwargs const&)#1}&&, pybind11::object (*)(pybind11::object const&, c10::DispatchKeySet, pybind11::args, pybind11::kwargs const&), pybind11::name const&, pybind11::is_method const&, pybind11::sibling const&)::{lambda(pybind11::detail::function_call&)#1}::_FUN(pybind11::detail::function_call) [0xb7067d] in libtorch_python.so
+=========         Host Frame: pybind11::cpp_function::dispatcher(_object*, _object*, _object*) [0x3838af] in libtorch_python.so
+=========         Host Frame: cfunction_call in methodobject.c:542 [0x350139] in libpython3.11.so.1.0
+=========         Host Frame: _PyObject_MakeTpCall in call.c:214 [0x1fd1b7] in libpython3.11.so.1.0
+=========         Host Frame: method_vectorcall in classobject.c:89 [0x32d552] in libpython3.11.so.1.0
+=========         Host Frame: _PyEval_EvalFrameDefault in ceval.c:5381 [0x3c8e2e] in libpython3.11.so.1.0
+=========         Host Frame: _PyFunction_Vectorcall in call.c:0 [0x329966] in libpython3.11.so.1.0
+=========         Host Frame: method_vectorcall in classobject.c:89 [0x32d387] in libpython3.11.so.1.0
+=========         Host Frame: _PyEval_EvalFrameDefault in ceval.c:5381 [0x3c8e2e] in libpython3.11.so.1.0
+=========         Host Frame: _PyFunction_Vectorcall in call.c:0 [0x329966] in libpython3.11.so.1.0
+=========         Host Frame: _PyEval_EvalFrameDefault in ceval.c:5381 [0x3c8e2e] in libpython3.11.so.1.0
+=========         Host Frame: _PyFunction_Vectorcall in call.c:0 [0x329966] in libpython3.11.so.1.0
+
+========= Target application returned an error
+========= ERROR SUMMARY: 16 errors
++ python3 -c 'import torch, flash_attn; print(torch.__version__, flash_attn.__version__)'
++ python3 scripts/fa2_lse_oob_min.py
+Traceback (most recent call last):
+  File "/root/repo/scripts/fa2_lse_oob_min.py", line 17, in <module>
+    torch.cuda.synchronize()
+  File "/usr/local/lib/python3.11/site-packages/torch/cuda/__init__.py", line 1085, in synchronize
+    return torch._C._cuda_synchronize()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+torch.AcceleratorError: CUDA error: an illegal memory access was encountered
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+++ command -v compute-sanitizer
++ CS=/usr/local/cuda/bin/compute-sanitizer
++ PYTORCH_NO_CUDA_MEMORY_CACHING=1
++ /usr/local/cuda/bin/compute-sanitizer --tool memcheck python3 scripts/fa2_lse_oob_min.py
++ head -n 40 /tmp/out/memcheck_min.log
++ tail -n 3 /tmp/out/memcheck_min.log
+
+[modal_upstream_fa2] exit=0

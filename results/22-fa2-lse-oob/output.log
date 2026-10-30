@@ -1,0 +1,138 @@
++ nvidia-smi --query-gpu=name,driver_version --format=csv
+name, driver_version
+NVIDIA A100-SXM4-80GB, 610.57.04
++ python3 -c 'import torch; print(torch.__version__, torch.version.cuda)'
+2.13.0+cu130 13.0
++ '[' '' = upstream ']'
++ python3 -c 'import vllm; print('\''vllm'\'', vllm.__version__)'
+vllm 0.32.0
+++ command -v compute-sanitizer
+++ find /usr/local -name compute-sanitizer -type f
+++ head -1
++ CS=
++ '[' -z '' ']'
+++ python3 -c 'import torch; print(torch.version.cuda.replace('\''.'\'', '\''-'\''))'
++ V=13-0
++ apt-get update -qq
+W: An error occurred during the signature verification. The repository is not updated and the previous index files will be used. GPG error: http://archive.ubuntu.com/ubuntu noble InRelease: Couldn't create temporary file /tmp/apt.conf.hfKOLm for passing config to apt-key
+W: An error occurred during the signature verification. The repository is not updated and the previous index files will be used. GPG error: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64  InRelease: Couldn't create temporary file /tmp/apt.conf.gkyp0c for passing config to apt-key
+W: An error occurred during the signature verification. The repository is not updated and the previous index files will be used. GPG error: http://archive.ubuntu.com/ubuntu noble-updates InRelease: Couldn't create temporary file /tmp/apt.conf.z8HMad for passing config to apt-key
+W: An error occurred during the signature verification. The repository is not updated and the previous index files will be used. GPG error: http://security.ubuntu.com/ubuntu noble-security InRelease: Couldn't create temporary file /tmp/apt.conf.Uq0NXX for passing config to apt-key
+W: An error occurred during the signature verification. The repository is not updated and the previous index files will be used. GPG error: http://archive.ubuntu.com/ubuntu noble-backports InRelease: Couldn't create temporary file /tmp/apt.conf.Bdzqxl for passing config to apt-key
+W: An error occurred during the signature verification. The repository is not updated and the previous index files will be used. GPG error: https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu noble InRelease: Unable to mkstemp /tmp/apt-key.mRMwzL.asc - GetTempFile (13: Permission denied) Couldn't create temporary file /tmp/apt.conf.s23ncK for passing config to apt-key
+W: Failed to fetch https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/InRelease  Couldn't create temporary file /tmp/apt.conf.gkyp0c for passing config to apt-key
+W: Failed to fetch https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu/dists/noble/InRelease  Unable to mkstemp /tmp/apt-key.mRMwzL.asc - GetTempFile (13: Permission denied) Couldn't create temporary file /tmp/apt.conf.s23ncK for passing config to apt-key
+W: Failed to fetch http://archive.ubuntu.com/ubuntu/dists/noble/InRelease  Couldn't create temporary file /tmp/apt.conf.hfKOLm for passing config to apt-key
+W: Failed to fetch http://archive.ubuntu.com/ubuntu/dists/noble-updates/InRelease  Couldn't create temporary file /tmp/apt.conf.z8HMad for passing config to apt-key
+W: Failed to fetch http://archive.ubuntu.com/ubuntu/dists/noble-backports/InRelease  Couldn't create temporary file /tmp/apt.conf.Bdzqxl for passing config to apt-key
+W: Failed to fetch http://security.ubuntu.com/ubuntu/dists/noble-security/InRelease  Couldn't create temporary file /tmp/apt.conf.Uq0NXX for passing config to apt-key
+W: Some index files failed to download. They have been ignored, or old ones used instead.
++ apt-get install -y -qq cuda-sanitizer-13-0
+debconf: delaying package configuration, since apt-utils is not installed
+++ find /usr/local -name compute-sanitizer -type f
+++ head -1
++ CS=/usr/local/cuda-13.0/bin/compute-sanitizer
++ /usr/local/cuda-13.0/bin/compute-sanitizer --version
+NVIDIA (R) Compute Sanitizer
+Copyright (c) 2020-2025 NVIDIA Corporation
+Version 2025.3.1.0 (build 36400806) (public-release)
++ P=scripts/repro_fa2_empty_rows.py
++ python3 scripts/repro_fa2_empty_rows.py
+serving: requests 256, tokens 6442, zero-key rows 188, max_seqlen_q 190, softmax_lse (28, 6442) = 721504 bytes; early-exit LSE writes 5264, out of bounds 4620 (rows [34, 35, 36, 37, 38, 39]..., up to 4725420 bytes past the end)
+serving_control: requests 256, tokens 6442, zero-key rows 0, max_seqlen_q 190, softmax_lse (28, 6442) = 721504 bytes; early-exit LSE writes 0, out of bounds 0 (rows []..., up to 0 bytes past the end)
+serving_low: requests 256, tokens 6442, zero-key rows 23, max_seqlen_q 190, softmax_lse (28, 6442) = 721504 bytes; early-exit LSE writes 644, out of bounds 0 (rows []..., up to 0 bytes past the end)
+serving_high: requests 256, tokens 6442, zero-key rows 165, max_seqlen_q 190, softmax_lse (28, 6442) = 721504 bytes; early-exit LSE writes 4620, out of bounds 4620 (rows [34, 35, 36, 37, 38, 39]..., up to 4725420 bytes past the end)
+small: requests 9, tokens 484, zero-key rows 3, max_seqlen_q 300, softmax_lse (28, 484) = 54208 bytes; early-exit LSE writes 84, out of bounds 38 (rows [1, 5]..., up to 146196 bytes past the end)
+small_control: requests 9, tokens 484, zero-key rows 0, max_seqlen_q 300, softmax_lse (28, 484) = 54208 bytes; early-exit LSE writes 0, out of bounds 0 (rows []..., up to 0 bytes past the end)
+lse: requests 8, tokens 3585, zero-key rows 1, max_seqlen_q 512, softmax_lse (28, 3585) = 401520 bytes; early-exit LSE writes 28, out of bounds 0 (rows []..., up to 0 bytes past the end)
+big: requests 512, tokens 8703, zero-key rows 511, max_seqlen_q 8192, softmax_lse (28, 8703) = 974736 bytes; early-exit LSE writes 14308, out of bounds 14306 (rows [1, 2, 3, 4, 5, 6]..., up to 468754548 bytes past the end)
+big_control: requests 512, tokens 8703, zero-key rows 0, max_seqlen_q 8192, softmax_lse (28, 8703) = 974736 bytes; early-exit LSE writes 0, out of bounds 0 (rows []..., up to 0 bytes past the end)
+serving: exit 0 ['serving: ok']
+serving_control: exit 0 ['serving_control: ok']
+serving_low: exit 0 ['serving_low: ok']
+serving_high: exit 0 ['serving_high: ok']
+small: exit 0 ['small: ok']
+small_control: exit 0 ['small_control: ok']
+lse: exit 0 ['lse: softmax_lse (100380,), 27 predicted foreign slots [512, 1024, 1536, 2048, 2560, 3072, 3584, 4096]...; slots that differ from the reference: 20, all predicted True, values [inf]']
+big: exit 1 ["Search for `cudaErrorIllegalAddress' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information."]
+big_control: exit 0 ['big_control: ok']
++ MC='/usr/local/cuda-13.0/bin/compute-sanitizer --tool memcheck --print-limit 100000 --show-backtrace device'
++ for v in serving serving_control serving_low serving_high small small_control big big_control
++ PYTORCH_NO_CUDA_MEMORY_CACHING=1
++ /usr/local/cuda-13.0/bin/compute-sanitizer --tool memcheck --print-limit 100000 --show-backtrace device python3 scripts/repro_fa2_empty_rows.py serving
++ python3 scripts/repro_fa2_empty_rows.py --check serving /tmp/out/memcheck_serving.log
+--check serving: 165 invalid global writes, sizes [4], kernels ['flash::flash_fwd_splitkv_kernel']; other errors 2 ['========= Program hit cudaErrorLaunchFailure (error 719) due to "unspecified launch failure" on CUDA API call to cudaFree.', '========= Program hit cudaErrorLaunchFailure (error 719) due to "unspecified launch failure" on CUDA API call to cudaGetLastError.']
+    ERROR SUMMARY: 167 errors
+    errors whose block (m_block, bidb, bidh) is a predicted out-of-bounds early exit: 165/165 (predicted 4620; the launch is aborted after the first errors, so memcheck reports a subset)
+    LSE base implied by address - 4*index: ['0x2b9b10e08400'] (1 distinct)
+    nearest allocation(s) reported: [('0x2b9b10e08400', 721504)]; softmax_lse is 721504 bytes
+    implied base is a reported allocation of softmax_lse's size: True
+    e.g. block (0, 36, 0): address 0x2b9b10ec3480 = base + 4 * ((36*28 + 0)*190 + 0*64) = base + 766080 bytes
++ for v in serving serving_control serving_low serving_high small small_control big big_control
++ PYTORCH_NO_CUDA_MEMORY_CACHING=1
++ /usr/local/cuda-13.0/bin/compute-sanitizer --tool memcheck --print-limit 100000 --show-backtrace device python3 scripts/repro_fa2_empty_rows.py serving_control
++ python3 scripts/repro_fa2_empty_rows.py --check serving_control /tmp/out/memcheck_serving_control.log
+--check serving_control: 0 invalid global writes, sizes [], kernels []; other errors 0 []
+    ERROR SUMMARY: 0 errors
+    predicted out-of-bounds writes 0
++ for v in serving serving_control serving_low serving_high small small_control big big_control
++ PYTORCH_NO_CUDA_MEMORY_CACHING=1
++ /usr/local/cuda-13.0/bin/compute-sanitizer --tool memcheck --print-limit 100000 --show-backtrace device python3 scripts/repro_fa2_empty_rows.py serving_low
++ python3 scripts/repro_fa2_empty_rows.py --check serving_low /tmp/out/memcheck_serving_low.log
+--check serving_low: 0 invalid global writes, sizes [], kernels []; other errors 0 []
+    ERROR SUMMARY: 0 errors
+    predicted out-of-bounds writes 0
++ for v in serving serving_control serving_low serving_high small small_control big big_control
++ PYTORCH_NO_CUDA_MEMORY_CACHING=1
++ /usr/local/cuda-13.0/bin/compute-sanitizer --tool memcheck --print-limit 100000 --show-backtrace device python3 scripts/repro_fa2_empty_rows.py serving_high
++ python3 scripts/repro_fa2_empty_rows.py --check serving_high /tmp/out/memcheck_serving_high.log
+--check serving_high: 165 invalid global writes, sizes [4], kernels ['flash::flash_fwd_splitkv_kernel']; other errors 2 ['========= Program hit cudaErrorLaunchFailure (error 719) due to "unspecified launch failure" on CUDA API call to cudaFree.', '========= Program hit cudaErrorLaunchFailure (error 719) due to "unspecified launch failure" on CUDA API call to cudaGetLastError.']
+    ERROR SUMMARY: 167 errors
+    errors whose block (m_block, bidb, bidh) is a predicted out-of-bounds early exit: 165/165 (predicted 4620; the launch is aborted after the first errors, so memcheck reports a subset)
+    LSE base implied by address - 4*index: ['0x2b5c24e08400'] (1 distinct)
+    nearest allocation(s) reported: [('0x2b5c24e08400', 721504)]; softmax_lse is 721504 bytes
+    implied base is a reported allocation of softmax_lse's size: True
+    e.g. block (0, 213, 0): address 0x2b5c2525ada0 = base + 4 * ((213*28 + 0)*190 + 0*64) = base + 4532640 bytes
++ for v in serving serving_control serving_low serving_high small small_control big big_control
++ PYTORCH_NO_CUDA_MEMORY_CACHING=1
++ /usr/local/cuda-13.0/bin/compute-sanitizer --tool memcheck --print-limit 100000 --show-backtrace device python3 scripts/repro_fa2_empty_rows.py small
++ python3 scripts/repro_fa2_empty_rows.py --check small /tmp/out/memcheck_small.log
+--check small: 26 invalid global writes, sizes [4], kernels ['flash::flash_fwd_splitkv_kernel']; other errors 2 ['========= Program hit cudaErrorLaunchFailure (error 719) due to "unspecified launch failure" on CUDA API call to cudaFree.', '========= Program hit cudaErrorLaunchFailure (error 719) due to "unspecified launch failure" on CUDA API call to cudaGetLastError.']
+    ERROR SUMMARY: 28 errors
+    errors whose block (m_block, bidb, bidh) is a predicted out-of-bounds early exit: 26/26 (predicted 38; the launch is aborted after the first errors, so memcheck reports a subset)
+    LSE base implied by address - 4*index: ['0x2b55d5401800'] (1 distinct)
+    nearest allocation(s) reported: [('0x2b55d5401800', 54208)]; softmax_lse is 54208 bytes
+    implied base is a reported allocation of softmax_lse's size: True
+    e.g. block (0, 1, 18): address 0x2b55d540efa0 = base + 4 * ((1*28 + 18)*300 + 0*64) = base + 55200 bytes
++ for v in serving serving_control serving_low serving_high small small_control big big_control
++ PYTORCH_NO_CUDA_MEMORY_CACHING=1
++ /usr/local/cuda-13.0/bin/compute-sanitizer --tool memcheck --print-limit 100000 --show-backtrace device python3 scripts/repro_fa2_empty_rows.py small_control
++ python3 scripts/repro_fa2_empty_rows.py --check small_control /tmp/out/memcheck_small_control.log
+--check small_control: 0 invalid global writes, sizes [], kernels []; other errors 0 []
+    ERROR SUMMARY: 0 errors
+    predicted out-of-bounds writes 0
++ for v in serving serving_control serving_low serving_high small small_control big big_control
++ PYTORCH_NO_CUDA_MEMORY_CACHING=1
++ /usr/local/cuda-13.0/bin/compute-sanitizer --tool memcheck --print-limit 100000 --show-backtrace device python3 scripts/repro_fa2_empty_rows.py big
++ python3 scripts/repro_fa2_empty_rows.py --check big /tmp/out/memcheck_big.log
+--check big: 14 invalid global writes, sizes [4], kernels ['flash::flash_fwd_splitkv_kernel']; other errors 2 ['========= Program hit cudaErrorLaunchFailure (error 719) due to "unspecified launch failure" on CUDA API call to cudaFree.', '========= Program hit cudaErrorLaunchFailure (error 719) due to "unspecified launch failure" on CUDA API call to cudaGetLastError.']
+    ERROR SUMMARY: 16 errors
+    errors whose block (m_block, bidb, bidh) is a predicted out-of-bounds early exit: 14/14 (predicted 14306; the launch is aborted after the first errors, so memcheck reports a subset)
+    LSE base implied by address - 4*index: ['0x2b602dd01c00'] (1 distinct)
+    nearest allocation(s) reported: [('0x2b602dd01c00', 974736)]; softmax_lse is 974736 bytes
+    implied base is a reported allocation of softmax_lse's size: True
+    e.g. block (0, 14, 0): address 0x2b602e941c00 = base + 4 * ((14*28 + 0)*8192 + 0*64) = base + 12845056 bytes
++ for v in serving serving_control serving_low serving_high small small_control big big_control
++ PYTORCH_NO_CUDA_MEMORY_CACHING=1
++ /usr/local/cuda-13.0/bin/compute-sanitizer --tool memcheck --print-limit 100000 --show-backtrace device python3 scripts/repro_fa2_empty_rows.py big_control
++ python3 scripts/repro_fa2_empty_rows.py --check big_control /tmp/out/memcheck_big_control.log
+--check big_control: 0 invalid global writes, sizes [], kernels []; other errors 0 []
+    ERROR SUMMARY: 0 errors
+    predicted out-of-bounds writes 0
++ /usr/local/cuda-13.0/bin/compute-sanitizer --tool memcheck --print-limit 100000 --show-backtrace device python3 scripts/repro_fa2_empty_rows.py small
++ python3 scripts/repro_fa2_empty_rows.py --check small /tmp/out/memcheck_small_caching.log
+--check small: 0 invalid global writes, sizes [], kernels []; other errors 0 []
+    ERROR SUMMARY: 0 errors
+    predicted out-of-bounds writes 38
+
+[modal_app] exit=0 wall=203s

@@ -139,7 +139,7 @@ head_dim 64 和 128 两种，和 head_dim 有关的常量都在 `Geom<D>` 里）
   K 保持 k−μ（smooth-K 的 μ 对 softmax 不可见，FA2 里也不用加回）。
 - 混合批怎么拼（`cuda_kernels.paged_attention`）：vLLM 0.32 的 V2 runner 不把 decode 请求排到前面，长短请求交错。
   所以不切批：先对整批调 FA2，短请求的 `seqused_k` 给它自己的 q_len（从临时第 0 页读几个 key，算出来的结果没用）；
-  再调 INT8 kernel，它只覆盖短请求的行。`seqused_k` 给 0 本来更省，但 FA2 会越界写（第 4 节第 36 条）。
+  再调 INT8 kernel，它只覆盖短请求的行。`seqused_k` 给 0 本来更省，但 FA2 会把这些行的 softmax_lse 写出界（第 4 节第 36 条）。
   不用 gather / scatter，也不用改 vLLM 的调度。
 
 ### 2.8 扩展
@@ -360,7 +360,10 @@ CUDA 版原来只做 q_len = 1。删 Triton 要先给这两类请求找新的落
     逐个改一个因素（`scripts/replay_fa_call.py`）。结果有两个原因：
     (a) 临时页的源页号在 metadata builder 里从页表 gather，读到的不是这一步的页表（forward 时页表是对的）。改成 builder 只在 CPU 上
         记"第几个请求的第几页"，由反量化 kernel 在 forward 时自己查页表；临时页表也在 forward 第一层才拷到 GPU。
-    (b) FA2 对 `seqused_k = 0` 的行会越界写（MMU 报 VIRT_WRITE）；单测里短请求少、输出缓冲后面碰巧有空间，所以没暴露。
+    (b) FA2 自己的 bug（MMU 报 VIRT_WRITE）：带页表的 varlen 调用走 split-KV kernel，`seqused_k = 0` 的行提前退出时按
+        padded 布局 `(bidb·h + bidh)·max_seqlen_q` 写 softmax_lse，而 LSE 是按 `(h, total_q)` 分配的。
+        越界距离随 bidb 变大，单测那种小批只超出百来 KB，落在 PyTorch 缓存池里不崩，所以没暴露，dump 那批最远超出 4.7 MB。
+        memcheck 报的每个越界地址都对上了这个偏移，上游 flash-attn 一样（`results/22-fa2-lse-oob*`，issue 草稿 `docs/upstream-issue-draft.md`）。
         短请求改成读它自己 q_len 个 key（临时第 0 页），重放和 400 题都不再出错。
     中间猜过"FA2 按整个 KV tile 查页表、临时页表太窄"，重放证明不是（加宽也照崩）；加宽本身无害，保留了。
 37. 我们扩展里的 launcher 没有在 kernel 后检查错误，越界会在下一次 CUDA 调用时才报出来，调用栈会指错 kernel。

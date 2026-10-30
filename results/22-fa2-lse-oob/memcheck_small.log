@@ -1,0 +1,192 @@
+========= COMPUTE-SANITIZER
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,1,18)
+=========     Access to 0x2b55d540efa0 is out of bounds
+=========     and is 993 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,5,2)
+=========     Access to 0x2b55d542b1a0 is out of bounds
+=========     and is 116193 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,5,18)
+=========     Access to 0x2b55d542fca0 is out of bounds
+=========     and is 135393 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,5,16)
+=========     Access to 0x2b55d542f340 is out of bounds
+=========     and is 132993 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,1,21)
+=========     Access to 0x2b55d540fdb0 is out of bounds
+=========     and is 4593 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,5,21)
+=========     Access to 0x2b55d5430ab0 is out of bounds
+=========     and is 138993 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,5,15)
+=========     Access to 0x2b55d542ee90 is out of bounds
+=========     and is 131793 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,5,0)
+=========     Access to 0x2b55d542a840 is out of bounds
+=========     and is 113793 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,5,6)
+=========     Access to 0x2b55d542c460 is out of bounds
+=========     and is 120993 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,5,19)
+=========     Access to 0x2b55d5430150 is out of bounds
+=========     and is 136593 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,5,20)
+=========     Access to 0x2b55d5430600 is out of bounds
+=========     and is 137793 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,5,13)
+=========     Access to 0x2b55d542e530 is out of bounds
+=========     and is 129393 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,5,8)
+=========     Access to 0x2b55d542cdc0 is out of bounds
+=========     and is 123393 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,5,11)
+=========     Access to 0x2b55d542dbd0 is out of bounds
+=========     and is 126993 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,5,12)
+=========     Access to 0x2b55d542e080 is out of bounds
+=========     and is 128193 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,5,3)
+=========     Access to 0x2b55d542b650 is out of bounds
+=========     and is 117393 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,5,5)
+=========     Access to 0x2b55d542bfb0 is out of bounds
+=========     and is 119793 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,5,17)
+=========     Access to 0x2b55d542f7f0 is out of bounds
+=========     and is 134193 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,5,1)
+=========     Access to 0x2b55d542acf0 is out of bounds
+=========     and is 114993 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,5,14)
+=========     Access to 0x2b55d542e9e0 is out of bounds
+=========     and is 130593 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,5,7)
+=========     Access to 0x2b55d542c910 is out of bounds
+=========     and is 122193 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,5,9)
+=========     Access to 0x2b55d542d270 is out of bounds
+=========     and is 124593 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,1,19)
+=========     Access to 0x2b55d540f450 is out of bounds
+=========     and is 2193 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,1,20)
+=========     Access to 0x2b55d540f900 is out of bounds
+=========     and is 3393 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,5,10)
+=========     Access to 0x2b55d542d720 is out of bounds
+=========     and is 125793 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Invalid __global__ write of size 4 bytes
+=========     at void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)1, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0, (bool)0>(flash::Flash_fwd_params)+0xd10
+=========     by thread (0,0,0) in block (0,5,4)
+=========     Access to 0x2b55d542bb00 is out of bounds
+=========     and is 118593 bytes after the nearest allocation at 0x2b55d5401800 of size 54208 bytes
+========= 
+========= Program hit cudaErrorLaunchFailure (error 719) due to "unspecified launch failure" on CUDA API call to cudaFree.
+========= 
+========= Program hit cudaErrorLaunchFailure (error 719) due to "unspecified launch failure" on CUDA API call to cudaGetLastError.
+========= 
+terminate called after throwing an instance of 'c10::AcceleratorError'
+  what():  CUDA error: unspecified launch failure
+Search for `cudaErrorLaunchFailure' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+
+Exception raised from uncached_delete at /__w/pytorch/pytorch/c10/cuda/CUDACachingAllocator.cpp:4520 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x9d (0x2b54e8f57bfd in /usr/local/lib/python3.12/dist-packages/torch/lib/libc10.so)
+frame #1: <unknown function> + 0xc4e9 (0x2b54e8a2b4e9 in /usr/local/lib/python3.12/dist-packages/torch/lib/libc10_cuda.so)
+frame #2: <unknown function> + 0x86ae4 (0x2b54e8f34ae4 in /usr/local/lib/python3.12/dist-packages/torch/lib/libc10.so)
+frame #3: c10::TensorImpl::~TensorImpl() + 0x9 (0x2b54e8f2f219 in /usr/local/lib/python3.12/dist-packages/torch/lib/libc10.so)
+frame #4: <unknown function> + 0x8752b5 (0x2b556af952b5 in /usr/local/lib/python3.12/dist-packages/torch/lib/libtorch_python.so)
+frame #5: <unknown function> + 0x875341 (0x2b556af95341 in /usr/local/lib/python3.12/dist-packages/torch/lib/libtorch_python.so)
+frame #6: /usr/bin/python3() [0x59f273]
+frame #7: /usr/bin/python3() [0x5f7949]
+frame #8: /usr/bin/python3() [0x5e3264]
+frame #9: _PyEval_EvalFrameDefault + 0xdb9 (0x5d73e9 in /usr/bin/python3)
+frame #10: PyEval_EvalCode + 0x15b (0x5d55eb in /usr/bin/python3)
+frame #11: /usr/bin/python3() [0x608852]
+frame #12: /usr/bin/python3() [0x6b50d3]
+frame #13: _PyRun_SimpleFileObject + 0x1aa (0x6b4e3a in /usr/bin/python3)
+frame #14: _PyRun_AnyFileObject + 0x4f (0x6b4c6f in /usr/bin/python3)
+frame #15: Py_RunMain + 0x3b5 (0x6bccd5 in /usr/bin/python3)
+frame #16: Py_BytesMain + 0x2d (0x6bc7bd in /usr/bin/python3)
+frame #17: <unknown function> + 0x2a1ca (0x2b54e10431ca in /usr/lib/x86_64-linux-gnu/libc.so.6)
+frame #18: __libc_start_main + 0x8b (0x2b54e104328b in /usr/lib/x86_64-linux-gnu/libc.so.6)
+frame #19: _start + 0x25 (0x657a05 in /usr/bin/python3)
+
+========= Error: process didn't terminate successfully
+========= Target application returned an error
+========= ERROR SUMMARY: 28 errors

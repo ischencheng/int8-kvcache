@@ -1,0 +1,115 @@
+name, driver_version
+NVIDIA A100-SXM4-80GB, 610.57.04
+2.8.0+cu128 12.8
+flash_attn 2.8.3.post2
+NVIDIA (R) Compute Sanitizer
+Copyright (c) 2020-2025 NVIDIA Corporation
+Version 2025.1.0.0 (build 35583870) (public-release)
+serving: requests 256, tokens 6442, zero-key rows 188, max_seqlen_q 190, softmax_lse (28, 6442) = 721504 bytes; early-exit LSE writes 5264, out of bounds 4620 (rows [34, 35, 36, 37, 38, 39]..., up to 4725420 bytes past the end)
+serving_control: requests 256, tokens 6442, zero-key rows 0, max_seqlen_q 190, softmax_lse (28, 6442) = 721504 bytes; early-exit LSE writes 0, out of bounds 0 (rows []..., up to 0 bytes past the end)
+serving_low: requests 256, tokens 6442, zero-key rows 23, max_seqlen_q 190, softmax_lse (28, 6442) = 721504 bytes; early-exit LSE writes 644, out of bounds 0 (rows []..., up to 0 bytes past the end)
+serving_high: requests 256, tokens 6442, zero-key rows 165, max_seqlen_q 190, softmax_lse (28, 6442) = 721504 bytes; early-exit LSE writes 4620, out of bounds 4620 (rows [34, 35, 36, 37, 38, 39]..., up to 4725420 bytes past the end)
+small: requests 9, tokens 484, zero-key rows 3, max_seqlen_q 300, softmax_lse (28, 484) = 54208 bytes; early-exit LSE writes 84, out of bounds 38 (rows [1, 5]..., up to 146196 bytes past the end)
+small_control: requests 9, tokens 484, zero-key rows 0, max_seqlen_q 300, softmax_lse (28, 484) = 54208 bytes; early-exit LSE writes 0, out of bounds 0 (rows []..., up to 0 bytes past the end)
+lse: requests 8, tokens 3585, zero-key rows 1, max_seqlen_q 512, softmax_lse (28, 3585) = 401520 bytes; early-exit LSE writes 28, out of bounds 0 (rows []..., up to 0 bytes past the end)
+big: requests 512, tokens 8703, zero-key rows 511, max_seqlen_q 8192, softmax_lse (28, 8703) = 974736 bytes; early-exit LSE writes 14308, out of bounds 14306 (rows [1, 2, 3, 4, 5, 6]..., up to 468754548 bytes past the end)
+big_control: requests 512, tokens 8703, zero-key rows 0, max_seqlen_q 8192, softmax_lse (28, 8703) = 974736 bytes; early-exit LSE writes 0, out of bounds 0 (rows []..., up to 0 bytes past the end)
+serving: exit 0 ['serving: ok']
+serving_control: exit 0 ['serving_control: ok']
+serving_low: exit 0 ['serving_low: ok']
+serving_high: exit 0 ['serving_high: ok']
+small: exit 0 ['small: ok']
+small_control: exit 0 ['small_control: ok']
+lse: exit 0 ['lse: softmax_lse (100380,), 27 predicted foreign slots [512, 1024, 1536, 2048, 2560, 3072, 3584, 4096]...; slots that differ from the reference: 19, all predicted True, values [inf]']
+big: exit 1 ['torch.AcceleratorError: CUDA error: an illegal memory access was encountered']
+big_control: exit 0 ['big_control: ok']
+--check serving: 176 invalid global writes, sizes [4], kernels ['flash::flash_fwd_splitkv_kernel']; other errors 2 ['========= Program hit cudaErrorLaunchFailure (error 719) due to "unspecified launch failure" on CUDA API call to cudaFree.', '========= Program hit cudaErrorLaunchFailure (error 719) due to "unspecified launch failure" on CUDA API call to cudaGetLastError.']
+    ERROR SUMMARY: 178 errors
+    errors whose block (m_block, bidb, bidh) is a predicted out-of-bounds early exit: 176/176 (predicted 4620; the launch is aborted after the first errors, so memcheck reports a subset)
+    LSE base implied by address - 4*index: ['0x2aad3ae01400'] (1 distinct)
+    nearest allocation(s) reported: [('0x2aad3aeb1800', 16)]; softmax_lse is 721504 bytes
+    implied base is a reported allocation of softmax_lse's size: False; or the allocation right after it (upstream allocates rng_state there): True
+    e.g. block (0, 217, 0): address 0x2aad3b268a20 = base + 4 * ((217*28 + 0)*190 + 0*64) = base + 4617760 bytes
+--check serving_control: 0 invalid global writes, sizes [], kernels []; other errors 0 []
+    ERROR SUMMARY: 0 errors
+    predicted out-of-bounds writes 0
+--check serving_low: 0 invalid global writes, sizes [], kernels []; other errors 0 []
+    ERROR SUMMARY: 0 errors
+    predicted out-of-bounds writes 0
+--check serving_high: 182 invalid global writes, sizes [4], kernels ['flash::flash_fwd_splitkv_kernel']; other errors 2 ['========= Program hit cudaErrorLaunchFailure (error 719) due to "unspecified launch failure" on CUDA API call to cudaFree.', '========= Program hit cudaErrorLaunchFailure (error 719) due to "unspecified launch failure" on CUDA API call to cudaGetLastError.']
+    ERROR SUMMARY: 184 errors
+    errors whose block (m_block, bidb, bidh) is a predicted out-of-bounds early exit: 182/182 (predicted 4620; the launch is aborted after the first errors, so memcheck reports a subset)
+    LSE base implied by address - 4*index: ['0x2b8934e01400'] (1 distinct)
+    nearest allocation(s) reported: [('0x2b8934eb1800', 16)]; softmax_lse is 721504 bytes
+    implied base is a reported allocation of softmax_lse's size: False; or the allocation right after it (upstream allocates rng_state there): True
+    e.g. block (0, 202, 0): address 0x2b893521ab40 = base + 4 * ((202*28 + 0)*190 + 0*64) = base + 4298560 bytes
+--check small: 27 invalid global writes, sizes [4], kernels ['flash::flash_fwd_splitkv_kernel']; other errors 2 ['========= Program hit cudaErrorLaunchFailure (error 719) due to "unspecified launch failure" on CUDA API call to cudaFree.', '========= Program hit cudaErrorLaunchFailure (error 719) due to "unspecified launch failure" on CUDA API call to cudaGetLastError.']
+    ERROR SUMMARY: 29 errors
+    errors whose block (m_block, bidb, bidh) is a predicted out-of-bounds early exit: 27/27 (predicted 38; the launch is aborted after the first errors, so memcheck reports a subset)
+    LSE base implied by address - 4*index: ['0x2b56bd400800'] (1 distinct)
+    nearest allocation(s) reported: [('0x2b56bd40dc00', 16)]; softmax_lse is 54208 bytes
+    implied base is a reported allocation of softmax_lse's size: False; or the allocation right after it (upstream allocates rng_state there): True
+    e.g. block (0, 5, 12): address 0x2b56bd42d080 = base + 4 * ((5*28 + 12)*300 + 0*64) = base + 182400 bytes
+--check small_control: 0 invalid global writes, sizes [], kernels []; other errors 0 []
+    ERROR SUMMARY: 0 errors
+    predicted out-of-bounds writes 0
+--check big: 16 invalid global writes, sizes [4], kernels ['flash::flash_fwd_splitkv_kernel']; other errors 2 ['========= Program hit cudaErrorLaunchFailure (error 719) due to "unspecified launch failure" on CUDA API call to cudaFree.', '========= Program hit cudaErrorLaunchFailure (error 719) due to "unspecified launch failure" on CUDA API call to cudaGetLastError.']
+    ERROR SUMMARY: 18 errors
+    errors whose block (m_block, bidb, bidh) is a predicted out-of-bounds early exit: 16/16 (predicted 14306; the launch is aborted after the first errors, so memcheck reports a subset)
+    LSE base implied by address - 4*index: ['0x2b7059c11c00'] (1 distinct)
+    nearest allocation(s) reported: [('0x2b7059cffc00', 16)]; softmax_lse is 974736 bytes
+    implied base is a reported allocation of softmax_lse's size: False; or the allocation right after it (upstream allocates rng_state there): True
+    e.g. block (0, 14, 0): address 0x2b705a851c00 = base + 4 * ((14*28 + 0)*8192 + 0*64) = base + 12845056 bytes
+--check big_control: 0 invalid global writes, sizes [], kernels []; other errors 0 []
+    ERROR SUMMARY: 0 errors
+    predicted out-of-bounds writes 0
+--check small: 0 invalid global writes, sizes [], kernels []; other errors 0 []
+    ERROR SUMMARY: 0 errors
+    predicted out-of-bounds writes 38
++ nvidia-smi --query-gpu=name,driver_version --format=csv
++ python3 -c 'import torch; print(torch.__version__, torch.version.cuda)'
++ '[' upstream = upstream ']'
++ python3 -c 'import flash_attn; print('\''flash_attn'\'', flash_attn.__version__)'
+++ command -v compute-sanitizer
++ CS=/usr/local/cuda/bin/compute-sanitizer
++ '[' -z /usr/local/cuda/bin/compute-sanitizer ']'
++ /usr/local/cuda/bin/compute-sanitizer --version
++ P=scripts/repro_fa2_empty_rows.py
++ python3 scripts/repro_fa2_empty_rows.py
++ MC='/usr/local/cuda/bin/compute-sanitizer --tool memcheck --print-limit 100000 --show-backtrace device'
++ for v in serving serving_control serving_low serving_high small small_control big big_control
++ PYTORCH_NO_CUDA_MEMORY_CACHING=1
++ /usr/local/cuda/bin/compute-sanitizer --tool memcheck --print-limit 100000 --show-backtrace device python3 scripts/repro_fa2_empty_rows.py serving
++ python3 scripts/repro_fa2_empty_rows.py --check serving /tmp/out/memcheck_serving.log
++ for v in serving serving_control serving_low serving_high small small_control big big_control
++ PYTORCH_NO_CUDA_MEMORY_CACHING=1
++ /usr/local/cuda/bin/compute-sanitizer --tool memcheck --print-limit 100000 --show-backtrace device python3 scripts/repro_fa2_empty_rows.py serving_control
++ python3 scripts/repro_fa2_empty_rows.py --check serving_control /tmp/out/memcheck_serving_control.log
++ for v in serving serving_control serving_low serving_high small small_control big big_control
++ PYTORCH_NO_CUDA_MEMORY_CACHING=1
++ /usr/local/cuda/bin/compute-sanitizer --tool memcheck --print-limit 100000 --show-backtrace device python3 scripts/repro_fa2_empty_rows.py serving_low
++ python3 scripts/repro_fa2_empty_rows.py --check serving_low /tmp/out/memcheck_serving_low.log
++ for v in serving serving_control serving_low serving_high small small_control big big_control
++ PYTORCH_NO_CUDA_MEMORY_CACHING=1
++ /usr/local/cuda/bin/compute-sanitizer --tool memcheck --print-limit 100000 --show-backtrace device python3 scripts/repro_fa2_empty_rows.py serving_high
++ python3 scripts/repro_fa2_empty_rows.py --check serving_high /tmp/out/memcheck_serving_high.log
++ for v in serving serving_control serving_low serving_high small small_control big big_control
++ PYTORCH_NO_CUDA_MEMORY_CACHING=1
++ /usr/local/cuda/bin/compute-sanitizer --tool memcheck --print-limit 100000 --show-backtrace device python3 scripts/repro_fa2_empty_rows.py small
++ python3 scripts/repro_fa2_empty_rows.py --check small /tmp/out/memcheck_small.log
++ for v in serving serving_control serving_low serving_high small small_control big big_control
++ PYTORCH_NO_CUDA_MEMORY_CACHING=1
++ /usr/local/cuda/bin/compute-sanitizer --tool memcheck --print-limit 100000 --show-backtrace device python3 scripts/repro_fa2_empty_rows.py small_control
++ python3 scripts/repro_fa2_empty_rows.py --check small_control /tmp/out/memcheck_small_control.log
++ for v in serving serving_control serving_low serving_high small small_control big big_control
++ PYTORCH_NO_CUDA_MEMORY_CACHING=1
++ /usr/local/cuda/bin/compute-sanitizer --tool memcheck --print-limit 100000 --show-backtrace device python3 scripts/repro_fa2_empty_rows.py big
++ python3 scripts/repro_fa2_empty_rows.py --check big /tmp/out/memcheck_big.log
++ for v in serving serving_control serving_low serving_high small small_control big big_control
++ PYTORCH_NO_CUDA_MEMORY_CACHING=1
++ /usr/local/cuda/bin/compute-sanitizer --tool memcheck --print-limit 100000 --show-backtrace device python3 scripts/repro_fa2_empty_rows.py big_control
++ python3 scripts/repro_fa2_empty_rows.py --check big_control /tmp/out/memcheck_big_control.log
++ /usr/local/cuda/bin/compute-sanitizer --tool memcheck --print-limit 100000 --show-backtrace device python3 scripts/repro_fa2_empty_rows.py small
++ python3 scripts/repro_fa2_empty_rows.py --check small /tmp/out/memcheck_small_caching.log
+
+[modal_upstream_fa2] exit=0
