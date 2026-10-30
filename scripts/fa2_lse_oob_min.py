@@ -1,4 +1,4 @@
-# Minimal repro for docs/upstream-issue-draft.md (upstream flash-attn): one 8k prefill row plus 511 rows
+# Minimal repro on upstream flash-attn (Dao-AILab/flash-attention#2842): one 8k prefill row plus 511 rows
 # with q_len 1 and no keys, paged KV. Illegal memory access on A100.
 import torch
 from flash_attn import flash_attn_varlen_func

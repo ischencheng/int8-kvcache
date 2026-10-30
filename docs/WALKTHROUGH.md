@@ -363,7 +363,9 @@ CUDA 版原来只做 q_len = 1。删 Triton 要先给这两类请求找新的落
     (b) FA2 自己的 bug（MMU 报 VIRT_WRITE）：带页表的 varlen 调用走 split-KV kernel，`seqused_k = 0` 的行提前退出时按
         padded 布局 `(bidb·h + bidh)·max_seqlen_q` 写 softmax_lse，而 LSE 是按 `(h, total_q)` 分配的。
         越界距离随 bidb 变大，单测那种小批只超出百来 KB，落在 PyTorch 缓存池里不崩，所以没暴露，dump 那批最远超出 4.7 MB。
-        memcheck 报的每个越界地址都对上了这个偏移，上游 flash-attn 一样（`results/22-fa2-lse-oob*`，issue 草稿 `docs/upstream-issue-draft.md`）。
+        memcheck 报的每个越界地址都对上了这个偏移，上游 flash-attn 一样（`results/22-fa2-lse-oob*`）。这是已知 bug：上游
+        [Dao-AILab/flash-attention#2842](https://github.com/Dao-AILab/flash-attention/issues/2842)，vLLM fork 的修复 PR
+        [vllm-project/flash-attention#139](https://github.com/vllm-project/flash-attention/pull/139)，截至 2026-10-30 都没合。
         短请求改成读它自己 q_len 个 key（临时第 0 页），重放和 400 题都不再出错。
     中间猜过"FA2 按整个 KV tile 查页表、临时页表太窄"，重放证明不是（加宽也照崩）；加宽本身无害，保留了。
 37. 我们扩展里的 launcher 没有在 kernel 后检查错误，越界会在下一次 CUDA 调用时才报出来，调用栈会指错 kernel。

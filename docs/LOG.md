@@ -728,7 +728,9 @@ D 实例（kv_consumer）找到后直接注入自己的分页 cache、跳过 pro
   重建的 dump 批直接跑也没崩（后面的地址正好映射着）。一个 8k prefill + 511 个空 decode 的批超出 ~470 MB，直接跑就 illegal memory access。
 - 没出界的也写错了地方，落在别的行的 LSE 槽上：`return_softmax_lse=True` 时 27 个预测槽里 19–20 个变成 +inf（看 block 执行先后），
   其余槽不变。
-- 上游 Dao-AILab flash-attn 2.8.3.post2 同一行代码、同样的结果（`results/22-fa2-lse-oob-upstream*`）。issue 草稿：`docs/upstream-issue-draft.md`（未发）。
+- 上游 Dao-AILab flash-attn 2.8.3.post2 同一行代码、同样的结果（`results/22-fa2-lse-oob-upstream*`）。这是已知 bug：
+  上游 issue [Dao-AILab/flash-attention#2842](https://github.com/Dao-AILab/flash-attention/issues/2842)（修复 PR #2573、#2851、#3093），
+  vLLM 的 fork 有修复 PR [vllm-project/flash-attention#139](https://github.com/vllm-project/flash-attention/pull/139)，截至 2026-10-30 都没合。
 
 **还丢了一个能力**：Triton 对 head_dim 通用，CUDA 版写死 128，Qwen2.5-0.5B（head_dim 64）当 int8 draft 起不来。
 kernel 按 D 模板化（`Geom<D>`：k-step 数 D/32、PV n-tile 数 D/8、每线程通道数 D/8、cp.async 每行 D/16 个 lane、smem 大小），
